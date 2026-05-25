@@ -85,6 +85,15 @@ body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellips
 .toggle-btn.recv{border-color:rgba(80,200,120,.4);background:rgba(80,200,120,.1);color:#80e0a0;}
 .toggle-btn.not-recv{border-color:rgba(220,80,80,.3);background:rgba(220,80,80,.07);color:#e08080;}
 
+/* 연락처 · 결제수단 표시 */
+.bk-contact{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:6px;}
+.bk-chip{font-size:.72rem;border-radius:6px;padding:4px 10px;display:inline-flex;align-items:center;gap:5px;}
+.chip-phone{background:rgba(100,150,210,.1);border:1px solid rgba(100,150,210,.25);color:#a8c8ec;}
+.chip-phone a{color:#a8c8ec;text-decoration:none;}
+.chip-pay-account{background:rgba(80,200,120,.1);border:1px solid rgba(80,200,120,.28);color:#9ce0b8;}
+.chip-pay-card{background:rgba(150,100,200,.1);border:1px solid rgba(150,100,200,.28);color:#c8a8e8;}
+.chip-key{opacity:.6;font-size:.62rem;}
+
 .bk-other{border:1px solid var(--border);border-radius:10px;padding:14px 16px;margin-bottom:8px;background:rgba(15,13,28,.6); transition: all 0.3s;}
 .bk-other.completed { opacity: 0.45; filter: grayscale(70%); background: rgba(0,0,0,0.2); border-color: rgba(255,255,255,0.05); }
 
@@ -165,6 +174,27 @@ function sad(d) { db.ref('hs_admin').set(d); }
 
 // 🔥 새 메뉴인 reunionLite 마감 기한 설정 추가 (48시간)
 const MENU_DEADLINE = { question:24, mixed:24, solo:48, reunionLite:48, reunion:48, weekly:168 };
+
+// 결제수단 한글 라벨 + 색상 클래스
+function payLabel(pay){ return pay==='account' ? '계좌이체' : (pay==='card' ? '카드결제' : '미선택'); }
+function payClass(pay){ return pay==='account' ? 'chip-pay-account' : 'chip-pay-card'; }
+
+// 연락처/카톡 + 결제수단 칩 HTML 생성
+function contactChips(b){
+  let h = '<div class="bk-contact">';
+  if(b.phone){
+    h += `<span class="bk-chip chip-phone" title="클릭하면 복사" style="cursor:pointer;user-select:all;" onclick="copyContact('${String(b.phone).replace(/'/g,"")}')"><span class="chip-key">연락처/카톡</span> ${b.phone}</span>`;
+  } else {
+    h += `<span class="bk-chip chip-phone" style="opacity:.5;"><span class="chip-key">연락처/카톡</span> 없음</span>`;
+  }
+  h += `<span class="bk-chip ${payClass(b.pay)}"><span class="chip-key">결제</span> ${payLabel(b.pay)}</span>`;
+  h += '</div>';
+  return h;
+}
+
+function copyContact(v){
+  if(navigator.clipboard){ navigator.clipboard.writeText(v).then(()=>showToast('복사됨: '+v)); }
+}
 
 function switchTab(t){
   document.querySelectorAll('.tab').forEach((el,i)=>el.classList.toggle('active',['slots','bookings'][i]===t));
@@ -354,6 +384,7 @@ function renderBookings(){
               <span class="bk-min">${b.dur?b.dur+'분':''}</span>
               <button class="bk-del" onclick="delBooking('${b.k}')">삭제</button>
             </div>
+            ${contactChips(b)}
             <div class="bk-form-toggle">
               <span class="toggle-label">양식 수신:</span>
               <button class="toggle-btn ${b.formReceived?'recv':'not-recv'}" onclick="toggleForm('${b.k}')">${b.formReceived?'✓ 받음':'미수신'}</button>
@@ -382,6 +413,7 @@ function renderBookings(){
             <button class="bk-del" onclick="delBooking('${b.k}')">삭제</button>
           </div>
         </div>
+        ${contactChips(b)}
         <div style="font-size:.72rem;color:var(--text3);margin-bottom:8px;">접수: ${b.ts?new Date(b.ts).toLocaleString('ko-KR'):'-'} · ${(b.price||0).toLocaleString()}원</div>
         <div class="bko-recv-row">
           <span class="bko-recv-label">양식 수신 시간:</span>
