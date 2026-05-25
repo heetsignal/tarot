@@ -247,6 +247,10 @@ body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellips
       <input class="ifield" id="nameInput" placeholder="이름을 입력해 주세요" oninput="chk3()">
     </div>
     <div class="igroup">
+      <label class="ilabel">연락처 또는 카카오톡 아이디 (안내 연락용)</label>
+      <input class="ifield" id="phoneInput" type="text" maxlength="40" placeholder="전화번호 또는 카카오톡 아이디" oninput="chk3()">
+    </div>
+    <div class="igroup">
       <label class="ilabel">예약 확인용 비밀번호</label>
       <input class="ifield" type="password" id="pwInput" maxlength="4" placeholder="비밀번호 4자리 (숫자)" oninput="chk3()">
     </div>
@@ -331,7 +335,7 @@ const db = firebase.database();
 
 let globalData = {};
 
-const S={menu:null,dur:null,q:0,mixDur:null,date:null,dateObj:null,time:null,name:'',pw:'',pay:null};
+const S={menu:null,dur:null,q:0,mixDur:null,date:null,dateObj:null,time:null,name:'',phone:'',pw:'',pay:null};
 const MENU_NAMES={realtime:'실시간 리딩',question:'질문제 리딩',mixed:'혼합 리딩',solo:'솔로 패키지',reunionLite:'재회 패키지 Lite',reunion:'재회 패키지',weekly:'위클리 패키지'};
 
 db.ref('hs_admin').on('value', (snap) => {
@@ -423,7 +427,7 @@ function buildS2(){
     oa.innerHTML = `
       <div class="notice" style="background:rgba(200,164,86,.12); border-color:var(--gold2); border-radius:8px;">
         <span style="color:var(--gold2); font-weight:500; font-size:1rem; display:block; margin-bottom:6px;">✔️ 패키지 선택 완료</span>
-        <strong>${MENU_NAMES[m]}</strong>가 선택되었습니다.<br>아래 <strong>[다음 단계</strong> 버튼을 눌러] 결제를 진행해 주세요.
+        <strong>${MENU_NAMES[m]}</strong>가 선택되었습니다.<br>아래 <strong>[다음 단계]</strong> 버튼을 눌러 결제를 진행해 주세요.
       </div>
     `;
     buildPrice();
@@ -613,8 +617,9 @@ function buildS3(){
   document.getElementById('acctAmt').textContent=calcPrice().toLocaleString()+'원';
   
   document.getElementById('nameInput').value='';
+  document.getElementById('phoneInput').value='';
   document.getElementById('pwInput').value='';
-  S.name='';S.pw='';S.pay=null;
+  S.name='';S.phone='';S.pw='';S.pay=null;
   document.querySelectorAll('.pay-card').forEach(p=>p.classList.remove('selected'));
   document.getElementById('acctBox').classList.remove('show');
   document.getElementById('btn3').disabled=true;
@@ -630,8 +635,9 @@ function selPay(t){
 
 function chk3(){
   S.name=document.getElementById('nameInput').value.trim();
+  S.phone=document.getElementById('phoneInput').value.trim();
   S.pw=document.getElementById('pwInput').value.trim();
-  document.getElementById('btn3').disabled=!(S.name && S.pw.length >= 4 && S.pay);
+  document.getElementById('btn3').disabled=!(S.name && S.phone.length >= 4 && S.pw.length >= 4 && S.pay);
 }
 
 function buildS4(){
@@ -643,7 +649,7 @@ function buildS4(){
   info+=`· 결제 금액: ${calcPrice().toLocaleString()}원\n`;
   info+=`· 결제 방법: ${S.pay==='account'?'계좌이체':'카드결제'}`;
 
-  const form=`📋 【예약 정보】\n이름: ${S.name}\n${info}\n\n📋 【상담 양식】\n성함 및 생년월일 : (소울넘버 확인용) \n상대방 생년월일 : (소울넘버 확인용) \n상세 사연 : \n핵심 질문 : `;
+  const form=`📋 【예약 정보】\n이름: ${S.name}\n연락처/카톡: ${S.phone}\n${info}\n\n📋 【상담 양식】\n성함 및 생년월일 : (소울넘버 확인용) \n상대방 생년월일 : (소울넘버 확인용) \n상세 사연 : \n핵심 질문 : `;
   document.getElementById('formTmpl').innerHTML=`<span class="ftitle">✦ 아래 내용을 복사하여 작성 후 1시간 이내에 카카오톡으로 보내주세요.</span>${form}`;
 
   const cpa=document.getElementById('cardPayArea');
@@ -680,7 +686,7 @@ function buildS4(){
         blockedKeys.push(slots[idx-1]);
       }
       data.bookings[bk]={
-        name:S.name, pw:S.pw, pay:S.pay,
+        name:S.name, phone:S.phone, pw:S.pw, pay:S.pay,
         menu:MENU_NAMES[m], menuKey:m,
         time:S.time, dur:dur, price:calcPrice(),
         dateStr:S.date, mixDur:S.mixDur, q:S.q,
@@ -691,7 +697,7 @@ function buildS4(){
   } else {
     const bk=`other_${Date.now()}`;
     data.bookings[bk]={
-      name:S.name, pw:S.pw, pay:S.pay,
+      name:S.name, phone:S.phone, pw:S.pw, pay:S.pay,
       menu:MENU_NAMES[m], menuKey:m,
       price:calcPrice(), q:S.q, ts:Date.now()
     };
@@ -700,7 +706,7 @@ function buildS4(){
 }
 
 function resetAll(){
-  Object.assign(S,{menu:null,dur:null,q:0,mixDur:null,date:null,dateObj:null,time:null,name:'',pw:'',pay:null});
+  Object.assign(S,{menu:null,dur:null,q:0,mixDur:null,date:null,dateObj:null,time:null,name:'',phone:'',pw:'',pay:null});
   document.querySelectorAll('.menu-card').forEach(c=>c.classList.remove('selected'));
   document.getElementById('btn1').disabled=true;
   document.getElementById('cardPayArea').innerHTML='';
@@ -755,7 +761,7 @@ function doCheck(){
              </div>`;
   }
 
-  const formStr = `📋 【예약 정보】\n이름: ${found.name}\n${info}\n\n📋 【상담 양식】\n성함 및 나이 : (소울넘버 확인용) \n상대방 나이 : (소울넘버 확인용) \n상세 사연 : \n핵심 질문 : `;
+  const formStr = `📋 【예약 정보】\n이름: ${found.name}\n연락처/카톡: ${found.phone||''}\n${info}\n\n📋 【상담 양식】\n성함 및 나이 : (소울넘버 확인용) \n상대방 나이 : (소울넘버 확인용) \n상세 사연 : \n핵심 질문 : `;
   html += `<div class="form-tmpl" style="margin-bottom:0;"><span class="ftitle">✦ 제출 양식</span>${formStr}</div>`;
 
   document.getElementById('chkResult').innerHTML = html;
