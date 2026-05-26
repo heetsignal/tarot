@@ -179,21 +179,12 @@ const MENU_DEADLINE = { question:24, mixed:24, solo:48, reunionLite:48, reunion:
 function payLabel(pay){ return pay==='account' ? '계좌이체' : (pay==='card' ? '카드결제' : '미선택'); }
 function payClass(pay){ return pay==='account' ? 'chip-pay-account' : 'chip-pay-card'; }
 
-// 연락처/카톡 + 결제수단 칩 HTML 생성
+// 결제수단 칩 HTML 생성 (연락처는 제거됨)
 function contactChips(b){
   let h = '<div class="bk-contact">';
-  if(b.phone){
-    h += `<span class="bk-chip chip-phone" title="클릭하면 복사" style="cursor:pointer;user-select:all;" onclick="copyContact('${String(b.phone).replace(/'/g,"")}')"><span class="chip-key">연락처/카톡</span> ${b.phone}</span>`;
-  } else {
-    h += `<span class="bk-chip chip-phone" style="opacity:.5;"><span class="chip-key">연락처/카톡</span> 없음</span>`;
-  }
   h += `<span class="bk-chip ${payClass(b.pay)}"><span class="chip-key">결제</span> ${payLabel(b.pay)}</span>`;
   h += '</div>';
   return h;
-}
-
-function copyContact(v){
-  if(navigator.clipboard){ navigator.clipboard.writeText(v).then(()=>showToast('복사됨: '+v)); }
 }
 
 function switchTab(t){
