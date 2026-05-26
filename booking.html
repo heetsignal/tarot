@@ -300,6 +300,23 @@ body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellips
   </div>
 </div>
 
+<div class="modal-bg" id="noticeModal">
+  <div class="modal-content" style="max-width:420px;">
+    <button class="close-modal" onclick="closeNotice()">×</button>
+    <div class="modal-title">예약 전 안내</div>
+    <div style="text-align:center;font-size:2.2rem;margin-bottom:18px;">⏳</div>
+    <div style="font-size:.92rem;color:var(--text);line-height:1.95;text-align:center;margin-bottom:8px;">
+      신청 후 <strong style="color:var(--gold2);">1시간 이내</strong>에<br>
+      <strong style="color:var(--gold2);">결제 및 상담 양식 제출</strong>이<br>
+      완료되어야 예약이 확정됩니다.
+    </div>
+    <div style="font-size:.82rem;color:var(--text3);line-height:1.8;text-align:center;margin-bottom:24px;">
+      시간 내 미완료 시 예약이<br>자동 취소될 수 있으니 유의해 주세요.
+    </div>
+    <button class="btn" onclick="closeNotice()">확인했습니다</button>
+  </div>
+</div>
+
 <div class="modal-bg" id="chkModal">
   <div class="modal-content">
     <button class="close-modal" onclick="closeCheckModal()">×</button>
@@ -320,6 +337,13 @@ body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellips
 
 <script>
 (()=>{const c=document.getElementById('stars');for(let i=0;i<55;i++){const s=document.createElement('span');const z=Math.random()*1.5+.4;s.style.cssText=`width:${z}px;height:${z}px;top:${Math.random()*100}%;left:${Math.random()*100}%;--d:${2+Math.random()*5}s;--dl:${Math.random()*6}s;`;c.appendChild(s);}})();
+
+// 접속 안내 팝업 (이 탭에서 처음 열 때 1회만)
+let noticeShown=false;
+window.addEventListener('load',()=>{
+  if(!noticeShown){ document.getElementById('noticeModal').classList.add('show'); noticeShown=true; }
+});
+function closeNotice(){ document.getElementById('noticeModal').classList.remove('show'); }
 
 const firebaseConfig = {
   apiKey: "AIzaSyB4WrXMra_eVmBMTDcJlROBvMGAN4DzRGo",
