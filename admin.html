@@ -92,6 +92,7 @@ body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellips
 .chip-phone a{color:#a8c8ec;text-decoration:none;}
 .chip-pay-account{background:rgba(80,200,120,.1);border:1px solid rgba(80,200,120,.28);color:#9ce0b8;}
 .chip-pay-card{background:rgba(150,100,200,.1);border:1px solid rgba(150,100,200,.28);color:#c8a8e8;}
+.chip-coupon{background:rgba(232,200,122,.12);border:1px solid rgba(232,200,122,.4);color:#f0d89a;}
 .chip-key{opacity:.6;font-size:.62rem;}
 
 .bk-other{border:1px solid var(--border);border-radius:10px;padding:14px 16px;margin-bottom:8px;background:rgba(15,13,28,.6); transition: all 0.3s;}
@@ -183,6 +184,9 @@ function payClass(pay){ return pay==='account' ? 'chip-pay-account' : 'chip-pay-
 function contactChips(b){
   let h = '<div class="bk-contact">';
   h += `<span class="bk-chip ${payClass(b.pay)}"><span class="chip-key">결제</span> ${payLabel(b.pay)}</span>`;
+  if(b.coupon){
+    h += `<span class="bk-chip chip-coupon">🎁 쿠폰적용 (-5,000원)</span>`;
+  }
   h += '</div>';
   return h;
 }
