@@ -173,8 +173,8 @@ db.ref('hs_admin').on('value', (snap) => {
 function ad() { return globalData; }
 function sad(d) { db.ref('hs_admin').set(d); }
 
-// 🔥 새 메뉴인 reunionLite 마감 기한 설정 추가 (48시간)
-const MENU_DEADLINE = { question:24, mixed:24, solo:48, reunionLite:48, reunion:48, weekly:168 };
+// 메뉴별 마감 기한 (양식 수신 시점부터)
+const MENU_DEADLINE = { question:24, mixed:24, lite:48, reunion:48, weekly:168 };
 
 // 결제수단 한글 라벨 + 색상 클래스
 function payLabel(pay){ return pay==='account' ? '계좌이체' : (pay==='card' ? '카드결제' : '미선택'); }
