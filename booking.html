@@ -201,13 +201,9 @@ body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellips
         <div class="menu-top"><span class="menu-name">혼합 리딩 <span class="mbadge b-24">24H+LIVE</span></span><span class="menu-price">5,000원 할인</span></div>
         <div class="menu-info">실시간 + 질문제 자유 조합 · 합계에서 5,000원 할인<br>질문지 먼저 발송(24시간 이내) → 24시간 이후 실시간 상담 진행</div>
       </div>
-      <div class="menu-card" data-menu="solo" onclick="selMenu(this)">
-        <div class="menu-top"><span class="menu-name">솔로 패키지 <span class="mbadge b-48">48H</span></span><span class="menu-price">10,000원</span></div>
-        <div class="menu-info">양식 제출 후 48시간 이내 리딩지 발송</div>
-      </div>
-      <div class="menu-card" data-menu="reunionLite" onclick="selMenu(this)">
-        <div class="menu-top"><span class="menu-name">재회 패키지 Lite <span class="mbadge b-48">48H</span></span><span class="menu-price">15,000원</span></div>
-        <div class="menu-info">양식 제출 후 48시간 이내 리딩지 발송</div>
+      <div class="menu-card" data-menu="lite" onclick="selMenu(this)">
+        <div class="menu-top"><span class="menu-name">Lite 패키지 <span class="mbadge b-48">48H</span></span><span class="menu-price">15,000원</span></div>
+        <div class="menu-info">재회 · 짝사랑 · 썸 · 솔로 중 1종 선택<br>양식 제출 후 48시간 이내 리딩지 발송</div>
       </div>
       <div class="menu-card" data-menu="reunion" onclick="selMenu(this)">
         <div class="menu-top"><span class="menu-name">재회 패키지 <span class="mbadge b-48">48H</span></span><span class="menu-price">30,000원</span></div>
@@ -364,8 +360,8 @@ const db = firebase.database();
 
 let globalData = {};
 
-const S={menu:null,dur:null,q:0,mixDur:null,date:null,dateObj:null,time:null,name:'',pw:'',pay:null};
-const MENU_NAMES={realtime:'실시간 리딩',question:'질문제 리딩',mixed:'혼합 리딩',solo:'솔로 패키지',reunionLite:'재회 패키지 Lite',reunion:'재회 패키지',weekly:'위클리 패키지'};
+const S={menu:null,dur:null,q:0,mixDur:null,liteType:null,date:null,dateObj:null,time:null,name:'',pw:'',pay:null};
+const MENU_NAMES={realtime:'실시간 리딩',question:'질문제 리딩',mixed:'혼합 리딩',lite:'Lite 패키지',reunion:'재회 패키지',weekly:'위클리 패키지'};
 
 db.ref('hs_admin').on('value', (snap) => {
   globalData = snap.val() || {};
@@ -394,7 +390,7 @@ function toFmtKey(d) {
 function selMenu(el){
   document.querySelectorAll('.menu-card').forEach(c=>c.classList.remove('selected'));
   el.classList.add('selected');
-  S.menu=el.dataset.menu;S.dur=null;S.q=0;S.mixDur=null;S.date=null;S.dateObj=null;S.time=null;
+  S.menu=el.dataset.menu;S.dur=null;S.q=0;S.mixDur=null;S.liteType=null;S.date=null;S.dateObj=null;S.time=null;
   document.getElementById('btn1').disabled=false;
 }
 
@@ -415,13 +411,12 @@ function updSteps(n){
 
 function buildS2(){
   const m=S.menu;
-  const titles={realtime:'시간 선택',question:'질문 수 선택',mixed:'옵션 선택',solo:'예약 확인',reunionLite:'예약 확인',reunion:'예약 확인',weekly:'예약 확인'};
+  const titles={realtime:'시간 선택',question:'질문 수 선택',mixed:'옵션 선택',lite:'Lite 종류 선택',reunion:'예약 확인',weekly:'예약 확인'};
   const descs={
     realtime:'상담 시간과 예약 일정을 선택해 주세요',
     question:'원하시는 질문 개수를 선택해 주세요 (질문당 5,000원)',
     mixed:'실시간 시간과 질문 수를 자유롭게 조합하세요 · 합계 5,000원 할인',
-    solo:'선택하신 패키지 내역을 확인해 주세요',
-    reunionLite:'선택하신 패키지 내역을 확인해 주세요',
+    lite:'재회 · 짝사랑 · 썸 · 솔로 중 1종을 선택해 주세요',
     reunion:'선택하신 패키지 내역을 확인해 주세요',
     weekly:'선택하신 패키지 내역을 확인해 주세요',
   };
@@ -452,6 +447,13 @@ function buildS2(){
       <div class="ogroup"><div class="olabel">질문 수</div><div class="orow" id="mqrow">
         ${[1,2,3,4,5].map(n=>`<button class="obtn" onclick="selMQ(this,${n})">${n}개 · ${(n*5000).toLocaleString()}원</button>`).join('')}
       </div></div>`;
+  } else if(m==='lite'){
+    oa.innerHTML=`<div class="ogroup"><div class="olabel">Lite 종류</div><div class="orow" id="litrow">
+      <button class="obtn" onclick="selLite(this,'재회')">재회 Lite</button>
+      <button class="obtn" onclick="selLite(this,'짝사랑')">짝사랑 Lite</button>
+      <button class="obtn" onclick="selLite(this,'썸')">썸 Lite</button>
+      <button class="obtn" onclick="selLite(this,'솔로')">솔로 Lite</button>
+    </div></div>`;
   } else {
     oa.innerHTML = `
       <div class="notice" style="background:rgba(200,164,86,.12); border-color:var(--gold2); border-radius:8px;">
@@ -484,6 +486,10 @@ function selMD(el,min){
 function selMQ(el,n){
   document.querySelectorAll('#mqrow .obtn').forEach(b=>b.classList.remove('selected'));
   el.classList.add('selected');S.q=n;buildPrice();chk2();
+}
+function selLite(el,type){
+  document.querySelectorAll('#litrow .obtn').forEach(b=>b.classList.remove('selected'));
+  el.classList.add('selected');S.liteType=type;buildPrice();chk2();
 }
 
 function showTime(type){
@@ -600,8 +606,7 @@ function calcPrice(){
   if(m==='realtime')return(S.dur||0)*1000;
   if(m==='question')return S.q*5000;
   if(m==='mixed'){const b=(S.mixDur||0)*1000+S.q*5000;return b>0?Math.max(0,b-5000):0;}
-  if(m==='solo')return 10000;
-  if(m==='reunionLite')return 15000;
+  if(m==='lite')return 15000;
   if(m==='reunion')return 30000;
   if(m==='weekly')return 70000;
   return 0;
@@ -616,8 +621,7 @@ function buildPrice(){
     if(S.q)rows+=`<div class="prow"><span>질문제 (${S.q}개)</span><span>${(S.q*5000).toLocaleString()}원</span></div>`;
     if((S.mixDur||0)+(S.q||0)>0)rows+=`<div class="prow disc"><span>혼합 할인</span><span>-5,000원</span></div>`;
   }
-  if(m==='solo')rows+=`<div class="prow"><span>솔로 패키지</span><span>10,000원</span></div>`;
-  if(m==='reunionLite')rows+=`<div class="prow"><span>재회 패키지 Lite</span><span>15,000원</span></div>`;
+  if(m==='lite'&&S.liteType)rows+=`<div class="prow"><span>Lite 패키지 (${S.liteType})</span><span>15,000원</span></div>`;
   if(m==='reunion')rows+=`<div class="prow"><span>재회 패키지</span><span>30,000원</span></div>`;
   if(m==='weekly')rows+=`<div class="prow"><span>위클리 패키지</span><span>70,000원</span></div>`;
   const total=calcPrice();
@@ -631,6 +635,7 @@ function chk2(){
   if(m==='realtime')ok=!!(S.dur&&S.date&&S.time);
   else if(m==='question')ok=S.q>0;
   else if(m==='mixed'){ok=!!(S.mixDur&&S.q&&S.date&&S.time);}
+  else if(m==='lite')ok=!!S.liteType;
   else ok=true;
   document.getElementById('btn2').disabled=!ok;
 }
@@ -654,6 +659,7 @@ function refreshS3Price(){
   if(m==='realtime')sum+=` · ${S.dur}분 · ${S.date} ${S.time}`;
   if(m==='question')sum+=` · 질문 ${S.q}개`;
   if(m==='mixed'){if(S.mixDur)sum+=` · 실시간 ${S.mixDur}분`;if(S.q)sum+=` · 질문 ${S.q}개`;if(S.date&&S.time)sum+=` · ${S.date} ${S.time}`;}
+  if(m==='lite'&&S.liteType)sum+=` · ${S.liteType}`;
   sum+=` · ${calcPrice().toLocaleString()}원`;
   document.getElementById('s3summary').textContent=sum;
   document.getElementById('acctAmt').textContent=calcPrice().toLocaleString()+'원';
@@ -678,7 +684,7 @@ function chk3(){
 
 function buildS4(){
   const m=S.menu;
-  let info=`· 메뉴: ${MENU_NAMES[m]}\n`;
+  let info=`· 메뉴: ${MENU_NAMES[m]}${m==='lite'?` (${S.liteType})`:''}\n`;
   if(m==='realtime')info+=`· 예약 시간: ${S.date} ${S.time} (${S.dur}분)\n`;
   if(m==='question')info+=`· 질문 수: ${S.q}개\n`;
   if(m==='mixed'){if(S.mixDur)info+=`· 실시간: ${S.date} ${S.time} (${S.mixDur}분)\n`;if(S.q)info+=`· 질문 수: ${S.q}개\n`;}
@@ -734,7 +740,7 @@ function buildS4(){
     const bk=`other_${Date.now()}`;
     data.bookings[bk]={
       name:S.name, pw:S.pw, pay:S.pay,
-      menu:MENU_NAMES[m], menuKey:m,
+      menu:MENU_NAMES[m]+(m==='lite'?` (${S.liteType})`:''), menuKey:m, liteType:S.liteType||null,
       price:calcPrice(), q:S.q, ts:Date.now()
     };
     db.ref('hs_admin').set(data);
@@ -742,7 +748,7 @@ function buildS4(){
 }
 
 function resetAll(){
-  Object.assign(S,{menu:null,dur:null,q:0,mixDur:null,date:null,dateObj:null,time:null,name:'',pw:'',pay:null});
+  Object.assign(S,{menu:null,dur:null,q:0,mixDur:null,liteType:null,date:null,dateObj:null,time:null,name:'',pw:'',pay:null});
   document.querySelectorAll('.menu-card').forEach(c=>c.classList.remove('selected'));
   document.getElementById('btn1').disabled=true;
   document.getElementById('cardPayArea').innerHTML='';
