@@ -803,7 +803,7 @@ function doCheck(){
              </div>`;
   }
 
-  const formStr = `📋 【예약 정보】\n이름: ${found.name}\n${info}\n\n📋 【상담 양식】\n성함 및 나이 : (소울넘버 확인용) \n상대방 나이 : (소울넘버 확인용) \n상세 사연 : \n핵심 질문 : `;
+  const formStr = `📋 【예약 정보】\n이름: ${found.name}\n${info}\n\n📋 【상담 양식】\n내담자님 성함 및 나이 :  \n상대방분 성함 및 나이 :  \n상세 사연 : \n핵심 질문 : `;
   html += `<div class="form-tmpl" style="margin-bottom:0;"><span class="ftitle">✦ 제출 양식</span>${formStr}</div>`;
 
   document.getElementById('chkResult').innerHTML = html;
