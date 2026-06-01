@@ -12,6 +12,24 @@
   gtag('js', new Date());
   gtag('config', 'G-Y4RDZJCW6G');
 </script>
+<!-- ===== Meta Pixel Code (시작) ===== -->
+<!-- ▼▼▼ 아래 PIXEL_ID_HERE 두 군데를 본인 픽셀 ID(숫자)로 바꾸세요 ▼▼▼ -->
+<script>
+!function(f,b,e,v,n,t,s)
+{if(f.fbq)return;n=f.fbq=function(){n.callMethod?
+n.callMethod.apply(n,arguments):n.queue.push(arguments)};
+if(!f._fbq)f._fbq=n;n.push=n;n.loaded=!0;n.version='2.0';
+n.queue=[];t=b.createElement(e);t.async=!0;
+t.src=v;s=b.getElementsByTagName(e)[0];
+s.parentNode.insertBefore(t,s)}(window, document,'script',
+'https://connect.facebook.net/en_US/fbevents.js');
+fbq('init', '1498731927904141');
+fbq('track', 'PageView');
+</script>
+<noscript><img height="1" width="1" style="display:none"
+src="https://www.facebook.com/tr?id=1498731927904141&ev=PageView&noscript=1"
+/></noscript>
+<!-- ===== Meta Pixel Code (끝) ===== -->
 <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,300&family=Noto+Serif+KR:wght@300;400;500&display=swap" rel="stylesheet">
 <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
 <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
@@ -745,6 +763,17 @@ function buildS4(){
     };
     db.ref('hs_admin').set(data);
   }
+
+  // ===== Meta 픽셀: 예약 신청 완료 시 1회 발생 (Lead 이벤트) =====
+  // 결제가 아니라 "예약 신청" 단계입니다. 입금 확정과는 다릅니다.
+  if (typeof fbq === 'function') {
+    fbq('track', 'Lead', {
+      value: calcPrice(),
+      currency: 'KRW',
+      content_name: MENU_NAMES[m]
+    });
+  }
+  // ===== Meta 픽셀 끝 =====
 }
 
 function resetAll(){
