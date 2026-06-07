@@ -95,6 +95,22 @@ body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellips
 .chip-coupon{background:rgba(232,200,122,.12);border:1px solid rgba(232,200,122,.4);color:#f0d89a;}
 .chip-key{opacity:.6;font-size:.62rem;}
 
+/* 유입 경로 칩 */
+.chip-src-meta{background:rgba(80,140,230,.12);border:1px solid rgba(80,140,230,.38);color:#9cc0f0;}
+.chip-src-insta{background:rgba(220,90,160,.12);border:1px solid rgba(220,90,160,.38);color:#f0a0c8;}
+.chip-src-direct{background:rgba(150,150,150,.1);border:1px solid rgba(150,150,150,.3);color:#bbbbbb;}
+
+/* 유입 경로 집계 박스 */
+.src-summary{background:rgba(15,13,28,.7);border:1px solid var(--border);border-radius:12px;padding:18px 20px;margin-bottom:24px;}
+.src-summary h3{font-family:'Cormorant Garamond',serif;font-size:1.05rem;color:var(--gold2);margin-bottom:5px;letter-spacing:.05em;}
+.src-note{font-size:.66rem;color:var(--text3);margin-bottom:14px;line-height:1.6;}
+.src-row{display:flex;justify-content:space-between;align-items:baseline;padding:6px 2px;font-size:.84rem;}
+.src-row.group{border-top:1px solid var(--border);margin-top:6px;padding-top:11px;color:var(--gold2);font-weight:500;}
+.src-row.sub{font-size:.74rem;color:var(--text2);padding-left:16px;}
+.src-num{font-family:'Cormorant Garamond',serif;color:var(--gold2);font-size:.95rem;}
+.src-num .sep{color:var(--text3);margin:0 5px;}
+.src-num .conf{color:#9ce0b8;}
+
 .bk-other{border:1px solid var(--border);border-radius:10px;padding:14px 16px;margin-bottom:8px;background:rgba(15,13,28,.6); transition: all 0.3s;}
 .bk-other.completed { opacity: 0.45; filter: grayscale(70%); background: rgba(0,0,0,0.2); border-color: rgba(255,255,255,0.05); }
 
@@ -138,6 +154,7 @@ body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellips
   </div>
 
   <div class="tab-panel" id="tab-bookings">
+    <div class="src-summary" id="srcSummary"></div>
     <div class="bk-section">
       <div class="bk-section-title">📡 실시간 상담</div>
       <div id="rtBookings"></div>
@@ -183,15 +200,64 @@ const MENU_DEADLINE = { question:24, mixed:24, lite:48, reunion:48, weekly:168 }
 function payLabel(pay){ return pay==='account' ? '계좌이체' : (pay==='card' ? '카드결제' : '미선택'); }
 function payClass(pay){ return pay==='account' ? 'chip-pay-account' : 'chip-pay-card'; }
 
+// 유입 경로(utm) 라벨/색상
+function srcGroup(s){
+  s = (s||'direct').toLowerCase();
+  if(s.indexOf('meta')===0) return 'meta';
+  if(s.indexOf('insta')===0) return 'insta';
+  return 'direct';
+}
+function srcKoreanLabel(s){
+  s = (s||'direct').toLowerCase();
+  const map = {meta1:'메타1', meta2:'메타2', insta1:'인스타1', insta2:'인스타2', direct:'직접·기타'};
+  if(map[s]) return map[s];
+  if(srcGroup(s)==='meta') return '메타';
+  if(srcGroup(s)==='insta') return '인스타';
+  return s;
+}
+function srcChipClass(s){
+  const g = srcGroup(s);
+  return g==='meta' ? 'chip-src-meta' : (g==='insta' ? 'chip-src-insta' : 'chip-src-direct');
+}
+
 // 결제수단 칩 HTML 생성 (연락처는 제거됨)
 function contactChips(b){
   let h = '<div class="bk-contact">';
   h += `<span class="bk-chip ${payClass(b.pay)}"><span class="chip-key">결제</span> ${payLabel(b.pay)}</span>`;
+  h += `<span class="bk-chip ${srcChipClass(b.source)}"><span class="chip-key">유입</span> ${srcKoreanLabel(b.source)}</span>`;
   if(b.coupon){
     h += `<span class="bk-chip chip-coupon">🎁 쿠폰적용 (-5,000원)</span>`;
   }
   h += '</div>';
   return h;
+}
+
+// 유입 경로 집계 렌더
+function renderSourceSummary(){
+  const el = document.getElementById('srcSummary');
+  if(!el) return;
+  const bookings = ad().bookings || {};
+  const tally = {};
+  Object.values(bookings).forEach(b=>{
+    const s = (b.source||'direct').toLowerCase();
+    if(!tally[s]) tally[s] = {total:0, conf:0};
+    tally[s].total++;
+    if(b.formReceived || b.isCompleted) tally[s].conf++;
+  });
+  const grab = (k,f)=> (tally[k] ? tally[k][f] : 0);
+  const groupSum = (g,f)=> Object.keys(tally).filter(k=>srcGroup(k)===g).reduce((n,k)=>n+tally[k][f],0);
+  const cell = (t,c)=> `<span class="src-num">${t}건<span class="sep">/</span><span class="conf">${c}</span></span>`;
+  el.innerHTML = `
+    <h3>유입 경로 집계</h3>
+    <div class="src-note">신청수 <span class="sep">/</span> <span style="color:#9ce0b8">진행됨(양식수신·완료)</span> · 광고 링크 utm 기준</div>
+    <div class="src-row group"><span>🔵 메타 합계</span>${cell(groupSum('meta','total'), groupSum('meta','conf'))}</div>
+    <div class="src-row sub"><span>메타1</span>${cell(grab('meta1','total'), grab('meta1','conf'))}</div>
+    <div class="src-row sub"><span>메타2</span>${cell(grab('meta2','total'), grab('meta2','conf'))}</div>
+    <div class="src-row group"><span>🟣 인스타 합계</span>${cell(groupSum('insta','total'), groupSum('insta','conf'))}</div>
+    <div class="src-row sub"><span>인스타1</span>${cell(grab('insta1','total'), grab('insta1','conf'))}</div>
+    <div class="src-row sub"><span>인스타2</span>${cell(grab('insta2','total'), grab('insta2','conf'))}</div>
+    <div class="src-row group"><span>⚪ 직접·기타</span>${cell(groupSum('direct','total'), groupSum('direct','conf'))}</div>
+  `;
 }
 
 function switchTab(t){
@@ -414,6 +480,7 @@ function renderOtherItem(b){
 function renderBookings(){
   const data = ad();
   const bookings = data.bookings || {};
+  renderSourceSummary();
   const rt = [], others = [];
   
   Object.entries(bookings).forEach(([k,b])=>{
