@@ -149,19 +149,18 @@ body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellips
 .policy strong{color:#d8ceb8;}
 .notice{background:rgba(200,164,86,.08);border-left:3px solid rgba(200,164,86,.7);padding:15px 18px;font-size:.85rem;color:#d0c8b0;line-height:1.85;border-radius:0 8px 8px 0;margin-bottom:20px;}
 
-/* REVIEW SLIDER (첫 화면 후기) */
+/* REVIEW STRIP (첫 화면 후기 - 작은 썸네일 가로 스크롤) */
 .review-band{margin-bottom:34px;}
 .review-band-label{font-size:.62rem;letter-spacing:.3em;color:var(--gold);text-transform:uppercase;margin-bottom:12px;display:flex;align-items:center;gap:10px;}
 .review-band-label::after{content:'';flex:1;height:1px;background:linear-gradient(to right,var(--border),transparent);}
-.review-viewport{overflow-x:auto;overflow-y:hidden;scroll-snap-type:x mandatory;-webkit-overflow-scrolling:touch;border-radius:12px;scrollbar-width:none;}
+.review-viewport{overflow-x:auto;overflow-y:hidden;-webkit-overflow-scrolling:touch;scrollbar-width:none;padding-bottom:4px;}
 .review-viewport::-webkit-scrollbar{display:none;}
-.review-track{display:flex;gap:0;}
-.review-slide{flex:0 0 100%;scroll-snap-align:center;cursor:pointer;}
-.review-slide img{width:100%;height:auto;display:block;border-radius:12px;border:1px solid var(--border);background:rgba(15,13,28,.6);}
-.review-loading{padding:40px 16px;text-align:center;font-size:.8rem;color:var(--text3);border:1px dashed var(--border);border-radius:12px;}
-.review-dots{display:flex;justify-content:center;gap:6px;margin-top:12px;}
-.review-dots span{width:6px;height:6px;border-radius:50%;background:rgba(200,164,86,.25);transition:all .25s;}
-.review-dots span.on{background:var(--gold2);width:18px;border-radius:3px;}
+.review-track{display:flex;gap:10px;}
+/* 한 줄에 약 3장: 뷰포트의 1/3에서 gap 보정 */
+.review-slide{flex:0 0 calc((100% - 20px) / 3);cursor:pointer;}
+.review-slide img{width:100%;height:auto;display:block;border-radius:9px;border:1px solid var(--border);background:rgba(15,13,28,.6);aspect-ratio:3/4;object-fit:cover;transition:border-color .2s,transform .2s;}
+.review-slide:hover img{border-color:var(--border2);transform:translateY(-2px);}
+.review-loading{padding:30px 16px;text-align:center;font-size:.8rem;color:var(--text3);border:1px dashed var(--border);border-radius:12px;}
 .review-more{display:block;width:100%;margin-top:14px;background:transparent;border:1px solid var(--border);border-radius:10px;padding:12px;color:var(--text2);font-family:'Noto Serif KR',serif;font-size:.82rem;cursor:pointer;text-decoration:none;text-align:center;transition:all .2s;}
 .review-more:hover{border-color:var(--border2);color:var(--text);background:rgba(200,164,86,.06);}
 
@@ -214,7 +213,6 @@ body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellips
     <div class="review-viewport" id="reviewViewport">
       <div class="review-track" id="reviewTrack"></div>
     </div>
-    <div class="review-dots" id="reviewDots"></div>
     <a class="review-more" href="reviews.html">후기 더 보기 →</a>
   </div>
 
@@ -387,7 +385,6 @@ body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellips
 const REVIEW_REPO = 'heetsignal/tarot';     // 깃허브 저장소
 const REVIEW_DIR = 'reviews';               // 이미지 폴더
 const REVIEW_BASE = 'https://heetsignal.github.io/tarot/reviews/'; // 실제 이미지 주소 베이스
-let reviewTimer = null;
 
 async function loadReviews(){
   try {
@@ -408,35 +405,10 @@ async function loadReviews(){
 function renderReviews(imgs){
   const band = document.getElementById('reviewBand');
   const track = document.getElementById('reviewTrack');
-  const dots = document.getElementById('reviewDots');
   track.innerHTML = imgs.map(name =>
     `<a class="review-slide" href="reviews.html"><img src="${REVIEW_BASE}${encodeURIComponent(name)}" alt="후기" loading="lazy"></a>`
   ).join('');
-  dots.innerHTML = imgs.map((_,i)=>`<span class="${i===0?'on':''}"></span>`).join('');
   band.style.display = 'block';
-
-  const vp = document.getElementById('reviewViewport');
-  // 스크롤 위치에 따라 점(dot) 갱신
-  vp.addEventListener('scroll', ()=>{
-    const i = Math.round(vp.scrollLeft / vp.clientWidth);
-    [...dots.children].forEach((d,di)=>d.classList.toggle('on', di===i));
-  });
-
-  // 자동 슬라이드 (5초). 사용자가 만지면 멈췄다 다시 시작
-  function startAuto(){
-    stopAuto();
-    if(imgs.length<2) return;
-    reviewTimer = setInterval(()=>{
-      const i = Math.round(vp.scrollLeft / vp.clientWidth);
-      const next = (i+1) % imgs.length;
-      vp.scrollTo({left: next*vp.clientWidth, behavior:'smooth'});
-    }, 5000);
-  }
-  function stopAuto(){ if(reviewTimer){ clearInterval(reviewTimer); reviewTimer=null; } }
-  vp.addEventListener('touchstart', stopAuto, {passive:true});
-  vp.addEventListener('mousedown', stopAuto);
-  vp.addEventListener('touchend', ()=>setTimeout(startAuto, 4000), {passive:true});
-  startAuto();
 }
 loadReviews();
 // ===== 후기 슬라이드 끝 =====
