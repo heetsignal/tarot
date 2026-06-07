@@ -32,17 +32,33 @@ body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellips
 .page-title{text-align:center;font-family:'Cormorant Garamond',serif;font-size:1.5rem;color:var(--gold2);margin:26px 0 6px;letter-spacing:.04em;}
 .page-desc{text-align:center;font-size:.8rem;color:var(--text3);line-height:1.8;margin-bottom:30px;}
 
-.gallery{display:flex;flex-direction:column;gap:18px;}
-.gallery img{width:100%;height:auto;display:block;border-radius:12px;border:1px solid var(--border);background:rgba(15,13,28,.6);animation:fadeUp .4s ease;}
-@keyframes fadeUp{from{opacity:0;transform:translateY(10px);}to{opacity:1;transform:translateY(0);}}
+/* GRID (인스타 피드식) */
+.grid{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;}
+.grid-item{cursor:pointer;position:relative;overflow:hidden;border-radius:6px;border:1px solid var(--border);background:rgba(15,13,28,.6);aspect-ratio:1/1;}
+.grid-item img{width:100%;height:100%;object-fit:cover;display:block;transition:transform .25s,opacity .25s;animation:fadeUp .4s ease;}
+.grid-item:hover img{transform:scale(1.05);opacity:.85;}
+@keyframes fadeUp{from{opacity:0;transform:translateY(8px);}to{opacity:1;transform:translateY(0);}}
 
-.state-msg{padding:48px 16px;text-align:center;font-size:.85rem;color:var(--text3);line-height:1.9;border:1px dashed var(--border);border-radius:12px;}
+.state-msg{padding:48px 16px;text-align:center;font-size:.85rem;color:var(--text3);line-height:1.9;border:1px dashed var(--border);border-radius:12px;grid-column:1/-1;}
 
 .cta{position:sticky;bottom:18px;margin-top:34px;}
 .btn{display:block;width:100%;background:linear-gradient(135deg,#7a5810,var(--gold),#7a5810);border:none;border-radius:10px;padding:16px;color:#08070f;font-family:'Noto Serif KR',serif;font-size:.95rem;font-weight:600;cursor:pointer;letter-spacing:.04em;text-decoration:none;text-align:center;box-shadow:0 4px 18px var(--glow);transition:all .3s;}
 .btn:hover{transform:translateY(-1px);box-shadow:0 6px 26px rgba(200,164,86,.28);}
 .btn-back{display:inline-block;margin-bottom:6px;color:var(--text3);font-size:.78rem;text-decoration:none;cursor:pointer;transition:color .2s;}
 .btn-back:hover{color:var(--text);}
+
+/* LIGHTBOX (클릭 시 확대) */
+.lightbox{position:fixed;inset:0;z-index:1000;background:rgba(5,4,10,.94);backdrop-filter:blur(4px);display:none;align-items:center;justify-content:center;padding:20px;}
+.lightbox.show{display:flex;animation:fadeIn .25s ease;}
+@keyframes fadeIn{from{opacity:0;}to{opacity:1;}}
+.lb-img{max-width:100%;max-height:86vh;border-radius:10px;border:1px solid var(--border);box-shadow:0 10px 50px rgba(0,0,0,.6);}
+.lb-close{position:absolute;top:18px;right:22px;background:none;border:none;color:var(--text2);font-size:2.2rem;line-height:1;cursor:pointer;padding:4px;z-index:2;}
+.lb-close:hover{color:var(--text);}
+.lb-nav{position:absolute;top:50%;transform:translateY(-50%);background:rgba(15,13,28,.7);border:1px solid var(--border);color:var(--gold2);width:44px;height:44px;border-radius:50%;font-size:1.4rem;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all .2s;z-index:2;}
+.lb-nav:hover{background:rgba(200,164,86,.18);border-color:var(--border2);}
+.lb-prev{left:14px;}
+.lb-next{right:14px;}
+.lb-count{position:absolute;bottom:20px;left:50%;transform:translateX(-50%);font-size:.78rem;color:var(--text3);letter-spacing:.1em;}
 </style>
 </head>
 <body>
@@ -56,9 +72,9 @@ body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellips
   </header>
 
   <div class="page-title">실제 후기</div>
-  <p class="page-desc">내담자님들이 직접 남겨주신 후기입니다.</p>
+  <p class="page-desc">내담자님들이 직접 남겨주신 후기입니다.<br>이미지를 누르면 크게 볼 수 있어요.</p>
 
-  <div class="gallery" id="gallery">
+  <div class="grid" id="grid">
     <div class="state-msg" id="stateMsg">후기를 불러오는 중입니다…</div>
   </div>
 
@@ -67,35 +83,69 @@ body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellips
   </div>
 </div>
 
+<div class="lightbox" id="lightbox">
+  <button class="lb-close" onclick="closeLb()">×</button>
+  <button class="lb-nav lb-prev" onclick="navLb(-1)">‹</button>
+  <img class="lb-img" id="lbImg" src="" alt="후기 확대">
+  <button class="lb-nav lb-next" onclick="navLb(1)">›</button>
+  <div class="lb-count" id="lbCount"></div>
+</div>
+
 <script>
 (()=>{const c=document.getElementById('stars');for(let i=0;i<55;i++){const s=document.createElement('span');const z=Math.random()*1.5+.4;s.style.cssText=`width:${z}px;height:${z}px;top:${Math.random()*100}%;left:${Math.random()*100}%;--d:${2+Math.random()*5}s;--dl:${Math.random()*6}s;`;c.appendChild(s);}})();
 
 const REVIEW_REPO = 'heetsignal/tarot';
 const REVIEW_DIR = 'reviews';
 const REVIEW_BASE = 'https://heetsignal.github.io/tarot/reviews/';
+let REVIEW_IMGS = [];
+let lbIndex = 0;
 
 async function loadReviews(){
-  const gallery = document.getElementById('gallery');
+  const grid = document.getElementById('grid');
   const msg = document.getElementById('stateMsg');
   try {
     const res = await fetch(`https://api.github.com/repos/${REVIEW_REPO}/contents/${REVIEW_DIR}`);
     if(!res.ok) throw new Error('list fail');
     const files = await res.json();
-    const imgs = files
+    REVIEW_IMGS = files
       .filter(f => f.type === 'file' && /\.(jpe?g|png|webp)$/i.test(f.name))
       .map(f => f.name)
       .sort();
-    if(!imgs.length){
+    if(!REVIEW_IMGS.length){
       msg.textContent = '등록된 후기가 아직 없습니다.';
       return;
     }
-    gallery.innerHTML = imgs.map(name =>
-      `<img src="${REVIEW_BASE}${encodeURIComponent(name)}" alt="후기" loading="lazy">`
+    grid.innerHTML = REVIEW_IMGS.map((name,i) =>
+      `<div class="grid-item" onclick="openLb(${i})"><img src="${REVIEW_BASE}${encodeURIComponent(name)}" alt="후기" loading="lazy"></div>`
     ).join('');
   } catch(e){
     msg.innerHTML = '후기를 불러오지 못했습니다.<br>잠시 후 다시 시도해 주세요.';
   }
 }
+
+function openLb(i){
+  lbIndex = i;
+  document.getElementById('lbImg').src = REVIEW_BASE + encodeURIComponent(REVIEW_IMGS[i]);
+  document.getElementById('lbCount').textContent = `${i+1} / ${REVIEW_IMGS.length}`;
+  document.getElementById('lightbox').classList.add('show');
+}
+function closeLb(){ document.getElementById('lightbox').classList.remove('show'); }
+function navLb(dir){
+  lbIndex = (lbIndex + dir + REVIEW_IMGS.length) % REVIEW_IMGS.length;
+  openLb(lbIndex);
+}
+// 배경 클릭 시 닫기 (이미지·버튼 클릭은 제외)
+document.getElementById('lightbox').addEventListener('click', (e)=>{
+  if(e.target.id === 'lightbox') closeLb();
+});
+// 키보드 좌우/ESC
+document.addEventListener('keydown', (e)=>{
+  if(!document.getElementById('lightbox').classList.contains('show')) return;
+  if(e.key === 'Escape') closeLb();
+  else if(e.key === 'ArrowLeft') navLb(-1);
+  else if(e.key === 'ArrowRight') navLb(1);
+});
+
 loadReviews();
 </script>
 </body>
