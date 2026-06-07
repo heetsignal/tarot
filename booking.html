@@ -13,7 +13,7 @@
   gtag('config', 'G-Y4RDZJCW6G');
 </script>
 <!-- ===== Meta Pixel Code (시작) ===== -->
-<!-- ▼▼▼ 아래 PIXEL_ID_HERE 두 군데를 본인 픽셀 ID(숫자)로 바꾸세요 ▼▼▼ -->
+<!-- 픽셀 ID(1498731927904141) 이미 입력됨. 그대로 두세요. -->
 <script>
 !function(f,b,e,v,n,t,s)
 {if(f.fbq)return;n=f.fbq=function(){n.callMethod?
@@ -420,6 +420,27 @@ function go(n){
   if(n===3)buildS3();
   if(n===4)buildS4();
   window.scrollTo(0,0);
+
+  // ===== Meta 픽셀: 단계별 깔때기 추적 =====
+  // 2단계 진입 = 메뉴 고르고 다음 누름 (옵션 단계 도달)
+  // 3단계 진입 = 옵션/시간 고르고 다음 누름 (정보·결제 단계 도달)
+  // 4단계(예약 신청 완료 Lead)는 buildS4에서 따로 발생
+  if (typeof fbq === 'function') {
+    if (n === 2) {
+      fbq('track', 'ViewContent', {
+        content_name: MENU_NAMES[S.menu] || '',
+        content_category: 'step2_옵션진입'
+      });
+    } else if (n === 3) {
+      fbq('track', 'AddToCart', {
+        value: calcPrice(),
+        currency: 'KRW',
+        content_name: MENU_NAMES[S.menu] || '',
+        content_category: 'step3_결제진입'
+      });
+    }
+  }
+  // ===== 단계별 추적 끝 =====
 }
 
 function updSteps(n){
@@ -709,7 +730,7 @@ function buildS4(){
   info+=`· 결제 금액: ${calcPrice().toLocaleString()}원\n`;
   info+=`· 결제 방법: ${S.pay==='account'?'계좌이체':'카드결제'}`;
 
-  const form=`📋 【예약 정보】\n이름: ${S.name}\n${info}\n\n📋 【상담 양식】\n 내담자님 성함 및 나이 : \n상대방 성함 및 나이 :  \n상세 사연 : \n핵심 질문 : `;
+  const form=`📋 【예약 정보】\n이름: ${S.name}\n${info}\n\n📋 【상담 양식】\n성함 및 생년월일 : (소울넘버 확인용) \n상대방 생년월일 : (소울넘버 확인용) \n상세 사연 : \n핵심 질문 : `;
   document.getElementById('formTmpl').innerHTML=`<span class="ftitle">✦ 아래 내용을 복사하여 작성 후 1시간 이내에 카카오톡으로 보내주세요.</span>${form}`;
 
   const cpa=document.getElementById('cardPayArea');
