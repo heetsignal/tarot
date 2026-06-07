@@ -114,6 +114,9 @@ body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellips
 .bk-comp:hover{background:rgba(80,200,120,.1);}
 
 .no-data{text-align:center;color:var(--text3);padding:24px;font-size:.78rem;border:1px dashed var(--border);border-radius:9px;}
+.past-toggle{display:block;width:100%;margin:14px 0 4px;background:rgba(255,255,255,.03);border:1px solid var(--border);border-radius:8px;padding:11px;color:var(--text2);font-family:'Noto Serif KR',serif;font-size:.78rem;cursor:pointer;transition:all .2s;letter-spacing:.02em;}
+.past-toggle:hover{border-color:var(--border2);color:var(--text);background:rgba(200,164,86,.06);}
+.past-wrap{margin-top:8px;opacity:.72;animation:fu .25s ease;}
 .toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%);background:rgba(80,200,120,.15);border:1px solid rgba(80,200,120,.35);border-radius:8px;padding:9px 22px;font-size:.76rem;color:#a0e0b0;display:none;z-index:999;white-space:nowrap;}
 </style>
 </head>
@@ -345,6 +348,69 @@ function removeSlot(key,t){
   sad(data);
 }
 
+// 토글 열림 상태 (Firebase 갱신 시에도 유지)
+let showPastRt=false, showDoneOther=false;
+function togglePastRt(){ showPastRt=!showPastRt; renderBookings(); }
+function toggleDoneOther(){ showDoneOther=!showDoneOther; renderBookings(); }
+
+// 실시간 예약 리스트를 날짜별 그룹으로 렌더
+function renderRtGroups(list){
+  const grouped = {};
+  list.forEach(b=>{
+    const dk = b.k.split('_')[0];
+    if(!grouped[dk]) grouped[dk]=[];
+    grouped[dk].push(b);
+  });
+  return Object.keys(grouped).sort().map(dk=>{
+    const parts = dk.split('-');
+    const dDate = new Date(parts[0], parts[1]-1, parts[2]);
+    const dlabel = `${dDate.getMonth()+1}/${dDate.getDate()}(${['일','월','화','수','목','금','토'][dDate.getDay()]})`;
+    const items = grouped[dk].sort((a,b)=>a.time?.localeCompare(b.time));
+    return `<div class="bk-date-group">
+      <div class="bk-date-label">${dlabel}</div>
+      ${items.map(b=>`
+        <div class="bk-item">
+          <div class="bk-top">
+            <span class="bk-time-badge">${b.time||'—'}</span>
+            <span class="bk-name">${b.name||'—'}</span>
+            <span class="bk-min">${b.dur?b.dur+'분':''}</span>
+            <button class="bk-del" onclick="delBooking('${b.k}')">삭제</button>
+          </div>
+          ${contactChips(b)}
+          <div class="bk-form-toggle">
+            <span class="toggle-label">양식 수신:</span>
+            <button class="toggle-btn ${b.formReceived?'recv':'not-recv'}" onclick="toggleForm('${b.k}')">${b.formReceived?'✓ 받음':'미수신'}</button>
+          </div>
+        </div>`).join('')}
+    </div>`;
+  }).join('');
+}
+
+// 그 외 메뉴 예약 1건 렌더
+function renderOtherItem(b){
+  const deadlineHtml = buildDeadline(b);
+  const isComp = b.isCompleted;
+  const compClass = isComp ? 'completed' : '';
+  const compText = isComp ? '✓ 완료' : '완료 처리';
+  return `<div class="bk-other ${compClass}">
+    <div class="bko-top">
+      <span class="bko-name">${b.name||'—'}</span>
+      <span class="bko-menu">${b.menu||'—'}</span>
+      <div>
+        <button class="bk-comp" onclick="toggleComplete('${b.k}')">${compText}</button>
+        <button class="bk-del" onclick="delBooking('${b.k}')">삭제</button>
+      </div>
+    </div>
+    ${contactChips(b)}
+    <div style="font-size:.72rem;color:var(--text3);margin-bottom:8px;">접수: ${b.ts?new Date(b.ts).toLocaleString('ko-KR'):'-'} · ${(b.price||0).toLocaleString()}원</div>
+    <div class="bko-recv-row">
+      <span class="bko-recv-label">양식 수신 시간:</span>
+      <input class="bko-recv-input" type="datetime-local" id="recv-${b.k}" value="${b.formRecvTime||''}" onchange="setRecvTime('${b.k}')">
+      ${deadlineHtml}
+    </div>
+  </div>`;
+}
+
 function renderBookings(){
   const data = ad();
   const bookings = data.bookings || {};
@@ -355,68 +421,40 @@ function renderBookings(){
     if(b.menu !== '실시간 리딩') others.push({k, ...b});
   });
 
+  // --- 실시간 상담: 지난 예약(시간 경과)을 토글로 분리 ---
   const rtEl = document.getElementById('rtBookings');
   if(!rt.length){ rtEl.innerHTML='<div class="no-data">실시간 상담 예약이 없습니다</div>'; }
   else {
-    const grouped = {};
+    const now = getKST(0);
+    const upcoming = [], past = [];
     rt.forEach(b=>{
       const dk = b.k.split('_')[0];
-      if(!grouped[dk]) grouped[dk]=[];
-      grouped[dk].push(b);
-    });
-    rtEl.innerHTML = Object.keys(grouped).sort().map(dk=>{
       const parts = dk.split('-');
-      const dDate = new Date(parts[0], parts[1]-1, parts[2]);
-      const dlabel = `${dDate.getMonth()+1}/${dDate.getDate()}(${['일','월','화','수','목','금','토'][dDate.getDay()]})`;
-      const items = grouped[dk].sort((a,b)=>a.time?.localeCompare(b.time));
-      return `<div class="bk-date-group">
-        <div class="bk-date-label">${dlabel}</div>
-        ${items.map(b=>`
-          <div class="bk-item">
-            <div class="bk-top">
-              <span class="bk-time-badge">${b.time||'—'}</span>
-              <span class="bk-name">${b.name||'—'}</span>
-              <span class="bk-min">${b.dur?b.dur+'분':''}</span>
-              <button class="bk-del" onclick="delBooking('${b.k}')">삭제</button>
-            </div>
-            ${contactChips(b)}
-            <div class="bk-form-toggle">
-              <span class="toggle-label">양식 수신:</span>
-              <button class="toggle-btn ${b.formReceived?'recv':'not-recv'}" onclick="toggleForm('${b.k}')">${b.formReceived?'✓ 받음':'미수신'}</button>
-            </div>
-          </div>`).join('')}
-      </div>`;
-    }).join('');
+      const [h,m] = (b.time||'00:00').split(':').map(Number);
+      const bt = new Date(parts[0], parts[1]-1, parts[2], h, m||0, 0, 0);
+      if(bt.getTime() < now.getTime()) past.push(b); else upcoming.push(b);
+    });
+    let html = upcoming.length ? renderRtGroups(upcoming) : '<div class="no-data">예정된 실시간 예약이 없습니다</div>';
+    if(past.length){
+      html += `<button class="past-toggle" onclick="togglePastRt()">${showPastRt?'▾':'▸'} 지난 예약 ${past.length}건 ${showPastRt?'접기':'보기'}</button>`;
+      if(showPastRt) html += `<div class="past-wrap">${renderRtGroups(past)}</div>`;
+    }
+    rtEl.innerHTML = html;
   }
 
+  // --- 그 외 메뉴: 완료 처리한 예약을 토글로 분리 ---
   const otherEl = document.getElementById('otherBookings');
   if(!others.length){ otherEl.innerHTML='<div class="no-data">예약 내역이 없습니다</div>'; }
   else {
     others.sort((a,b)=>(a.ts||0)-(b.ts||0));
-    otherEl.innerHTML = others.map(b=>{
-      const deadlineHtml = buildDeadline(b);
-      const isComp = b.isCompleted;
-      const compClass = isComp ? 'completed' : '';
-      const compText = isComp ? '✓ 완료' : '완료 처리';
-
-      return `<div class="bk-other ${compClass}">
-        <div class="bko-top">
-          <span class="bko-name">${b.name||'—'}</span>
-          <span class="bko-menu">${b.menu||'—'}</span>
-          <div>
-            <button class="bk-comp" onclick="toggleComplete('${b.k}')">${compText}</button>
-            <button class="bk-del" onclick="delBooking('${b.k}')">삭제</button>
-          </div>
-        </div>
-        ${contactChips(b)}
-        <div style="font-size:.72rem;color:var(--text3);margin-bottom:8px;">접수: ${b.ts?new Date(b.ts).toLocaleString('ko-KR'):'-'} · ${(b.price||0).toLocaleString()}원</div>
-        <div class="bko-recv-row">
-          <span class="bko-recv-label">양식 수신 시간:</span>
-          <input class="bko-recv-input" type="datetime-local" id="recv-${b.k}" value="${b.formRecvTime||''}" onchange="setRecvTime('${b.k}')">
-          ${deadlineHtml}
-        </div>
-      </div>`;
-    }).join('');
+    const active = others.filter(b=>!b.isCompleted);
+    const done = others.filter(b=>b.isCompleted);
+    let html = active.length ? active.map(renderOtherItem).join('') : '<div class="no-data">처리할 예약이 없습니다</div>';
+    if(done.length){
+      html += `<button class="past-toggle" onclick="toggleDoneOther()">${showDoneOther?'▾':'▸'} 완료된 예약 ${done.length}건 ${showDoneOther?'접기':'보기'}</button>`;
+      if(showDoneOther) html += `<div class="past-wrap">${done.map(renderOtherItem).join('')}</div>`;
+    }
+    otherEl.innerHTML = html;
   }
 }
 
