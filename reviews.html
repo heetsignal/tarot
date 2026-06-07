@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Heet Signal · 후기 모음</title>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,300&family=Noto+Serif+KR:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#08070f;--bg2:#0f0d1c;
+  --gold:#c8a456;--gold2:#e8c87a;
+  --text:#f0ead8;--text2:#d0c8b0;--text3:#a09888;
+  --border:rgba(200,164,86,.18);--border2:rgba(200,164,86,.38);
+  --glow:rgba(200,164,86,.14);
+}
+*{margin:0;padding:0;box-sizing:border-box;}
+html{scroll-behavior:smooth;}
+body{background:var(--bg);color:var(--text);font-family:'Noto Serif KR',serif;min-height:100vh;font-weight:300;}
+body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellipse at 15% 10%,rgba(100,80,160,.07),transparent 55%),radial-gradient(ellipse at 85% 90%,rgba(80,60,130,.05),transparent 55%);pointer-events:none;z-index:0;}
+#stars{position:fixed;inset:0;pointer-events:none;z-index:0;}
+#stars span{position:absolute;border-radius:50%;background:#fff;animation:tw var(--d,3s) var(--dl,0s) infinite ease-in-out;}
+@keyframes tw{0%,100%{opacity:.07;}50%{opacity:.45;}}
+.wrap{position:relative;z-index:1;max-width:560px;margin:0 auto;padding:48px 20px 80px;}
+
+.site-header{text-align:center;margin-bottom:18px;}
+.site-name{font-family:'Cormorant Garamond',serif;font-size:clamp(1.7rem,5.5vw,2.4rem);font-weight:300;letter-spacing:.26em;color:var(--gold2);display:block;margin-bottom:8px;}
+.site-sub{font-size:.62rem;letter-spacing:.42em;color:var(--text3);text-transform:uppercase;}
+.hdiv{display:flex;align-items:center;gap:14px;margin:12px auto 8px;max-width:180px;}
+.hdiv::before,.hdiv::after{content:'';flex:1;height:1px;background:linear-gradient(to right,transparent,var(--gold),transparent);}
+.hdiv span{color:var(--gold);font-size:.8rem;opacity:.6;}
+
+.page-title{text-align:center;font-family:'Cormorant Garamond',serif;font-size:1.5rem;color:var(--gold2);margin:26px 0 6px;letter-spacing:.04em;}
+.page-desc{text-align:center;font-size:.8rem;color:var(--text3);line-height:1.8;margin-bottom:30px;}
+
+.gallery{display:flex;flex-direction:column;gap:18px;}
+.gallery img{width:100%;height:auto;display:block;border-radius:12px;border:1px solid var(--border);background:rgba(15,13,28,.6);animation:fadeUp .4s ease;}
+@keyframes fadeUp{from{opacity:0;transform:translateY(10px);}to{opacity:1;transform:translateY(0);}}
+
+.state-msg{padding:48px 16px;text-align:center;font-size:.85rem;color:var(--text3);line-height:1.9;border:1px dashed var(--border);border-radius:12px;}
+
+.cta{position:sticky;bottom:18px;margin-top:34px;}
+.btn{display:block;width:100%;background:linear-gradient(135deg,#7a5810,var(--gold),#7a5810);border:none;border-radius:10px;padding:16px;color:#08070f;font-family:'Noto Serif KR',serif;font-size:.95rem;font-weight:600;cursor:pointer;letter-spacing:.04em;text-decoration:none;text-align:center;box-shadow:0 4px 18px var(--glow);transition:all .3s;}
+.btn:hover{transform:translateY(-1px);box-shadow:0 6px 26px rgba(200,164,86,.28);}
+.btn-back{display:inline-block;margin-bottom:6px;color:var(--text3);font-size:.78rem;text-decoration:none;cursor:pointer;transition:color .2s;}
+.btn-back:hover{color:var(--text);}
+</style>
+</head>
+<body>
+<div id="stars"></div>
+<div class="wrap">
+  <a class="btn-back" href="booking.html">← 예약 페이지로</a>
+  <header class="site-header">
+    <span class="site-name">Heet Signal</span>
+    <div class="hdiv"><span>✦</span></div>
+    <span class="site-sub">Tarot Consultation</span>
+  </header>
+
+  <div class="page-title">실제 후기</div>
+  <p class="page-desc">내담자님들이 직접 남겨주신 후기입니다.</p>
+
+  <div class="gallery" id="gallery">
+    <div class="state-msg" id="stateMsg">후기를 불러오는 중입니다…</div>
+  </div>
+
+  <div class="cta">
+    <a class="btn" href="booking.html">상담 예약하러 가기 →</a>
+  </div>
+</div>
+
+<script>
+(()=>{const c=document.getElementById('stars');for(let i=0;i<55;i++){const s=document.createElement('span');const z=Math.random()*1.5+.4;s.style.cssText=`width:${z}px;height:${z}px;top:${Math.random()*100}%;left:${Math.random()*100}%;--d:${2+Math.random()*5}s;--dl:${Math.random()*6}s;`;c.appendChild(s);}})();
+
+const REVIEW_REPO = 'heetsignal/tarot';
+const REVIEW_DIR = 'reviews';
+const REVIEW_BASE = 'https://heetsignal.github.io/tarot/reviews/';
+
+async function loadReviews(){
+  const gallery = document.getElementById('gallery');
+  const msg = document.getElementById('stateMsg');
+  try {
+    const res = await fetch(`https://api.github.com/repos/${REVIEW_REPO}/contents/${REVIEW_DIR}`);
+    if(!res.ok) throw new Error('list fail');
+    const files = await res.json();
+    const imgs = files
+      .filter(f => f.type === 'file' && /\.(jpe?g|png|webp)$/i.test(f.name))
+      .map(f => f.name)
+      .sort();
+    if(!imgs.length){
+      msg.textContent = '등록된 후기가 아직 없습니다.';
+      return;
+    }
+    gallery.innerHTML = imgs.map(name =>
+      `<img src="${REVIEW_BASE}${encodeURIComponent(name)}" alt="후기" loading="lazy">`
+    ).join('');
+  } catch(e){
+    msg.innerHTML = '후기를 불러오지 못했습니다.<br>잠시 후 다시 시도해 주세요.';
+  }
+}
+loadReviews();
+</script>
+</body>
+</html>
