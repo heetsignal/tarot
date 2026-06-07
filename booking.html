@@ -379,6 +379,18 @@ const db = firebase.database();
 let globalData = {};
 
 const S={menu:null,dur:null,q:0,mixDur:null,liteType:null,date:null,dateObj:null,time:null,name:'',pw:'',pay:null};
+
+// ===== 유입 경로(UTM) 읽기 =====
+// 광고 링크 뒤에 ?utm_source=meta 또는 ?utm_source=insta 를 붙이면
+// 어느 광고로 들어온 예약인지 아래 BOOKING_SOURCE에 기록됨. 없으면 'direct'.
+function getUtmSource(){
+  try {
+    const p = new URLSearchParams(window.location.search);
+    return (p.get('utm_source') || 'direct').toLowerCase();
+  } catch(e) { return 'direct'; }
+}
+const BOOKING_SOURCE = getUtmSource();
+// ===== 유입 경로 끝 =====
 const MENU_NAMES={realtime:'실시간 리딩',question:'질문제 리딩',mixed:'혼합 리딩',lite:'Lite 패키지',reunion:'재회 패키지',weekly:'위클리 패키지'};
 
 db.ref('hs_admin').on('value', (snap) => {
@@ -771,7 +783,7 @@ function buildS4(){
         menu:MENU_NAMES[m], menuKey:m,
         time:S.time, dur:dur, price:calcPrice(),
         dateStr:S.date, mixDur:S.mixDur, q:S.q,
-        blockedKeys, ts:Date.now()
+        blockedKeys, ts:Date.now(), source:BOOKING_SOURCE
       };
       db.ref('hs_admin').set(data);
     }
@@ -780,7 +792,7 @@ function buildS4(){
     data.bookings[bk]={
       name:S.name, pw:S.pw, pay:S.pay,
       menu:MENU_NAMES[m]+(m==='lite'?` (${S.liteType})`:''), menuKey:m, liteType:S.liteType||null,
-      price:calcPrice(), q:S.q, ts:Date.now()
+      price:calcPrice(), q:S.q, ts:Date.now(), source:BOOKING_SOURCE
     };
     db.ref('hs_admin').set(data);
   }
