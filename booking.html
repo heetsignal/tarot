@@ -255,7 +255,7 @@ body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellips
         <div class="menu-info">재회 · 짝사랑 · 썸 · 솔로 중 1종 선택<br>양식 제출 후 48시간 이내 리딩지 발송</div>
       </div>
       <div class="menu-card" data-menu="reunion" onclick="selMenu(this)">
-        <div class="menu-top"><span class="menu-name">재회 패키지 <span class="mbadge b-48">48H</span></span><span class="menu-price">30,000원</span></div>
+        <div class="menu-top"><span class="menu-name">재회 패키지 <span class="mbadge b-48">48H</span></span><span class="menu-price">40,000원</span></div>
         <div class="menu-info">양식 제출 후 48시간 이내 리딩지 발송</div>
       </div>
       <div class="menu-card" data-menu="weekly" onclick="selMenu(this)">
@@ -728,7 +728,7 @@ function calcPrice(){
   if(m==='question')return S.q*5000;
   if(m==='mixed'){const b=(S.mixDur||0)*1000+S.q*5000;return b>0?Math.max(0,b-5000):0;}
   if(m==='lite')return 15000;
-  if(m==='reunion')return 30000;
+  if(m==='reunion')return 40000;
   if(m==='weekly')return 70000;
   return 0;
 }
@@ -743,7 +743,7 @@ function buildPrice(){
     if((S.mixDur||0)+(S.q||0)>0)rows+=`<div class="prow disc"><span>혼합 할인</span><span>-5,000원</span></div>`;
   }
   if(m==='lite'&&S.liteType)rows+=`<div class="prow"><span>Lite 패키지 (${S.liteType})</span><span>15,000원</span></div>`;
-  if(m==='reunion')rows+=`<div class="prow"><span>재회 패키지</span><span>30,000원</span></div>`;
+  if(m==='reunion')rows+=`<div class="prow"><span>재회 패키지</span><span>40,000원</span></div>`;
   if(m==='weekly')rows+=`<div class="prow"><span>위클리 패키지</span><span>70,000원</span></div>`;
   const total=calcPrice();
   const pa=document.getElementById('priceArea');
