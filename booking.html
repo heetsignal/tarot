@@ -170,8 +170,15 @@ body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellips
 @keyframes float{0%,100%{transform:translateY(0);}50%{transform:translateY(-8px);}}
 .c-title{font-family:'Cormorant Garamond',serif;font-size:1.9rem;color:var(--gold2);margin-bottom:12px;}
 .c-desc{font-size:.85rem;color:var(--text3);line-height:1.9;margin-bottom:28px;}
-.form-tmpl{background:var(--bg2);border:1px solid rgba(200,164,86,.25);border-radius:11px;padding:20px;text-align:left;margin-bottom:20px;font-size:.85rem;color:#d0c8b0;line-height:2.2;white-space:pre-wrap;}
+.form-tmpl{background:var(--bg2);border:1px solid rgba(200,164,86,.25);border-radius:11px;padding:20px;text-align:left;margin-bottom:12px;font-size:.85rem;color:#d0c8b0;line-height:2.2;white-space:pre-wrap;}
 .ftitle{font-size:.9rem;letter-spacing:.05em;color:var(--gold);margin-bottom:12px;display:block;font-weight:500;}
+/* 제출 강조 안내 박스 */
+.submit-warn{background:rgba(200,80,80,.1);border:1px solid rgba(220,120,120,.45);border-radius:10px;padding:14px 16px;margin-bottom:14px;font-size:.85rem;color:#f0c8c0;line-height:1.7;text-align:center;}
+.submit-warn strong{color:#ffd0c0;}
+/* 전체 복사 버튼 */
+.copy-btn{width:100%;background:rgba(200,164,86,.14);border:1px solid var(--border2);border-radius:10px;padding:14px;color:var(--gold2);font-family:'Noto Serif KR',serif;font-size:.92rem;font-weight:600;cursor:pointer;letter-spacing:.03em;transition:all .2s;margin-bottom:20px;display:flex;align-items:center;justify-content:center;gap:8px;}
+.copy-btn:hover{background:rgba(200,164,86,.24);border-color:var(--gold2);}
+.copy-btn.copied{background:rgba(120,180,120,.18);border-color:rgba(150,200,150,.6);color:#b8e0b0;}
 
 /* KAKAO BTNS */
 .kakao-btn{display:block;width:100%;background:#fee500;border:none;border-radius:10px;padding:15px;color:#3c1e1e;font-family:'Noto Serif KR',serif;font-size:.95rem;font-weight:600;cursor:pointer;text-decoration:none;text-align:center;transition:all .2s;margin-bottom:10px;}
@@ -333,7 +340,9 @@ body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellips
       <div class="c-title">예약 접수 완료</div>
       <p class="c-desc">결제 완료 후 아래 양식을 카카오톡 채널로 보내주시면<br>예약이 최종 확정됩니다<br><br>⚠️ 결제 후 <strong>1시간 이내</strong> 양식 미제출 시 예약이 취소될 수 있습니다</p>
       <div id="cardPayArea"></div>
+      <div class="submit-warn">📌 <strong>예약정보 + 상담양식 모두</strong> 복사해서 보내주세요.<br>상담양식만 보내면 예약 확인이 어려워요.</div>
       <div class="form-tmpl" id="formTmpl"><span class="ftitle">✦ 아래 내용을 복사하여 작성 후 1시간 이내에 카카오톡으로 보내주세요.</span></div>
+      <button class="copy-btn" id="copyBtn" onclick="copyForm('formTmpl','copyBtn')">📋 예약정보 + 상담양식 전체 복사하기</button>
       
       <a class="kakao-btn" href="https://pf.kakao.com/_RuddX" target="_blank">💬 카카오톡 공개프로필 채팅으로 보내기 →</a>
       <a class="kakao-btn-dark" href="https://open.kakao.com/o/sz4BZIti" target="_blank">🔒 카카오톡 비공개 오픈채팅으로 보내기 →</a>
@@ -803,8 +812,10 @@ function buildS4(){
   info+=`· 결제 금액: ${calcPrice().toLocaleString()}원\n`;
   info+=`· 결제 방법: ${S.pay==='account'?'계좌이체':'카드결제'}`;
 
-  const form=`📋 【예약 정보】\n이름: ${S.name}\n${info}\n\n📋 【상담 양식】\n성함 및 생년월일 : (소울넘버 확인용) \n상대방 생년월일 : (소울넘버 확인용) \n상세 사연 : \n핵심 질문 : `;
-  document.getElementById('formTmpl').innerHTML=`<span class="ftitle">✦ 아래 내용을 복사하여 작성 후 1시간 이내에 카카오톡으로 보내주세요.</span>${form}`;
+  const form=`📋 【예약 정보】\n이름: ${S.name}\n${info}\n\n📋 【상담 양식】\n내담자 성함 및 나이 :  \n상대방 성함 및 나이 : \n상세 사연 : \n핵심 질문 : `;
+  const ft=document.getElementById('formTmpl');
+  ft.innerHTML=`<span class="ftitle">✦ 아래 내용을 복사하여 작성 후 1시간 이내에 카카오톡으로 보내주세요.</span>${form}`;
+  ft.dataset.copy=form;
 
   const cpa=document.getElementById('cardPayArea');
   cpa.innerHTML=S.pay==='card'?`<a class="card-pay-btn" href="https://mkt.shopping.naver.com/link/69f9aa055358056105d6b7b0" target="_blank">카드결제 (네이버 스마트스토어) →</a>`:'';
@@ -870,6 +881,37 @@ function buildS4(){
   // ===== Meta 픽셀 끝 =====
 }
 
+function copyForm(tmplId, btnId){
+  const el = document.getElementById(tmplId);
+  const btn = document.getElementById(btnId);
+  const text = (el && el.dataset.copy) ? el.dataset.copy : '';
+  if(!text){ return; }
+
+  const done = ()=>{
+    const orig = btn.textContent;
+    btn.classList.add('copied');
+    btn.textContent = '✅ 복사 완료! 카카오톡에 붙여넣어 주세요';
+    setTimeout(()=>{ btn.classList.remove('copied'); btn.textContent = orig; }, 2500);
+  };
+  const fallback = ()=>{
+    // 구형 브라우저/비보안 환경 대비
+    const ta = document.createElement('textarea');
+    ta.value = text;
+    ta.style.position='fixed'; ta.style.opacity='0';
+    document.body.appendChild(ta);
+    ta.focus(); ta.select();
+    try{ document.execCommand('copy'); done(); }
+    catch(e){ alert('복사가 안 되면 양식을 길게 눌러 직접 복사해 주세요.'); }
+    document.body.removeChild(ta);
+  };
+
+  if(navigator.clipboard && window.isSecureContext){
+    navigator.clipboard.writeText(text).then(done).catch(fallback);
+  } else {
+    fallback();
+  }
+}
+
 function resetAll(){
   Object.assign(S,{menu:null,dur:null,q:0,mixDur:null,liteType:null,date:null,dateObj:null,time:null,name:'',pw:'',pay:null});
   document.querySelectorAll('.menu-card').forEach(c=>c.classList.remove('selected'));
@@ -926,8 +968,10 @@ function doCheck(){
              </div>`;
   }
 
-  const formStr = `📋 【예약 정보】\n이름: ${found.name}\n${info}\n\n📋 【상담 양식】\n내담자님 성함 및 나이 :  \n상대방분 성함 및 나이 :  \n상세 사연 : \n핵심 질문 : `;
-  html += `<div class="form-tmpl" style="margin-bottom:0;"><span class="ftitle">✦ 제출 양식</span>${formStr}</div>`;
+  const formStr = `📋 【예약 정보】\n이름: ${found.name}\n${info}\n\n📋 【상담 양식】\n내담자 성함 및 나이 :  \n상대방 성함 및 나이 : \n상세 사연 : \n핵심 질문 : `;
+  html += `<div class="submit-warn" style="margin-bottom:14px;">📌 <strong>예약정보 + 상담양식 모두</strong> 복사해서 보내주세요.<br>상담양식만 보내면 예약 확인이 어려워요.</div>`;
+  html += `<div class="form-tmpl" id="chkFormTmpl" style="margin-bottom:12px;" data-copy="${formStr.replace(/"/g,'&quot;')}"><span class="ftitle">✦ 제출 양식</span>${formStr}</div>`;
+  html += `<button class="copy-btn" id="chkCopyBtn" style="margin-bottom:0;" onclick="copyForm('chkFormTmpl','chkCopyBtn')">📋 예약정보 + 상담양식 전체 복사하기</button>`;
 
   document.getElementById('chkResult').innerHTML = html;
   document.getElementById('chkResult').classList.add('show');
