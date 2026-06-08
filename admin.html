@@ -98,12 +98,16 @@ body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellips
 /* 유입 경로 칩 */
 .chip-src-meta{background:rgba(80,140,230,.12);border:1px solid rgba(80,140,230,.38);color:#9cc0f0;}
 .chip-src-insta{background:rgba(220,90,160,.12);border:1px solid rgba(220,90,160,.38);color:#f0a0c8;}
+.chip-src-profile{background:rgba(120,200,160,.12);border:1px solid rgba(120,200,160,.38);color:#9ce0c0;}
+.chip-src-threads{background:rgba(180,180,200,.12);border:1px solid rgba(180,180,200,.38);color:#d0d0e0;}
 .chip-src-direct{background:rgba(150,150,150,.1);border:1px solid rgba(150,150,150,.3);color:#bbbbbb;}
 
 /* 유입 경로 집계 박스 */
 .src-summary{background:rgba(15,13,28,.7);border:1px solid var(--border);border-radius:12px;padding:18px 20px;margin-bottom:24px;}
 .src-summary h3{font-family:'Cormorant Garamond',serif;font-size:1.05rem;color:var(--gold2);margin-bottom:5px;letter-spacing:.05em;}
 .src-note{font-size:.66rem;color:var(--text3);margin-bottom:14px;line-height:1.6;}
+.src-cat{font-size:.6rem;letter-spacing:.2em;color:var(--gold);text-transform:uppercase;margin:14px 0 2px;}
+.src-cat:first-of-type{margin-top:4px;}
 .src-row{display:flex;justify-content:space-between;align-items:baseline;padding:6px 2px;font-size:.84rem;}
 .src-row.group{border-top:1px solid var(--border);margin-top:6px;padding-top:11px;color:var(--gold2);font-weight:500;}
 .src-row.sub{font-size:.74rem;color:var(--text2);padding-left:16px;}
@@ -205,22 +209,31 @@ function srcGroup(s){
   s = (s||'direct').toLowerCase();
   if(s.indexOf('meta')===0) return 'meta';
   if(s.indexOf('insta')===0) return 'insta';
+  if(s.indexOf('profile')===0) return 'profile';
+  if(s.indexOf('threads')===0) return 'threads';
   return 'direct';
 }
 function srcKoreanLabel(s){
   s = (s||'direct').toLowerCase();
-  const map = {meta1:'메타1', meta2:'메타2', insta1:'인스타1', insta2:'인스타2', direct:'직접·기타'};
+  const map = {meta1:'메타1', meta2:'메타2', insta1:'인스타1', insta2:'인스타2', profile:'인스타 프로필', threads:'스레드', direct:'직접·기타'};
   if(map[s]) return map[s];
-  if(srcGroup(s)==='meta') return '메타';
-  if(srcGroup(s)==='insta') return '인스타';
+  const g = srcGroup(s);
+  if(g==='meta') return '메타';
+  if(g==='insta') return '인스타';
+  if(g==='profile') return '인스타 프로필';
+  if(g==='threads') return '스레드';
   return s;
 }
 function srcChipClass(s){
   const g = srcGroup(s);
-  return g==='meta' ? 'chip-src-meta' : (g==='insta' ? 'chip-src-insta' : 'chip-src-direct');
+  if(g==='meta') return 'chip-src-meta';
+  if(g==='insta') return 'chip-src-insta';
+  if(g==='profile') return 'chip-src-profile';
+  if(g==='threads') return 'chip-src-threads';
+  return 'chip-src-direct';
 }
 
-// 결제수단 칩 HTML 생성 (연락처는 제거됨)
+// 결제수단 + 유입 칩 HTML 생성
 function contactChips(b){
   let h = '<div class="bk-contact">';
   h += `<span class="bk-chip ${payClass(b.pay)}"><span class="chip-key">결제</span> ${payLabel(b.pay)}</span>`;
@@ -247,16 +260,25 @@ function renderSourceSummary(){
   const grab = (k,f)=> (tally[k] ? tally[k][f] : 0);
   const groupSum = (g,f)=> Object.keys(tally).filter(k=>srcGroup(k)===g).reduce((n,k)=>n+tally[k][f],0);
   const cell = (t,c)=> `<span class="src-num">${t}건<span class="sep">/</span><span class="conf">${c}</span></span>`;
+
   el.innerHTML = `
     <h3>유입 경로 집계</h3>
-    <div class="src-note">신청수 <span class="sep">/</span> <span style="color:#9ce0b8">진행됨(양식수신·완료)</span> · 광고 링크 utm 기준</div>
+    <div class="src-note">신청수 <span class="sep">/</span> <span style="color:#9ce0b8">진행됨(양식수신·완료)</span> · 광고 링크 utm 기준<br>※ 프로필·스레드 경유는 광고 보고 프로필 거쳐 온 경우도 섞일 수 있어 100% 무료는 아님</div>
+
+    <div class="src-cat">광고 직접 클릭</div>
     <div class="src-row group"><span>🔵 메타 합계</span>${cell(groupSum('meta','total'), groupSum('meta','conf'))}</div>
     <div class="src-row sub"><span>메타1</span>${cell(grab('meta1','total'), grab('meta1','conf'))}</div>
     <div class="src-row sub"><span>메타2</span>${cell(grab('meta2','total'), grab('meta2','conf'))}</div>
-    <div class="src-row group"><span>🟣 인스타 합계</span>${cell(groupSum('insta','total'), groupSum('insta','conf'))}</div>
+    <div class="src-row group"><span>🟣 인스타 광고 합계</span>${cell(groupSum('insta','total'), groupSum('insta','conf'))}</div>
     <div class="src-row sub"><span>인스타1</span>${cell(grab('insta1','total'), grab('insta1','conf'))}</div>
     <div class="src-row sub"><span>인스타2</span>${cell(grab('insta2','total'), grab('insta2','conf'))}</div>
-    <div class="src-row group"><span>⚪ 직접·기타</span>${cell(groupSum('direct','total'), groupSum('direct','conf'))}</div>
+
+    <div class="src-cat">프로필·스레드 경유</div>
+    <div class="src-row group"><span>🟢 인스타 프로필</span>${cell(groupSum('profile','total'), groupSum('profile','conf'))}</div>
+    <div class="src-row group"><span>⚫ 스레드</span>${cell(groupSum('threads','total'), groupSum('threads','conf'))}</div>
+
+    <div class="src-cat">기타</div>
+    <div class="src-row group"><span>⚪ 직접·기타(꼬리표 없음)</span>${cell(groupSum('direct','total'), groupSum('direct','conf'))}</div>
   `;
 }
 
