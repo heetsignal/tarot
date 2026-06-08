@@ -260,7 +260,7 @@ body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellips
       </div>
       <div class="menu-card" data-menu="weekly" onclick="selMenu(this)">
         <div class="menu-top"><span class="menu-name">위클리 패키지 <span class="mbadge b-wk">7DAYS</span></span><span class="menu-price">70,000원</span></div>
-        <div class="menu-info">양식 제출 시점부터 연속 7일 무제한 상담 · 실시간 하루 30분 한도. 실시간 일정은 양식 제출 후 별도 협의</div>
+        <div class="menu-info">양식 제출 시점부터 연속 7일 무제한 상담 · 실시간 하루 10분 한도. 실시간 일정은 양식 제출 후 별도 협의</div>
       </div>
     </div>
     <button class="btn" id="btn1" onclick="go(2)" disabled style="margin-bottom:12px;">다음 단계</button>
@@ -812,7 +812,11 @@ function buildS4(){
   info+=`· 결제 금액: ${calcPrice().toLocaleString()}원\n`;
   info+=`· 결제 방법: ${S.pay==='account'?'계좌이체':'카드결제'}`;
 
-  const form=`📋 【예약 정보】\n이름: ${S.name}\n${info}\n\n📋 【상담 양식】\n내담자 성함 및 나이 :  \n상대방 성함 및 나이 : \n상세 사연 : \n핵심 질문 : `;
+  const isPkg = (m==='lite'||m==='reunion'||m==='weekly');
+  const formBody = isPkg
+    ? `내담자 성함 및 나이 :  \n상대방 성함 및 나이 : \n상세 사연 : `
+    : `내담자 성함 및 나이 :  \n상대방 성함 및 나이 : \n상세 사연 : \n핵심 질문 : `;
+  const form=`📋 【예약 정보】\n이름: ${S.name}\n${info}\n\n📋 【상담 양식】\n${formBody}`;
   const ft=document.getElementById('formTmpl');
   ft.innerHTML=`<span class="ftitle">✦ 아래 내용을 복사하여 작성 후 1시간 이내에 카카오톡으로 보내주세요.</span>${form}`;
   ft.dataset.copy=form;
@@ -968,7 +972,11 @@ function doCheck(){
              </div>`;
   }
 
-  const formStr = `📋 【예약 정보】\n이름: ${found.name}\n${info}\n\n📋 【상담 양식】\n내담자 성함 및 나이 :  \n상대방 성함 및 나이 : \n상세 사연 : \n핵심 질문 : `;
+  const chkIsPkg = (found.menuKey==='lite'||found.menuKey==='reunion'||found.menuKey==='weekly');
+  const chkBody = chkIsPkg
+    ? `내담자 성함 및 나이 :  \n상대방 성함 및 나이 : \n상세 사연 : `
+    : `내담자 성함 및 나이 :  \n상대방 성함 및 나이 : \n상세 사연 : \n핵심 질문 : `;
+  const formStr = `📋 【예약 정보】\n이름: ${found.name}\n${info}\n\n📋 【상담 양식】\n${chkBody}`;
   html += `<div class="submit-warn" style="margin-bottom:14px;">📌 <strong>예약정보 + 상담양식 모두</strong> 복사해서 보내주세요.<br>상담양식만 보내면 예약 확인이 어려워요.</div>`;
   html += `<div class="form-tmpl" id="chkFormTmpl" style="margin-bottom:12px;" data-copy="${formStr.replace(/"/g,'&quot;')}"><span class="ftitle">✦ 제출 양식</span>${formStr}</div>`;
   html += `<button class="copy-btn" id="chkCopyBtn" style="margin-bottom:0;" onclick="copyForm('chkFormTmpl','chkCopyBtn')">📋 예약정보 + 상담양식 전체 복사하기</button>`;
