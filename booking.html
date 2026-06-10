@@ -395,6 +395,20 @@ const REVIEW_REPO = 'heetsignal/tarot';     // 깃허브 저장소
 const REVIEW_DIR = 'reviews';               // 이미지 폴더
 const REVIEW_BASE = 'https://hecate.io.kr/reviews/'; // 실제 이미지 주소 베이스
 
+// ===== 후기 정렬 규칙 =====
+// 1) 앞에 "숫자_"가 붙은 파일(메인 노출용)을 맨 위로, 번호 큰 것부터(02_,01_,00_)
+// 2) 번호 없는 IMG 파일은 그 아래에, 파일명 숫자가 큰 것부터(=최근 사진 먼저)
+function reviewSort(a, b){
+  const reNum = /^(\d+)_/;
+  const ma = a.match(reNum), mb = b.match(reNum);
+  const aN = !!ma, bN = !!mb;
+  if(aN !== bN) return aN ? -1 : 1;
+  if(aN && bN) return parseInt(mb[1],10) - parseInt(ma[1],10);
+  const na = parseInt((a.match(/(\d+)/)||['','0'])[1],10);
+  const nb = parseInt((b.match(/(\d+)/)||['','0'])[1],10);
+  return nb - na;
+}
+
 async function loadReviews(){
   try {
     const res = await fetch(`https://api.github.com/repos/${REVIEW_REPO}/contents/${REVIEW_DIR}`);
@@ -403,7 +417,7 @@ async function loadReviews(){
     const imgs = files
       .filter(f => f.type === 'file' && /\.(jpe?g|png|webp)$/i.test(f.name))
       .map(f => f.name)
-      .sort();
+      .sort(reviewSort);
     if(!imgs.length) return; // 후기 없으면 배너 자체를 숨김(기본 display:none)
     renderReviews(imgs);
   } catch(e){
