@@ -218,7 +218,7 @@ function srcGroup(s){
 }
 function srcKoreanLabel(s){
   s = (s||'direct').toLowerCase();
-  const map = {meta1:'메타1', meta2:'메타2', insta1:'인스타1', insta2:'인스타2', profile:'인스타 프로필', threads:'스레드', direct:'직접·기타'};
+  const map = {meta1:'메타1', meta2:'메타2', meta3:'메타3', insta1:'인스타1', insta2:'인스타2', insta3:'인스타3', profile:'인스타 프로필', threads:'스레드', direct:'직접·기타'};
   if(map[s]) return map[s];
   const g = srcGroup(s);
   if(g==='meta') return '메타';
@@ -272,9 +272,11 @@ function renderSourceSummary(){
     <div class="src-row group"><span>🔵 메타 합계</span>${cell(groupSum('meta','total'), groupSum('meta','conf'))}</div>
     <div class="src-row sub"><span>메타1</span>${cell(grab('meta1','total'), grab('meta1','conf'))}</div>
     <div class="src-row sub"><span>메타2</span>${cell(grab('meta2','total'), grab('meta2','conf'))}</div>
+    <div class="src-row sub"><span>메타3</span>${cell(grab('meta3','total'), grab('meta3','conf'))}</div>
     <div class="src-row group"><span>🟣 인스타 광고 합계</span>${cell(groupSum('insta','total'), groupSum('insta','conf'))}</div>
     <div class="src-row sub"><span>인스타1</span>${cell(grab('insta1','total'), grab('insta1','conf'))}</div>
     <div class="src-row sub"><span>인스타2</span>${cell(grab('insta2','total'), grab('insta2','conf'))}</div>
+    <div class="src-row sub"><span>인스타3</span>${cell(grab('insta3','total'), grab('insta3','conf'))}</div>
 
     <div class="src-cat">프로필·스레드 경유</div>
     <div class="src-row group"><span>🟢 인스타 프로필</span>${cell(groupSum('profile','total'), groupSum('profile','conf'))}</div>
