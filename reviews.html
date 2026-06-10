@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Heet Signal · 후기 모음</title>
+<title>Hecate · 후기 모음</title>
 <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,300&family=Noto+Serif+KR:wght@300;400;500&display=swap" rel="stylesheet">
 <style>
 :root{
@@ -66,7 +66,7 @@ body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellips
 <div class="wrap">
   <a class="btn-back" href="booking.html">← 예약 페이지로</a>
   <header class="site-header">
-    <span class="site-name">Heet Signal</span>
+    <span class="site-name">Hecate</span>
     <div class="hdiv"><span>✦</span></div>
     <span class="site-sub">Tarot Consultation</span>
   </header>
@@ -96,9 +96,23 @@ body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellips
 
 const REVIEW_REPO = 'heetsignal/tarot';
 const REVIEW_DIR = 'reviews';
-const REVIEW_BASE = 'https://heetsignal.github.io/tarot/reviews/';
+const REVIEW_BASE = 'https://hecate.io.kr/reviews/';
 let REVIEW_IMGS = [];
 let lbIndex = 0;
+
+// ===== 후기 정렬 규칙 =====
+// 1) 앞에 "숫자_"가 붙은 파일(메인 노출용)을 맨 위로, 번호 큰 것부터(02_,01_,00_)
+// 2) 번호 없는 IMG 파일은 그 아래에, 파일명 숫자가 큰 것부터(=최근 사진 먼저)
+function reviewSort(a, b){
+  const reNum = /^(\d+)_/;
+  const ma = a.match(reNum), mb = b.match(reNum);
+  const aN = !!ma, bN = !!mb;
+  if(aN !== bN) return aN ? -1 : 1;          // 번호 붙은 것이 항상 위
+  if(aN && bN) return parseInt(mb[1],10) - parseInt(ma[1],10); // 둘 다 번호: 큰 번호 먼저
+  const na = parseInt((a.match(/(\d+)/)||['','0'])[1],10);     // 둘 다 번호 없음:
+  const nb = parseInt((b.match(/(\d+)/)||['','0'])[1],10);     // 파일명 숫자 큰 것 먼저
+  return nb - na;
+}
 
 async function loadReviews(){
   const grid = document.getElementById('grid');
@@ -110,7 +124,7 @@ async function loadReviews(){
     REVIEW_IMGS = files
       .filter(f => f.type === 'file' && /\.(jpe?g|png|webp)$/i.test(f.name))
       .map(f => f.name)
-      .sort();
+      .sort(reviewSort);
     if(!REVIEW_IMGS.length){
       msg.textContent = '등록된 후기가 아직 없습니다.';
       return;
