@@ -176,7 +176,7 @@ body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellips
 .submit-warn{background:rgba(200,80,80,.1);border:1px solid rgba(220,120,120,.45);border-radius:10px;padding:14px 16px;margin-bottom:14px;font-size:.85rem;color:#f0c8c0;line-height:1.7;text-align:center;}
 .submit-warn strong{color:#ffd0c0;}
 /* 후기 사용 고지 (차분한 안내) */
-.consent-note{font-size:.72rem;color:var(--text3);line-height:1.65;background:rgba(255,255,255,.03);border:1px solid var(--border);border-radius:8px;padding:11px 14px;margin-bottom:14px;text-align:left;}
+.consent-note{font-size:.72rem;color:var(--text3);line-height:1.65;background:rgba(255,255,255,.03);border:1px solid var(--border);border-radius:8px;padding:11px 14px;margin-bottom:14px;text-align:center;}
 /* 전체 복사 버튼 */
 .copy-btn{width:100%;background:rgba(200,164,86,.14);border:1px solid var(--border2);border-radius:10px;padding:14px;color:var(--gold2);font-family:'Noto Serif KR',serif;font-size:.92rem;font-weight:600;cursor:pointer;letter-spacing:.03em;transition:all .2s;margin-bottom:20px;display:flex;align-items:center;justify-content:center;gap:8px;}
 .copy-btn:hover{background:rgba(200,164,86,.24);border-color:var(--gold2);}
@@ -342,7 +342,7 @@ body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellips
       <div class="c-title">예약 접수 완료</div>
       <p class="c-desc">결제 후 아래 양식을 복사해 카카오톡으로 보내주시면<br>예약이 최종 확정됩니다 <strong>(1시간 이내)</strong></p>
       <div id="cardPayArea"></div>
-      <div class="consent-note">상담 내용은 개인을 특정할 수 없도록 처리한 후 후기로 사용될 수 있습니다. 원치 않으시면 사전에 말씀해 주시면 일절 사용되지 않습니다.</div>
+      <div class="consent-note">⚠️ 상담 내용은 개인을 특정할 수 없도록 처리한 후 후기로 사용될 수 있습니다. 원치 않으시면 사전에 말씀해 주시면 일절 사용되지 않습니다.</div>
       <div class="form-tmpl" id="formTmpl"><span class="ftitle">✦ 예약정보 + 상담양식을 모두 복사해 보내주세요</span></div>
       <button class="copy-btn" id="copyBtn" onclick="copyForm('formTmpl','copyBtn')">📋 예약정보 + 상담양식 전체 복사하기</button>
       
@@ -838,7 +838,20 @@ function buildS4(){
   ft.dataset.copy=form;
 
   const cpa=document.getElementById('cardPayArea');
-  cpa.innerHTML=S.pay==='card'?`<a class="card-pay-btn" href="https://mkt.shopping.naver.com/link/69f9aa055358056105d6b7b0" target="_blank">카드결제 (네이버 스마트스토어) →</a>`:'';
+  if(S.pay==='account'){
+    cpa.innerHTML=`
+      <div class="account-box show" style="margin-bottom:10px;">
+        <div class="arow"><span class="akey">은행</span><span class="aval">카카오뱅크</span></div>
+        <div class="arow"><span class="akey">계좌번호</span><span class="aval" style="color:#e8c87a;user-select:all;">3333-37-0910218</span></div>
+        <div class="arow"><span class="akey">예금주</span><span class="aval">한서희</span></div>
+        <div class="arow"><span class="akey">입금액</span><span class="aval">${calcPrice().toLocaleString()}원</span></div>
+      </div>
+      <button class="copy-btn" id="acctCopyBtn" onclick="copyAccount('acctCopyBtn')">📋 계좌번호 복사하기</button>`;
+  } else if(S.pay==='card'){
+    cpa.innerHTML=`<a class="card-pay-btn" href="https://mkt.shopping.naver.com/link/69f9aa055358056105d6b7b0" target="_blank">💳 카드결제하기 (네이버 스마트스토어) →</a>`;
+  } else {
+    cpa.innerHTML='';
+  }
 
   const data=aData();
   if(!data.bookings)data.bookings={};
@@ -899,6 +912,28 @@ function buildS4(){
     });
   }
   // ===== Meta 픽셀 끝 =====
+}
+
+function copyAccount(btnId){
+  const text = '3333-37-0910218';
+  const btn = document.getElementById(btnId);
+  const done = ()=>{
+    const orig = btn.textContent;
+    btn.classList.add('copied');
+    btn.textContent = '✅ 계좌번호 복사 완료!';
+    setTimeout(()=>{ btn.classList.remove('copied'); btn.textContent = orig; }, 2500);
+  };
+  const fallback = ()=>{
+    const ta = document.createElement('textarea');
+    ta.value = text; ta.style.position='fixed'; ta.style.opacity='0';
+    document.body.appendChild(ta); ta.focus(); ta.select();
+    try{ document.execCommand('copy'); done(); }
+    catch(e){ alert('복사가 안 되면 계좌번호를 길게 눌러 직접 복사해 주세요.'); }
+    document.body.removeChild(ta);
+  };
+  if(navigator.clipboard && window.isSecureContext){
+    navigator.clipboard.writeText(text).then(done).catch(fallback);
+  } else { fallback(); }
 }
 
 function copyForm(tmplId, btnId){
