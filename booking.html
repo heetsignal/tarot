@@ -829,9 +829,15 @@ function buildS4(){
   info+=`· 결제 방법: ${S.pay==='account'?'계좌이체':'카드결제'}`;
 
   const isPkg = (m==='lite'||m==='reunion'||m==='weekly');
-  const formBody = isPkg
-    ? `내담자 성함 및 나이 :  \n상대방 성함 및 나이 : \n상세 사연 : `
-    : `내담자 성함 및 나이 :  \n상대방 성함 및 나이 : \n상세 사연 : \n핵심 질문 : `;
+  const isReunionLite = (m==='lite' && S.liteType==='재회');
+  let formBody;
+  if(isReunionLite){
+    formBody = `내담자 성함 및 나이 :  \n상대방 성함 및 나이 : \n상세 사연 : \n추가 자유질문 : `;
+  } else if(isPkg){
+    formBody = `내담자 성함 및 나이 :  \n상대방 성함 및 나이 : \n상세 사연 : `;
+  } else {
+    formBody = `내담자 성함 및 나이 :  \n상대방 성함 및 나이 : \n상세 사연 : \n핵심 질문 : `;
+  }
   const form=`📋 【예약 정보】\n이름: ${S.name}\n${info}\n\n📋 【상담 양식】\n${formBody}`;
   const ft=document.getElementById('formTmpl');
   ft.innerHTML=`${form}`;
@@ -1024,9 +1030,15 @@ function doCheck(){
   }
 
   const chkIsPkg = (found.menuKey==='lite'||found.menuKey==='reunion'||found.menuKey==='weekly');
-  const chkBody = chkIsPkg
-    ? `내담자 성함 및 나이 :  \n상대방 성함 및 나이 : \n상세 사연 : `
-    : `내담자 성함 및 나이 :  \n상대방 성함 및 나이 : \n상세 사연 : \n핵심 질문 : `;
+  const chkIsReunionLite = (found.menuKey==='lite' && found.liteType==='재회');
+  let chkBody;
+  if(chkIsReunionLite){
+    chkBody = `내담자 성함 및 나이 :  \n상대방 성함 및 나이 : \n상세 사연 : \n추가 자유질문 1개 : `;
+  } else if(chkIsPkg){
+    chkBody = `내담자 성함 및 나이 :  \n상대방 성함 및 나이 : \n상세 사연 : `;
+  } else {
+    chkBody = `내담자 성함 및 나이 :  \n상대방 성함 및 나이 : \n상세 사연 : \n핵심 질문 : `;
+  }
   const formStr = `📋 【예약 정보】\n이름: ${found.name}\n${info}\n\n📋 【상담 양식】\n${chkBody}`;
   html += `<div class="submit-warn" style="margin-bottom:14px;">📌 <strong>예약정보 + 상담양식 모두</strong> 복사해서 보내주세요.<br>상담양식만 보내면 예약 확인이 어려워요.</div>`;
   html += `<div class="form-tmpl" id="chkFormTmpl" style="margin-bottom:12px;" data-copy="${formStr.replace(/"/g,'&quot;')}"><span class="ftitle">✦ 제출 양식</span>${formStr}</div>`;
