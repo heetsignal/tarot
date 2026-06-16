@@ -320,7 +320,7 @@ body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellips
       </div>
       <div class="pay-card" id="pm-card" onclick="selPay('card')">
         <div class="pay-name">카드결제</div>
-        <div class="pay-desc">다음 화면에 보이는 사이트에서 결제 후 양식을 제출해 주세요</div>
+        <div class="pay-desc">다음 화면에 보이는 사이트에서 결제 후 양식을 제출해 주세요<br><span style="color:#e0b87a;">※ 카드결제 시 스마트스토어 수수료 3.5%가 추가됩니다</span></div>
       </div>
     </div>
     <div id="couponNote" style="display:none;"></div>
@@ -854,7 +854,7 @@ function buildS4(){
       </div>
       <button class="copy-btn" id="acctCopyBtn" onclick="copyAccount('acctCopyBtn')">📋 계좌번호 복사하기</button>`;
   } else if(S.pay==='card'){
-    cpa.innerHTML=`<a class="card-pay-btn" href="https://mkt.shopping.naver.com/link/69f9aa055358056105d6b7b0" target="_blank">💳 카드결제하기 (네이버 스마트스토어) →</a>`;
+    cpa.innerHTML=`<div style="font-size:.78rem;color:#e0b87a;text-align:center;margin-bottom:8px;line-height:1.5;">※ 카드결제 시 스마트스토어 수수료 3.5%가 추가됩니다</div><a class="card-pay-btn" href="https://mkt.shopping.naver.com/link/69f9aa055358056105d6b7b0" target="_blank">💳 카드결제하기 (네이버 스마트스토어) →</a>`;
   } else {
     cpa.innerHTML='';
   }
@@ -1033,7 +1033,7 @@ function doCheck(){
   const chkIsReunionLite = (found.menuKey==='lite' && found.liteType==='재회');
   let chkBody;
   if(chkIsReunionLite){
-    chkBody = `내담자 성함 및 나이 :  \n상대방 성함 및 나이 : \n상세 사연 : \n추가 자유질문 1개 : `;
+    chkBody = `내담자 성함 및 나이 :  \n상대방 성함 및 나이 : \n상세 사연 : \n추가 자유질문 : `;
   } else if(chkIsPkg){
     chkBody = `내담자 성함 및 나이 :  \n상대방 성함 및 나이 : \n상세 사연 : `;
   } else {
