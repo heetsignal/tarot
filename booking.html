@@ -177,6 +177,13 @@ body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellips
 .submit-warn strong{color:#ffd0c0;}
 /* 후기 사용 고지 (차분한 안내) */
 .consent-note{font-size:.72rem;color:var(--text3);line-height:1.65;background:rgba(255,255,255,.03);border:1px solid var(--border);border-radius:8px;padding:11px 14px;margin-bottom:14px;text-align:center;}
+/* 질문 개수 안내 */
+.q-guide{background:rgba(200,164,86,.06);border:1px solid var(--border);border-radius:10px;padding:15px 16px;margin-bottom:20px;font-size:.8rem;color:var(--text2);line-height:1.7;text-align:left;}
+.q-guide .qg-head{color:var(--gold2);font-weight:500;font-size:.85rem;display:block;margin-bottom:8px;}
+.q-guide .qg-ex{background:rgba(255,255,255,.03);border-radius:7px;padding:9px 11px;margin:7px 0;font-size:.76rem;color:var(--text2);line-height:1.6;}
+.q-guide .qg-ex b{color:var(--gold2);}
+.q-guide .qg-no{color:#e6b89a;font-weight:500;display:block;margin:12px 0 4px;font-size:.82rem;}
+.q-guide .qg-cta{color:var(--gold2);}
 /* 전체 복사 버튼 */
 .copy-btn{width:100%;background:rgba(200,164,86,.14);border:1px solid var(--border2);border-radius:10px;padding:14px;color:var(--gold2);font-family:'Noto Serif KR',serif;font-size:.92rem;font-weight:600;cursor:pointer;letter-spacing:.03em;transition:all .2s;margin-bottom:20px;display:flex;align-items:center;justify-content:center;gap:8px;}
 .copy-btn:hover{background:rgba(200,164,86,.24);border-color:var(--gold2);}
@@ -320,7 +327,7 @@ body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellips
       </div>
       <div class="pay-card" id="pm-card" onclick="selPay('card')">
         <div class="pay-name">카드결제</div>
-        <div class="pay-desc">다음 화면에 보이는 사이트에서 결제 후 양식을 제출해 주세요<br><span style="color:#e0b87a;">※ 스마트스토어 수수료 3.5%가 추가됩니다</span></div>
+        <div class="pay-desc">다음 화면에 보이는 사이트에서 결제 후 양식을 제출해 주세요<br><span style="color:#e0b87a;">※ 카드결제 시 스마트스토어 수수료 3.5%가 추가됩니다</span></div>
       </div>
     </div>
     <div id="couponNote" style="display:none;"></div>
@@ -571,7 +578,17 @@ function buildS2(){
       <button class="obtn" onclick="selDur(this,30)">30분 · 30,000원</button>
     </div></div>`;
   } else if(m==='question'){
-    oa.innerHTML=`<div class="ogroup"><div class="olabel">질문 수</div><div class="orow" id="qrow">
+    oa.innerHTML=`
+    <div class="q-guide">
+      <span class="qg-head">📌 질문 1개는 한 가지 주제만 답해드려요</span>
+      한 문장이어도 서로 다른 걸 물으면 그만큼 질문 수가 늘어나요.
+      <div class="qg-ex">"상대에게 연락이 온다면 언제 올까요?"<br>→ 연락 여부 ① + 시기 ② = <b>2질문</b></div>
+      <div class="qg-ex">"언제쯤 어떤 방식으로 인연을 만나고, 그 사람 특징은?"<br>→ 새 인연 시기 ① + 만나는 방식 ② + 상대 특징 ③ = <b>3질문</b></div>
+      <span class="qg-no">❗ 이런 질문은 질문제로 받지 않아요</span>
+      "재회하려면 어떻게 해야 하나요?" 같은 질문은 상대 속마음, 연락 여부·시기, 행동 지침까지 방대하게 봐야 해서 질문 1개로 진행하지 않습니다.<br>
+      <span class="qg-cta">이 경우 재회 Lite 또는 재회 패키지를 이용해 주세요.</span>
+    </div>
+    <div class="ogroup"><div class="olabel">질문 수</div><div class="orow" id="qrow">
       ${[1,2,3,4,5].map(n=>`<button class="obtn" onclick="selQ(this,${n})">${n}개 · ${(n*5000).toLocaleString()}원</button>`).join('')}
     </div></div>`;
   } else if(m==='mixed'){
