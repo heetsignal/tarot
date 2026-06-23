@@ -184,6 +184,12 @@ body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellips
 .q-guide .qg-ex b{color:var(--gold2);}
 .q-guide .qg-no{color:#e6b89a;font-weight:500;display:block;margin:12px 0 4px;font-size:.82rem;}
 .q-guide .qg-cta{color:var(--gold2);}
+/* 리딩 방향/톤 선택 */
+.tone-wrap{margin:4px 0 22px;}
+.tone-wrap .tone-label{font-size:.8rem;color:#c8bea8;margin-bottom:5px;letter-spacing:.05em;font-weight:500;}
+.tone-wrap .tone-sub{font-size:.72rem;color:var(--text3);margin-bottom:11px;line-height:1.5;}
+.tone-wrap .orow{flex-direction:column;}
+.tone-wrap .obtn{width:100%;text-align:left;line-height:1.45;}
 /* 전체 복사 버튼 */
 .copy-btn{width:100%;background:rgba(200,164,86,.14);border:1px solid var(--border2);border-radius:10px;padding:14px;color:var(--gold2);font-family:'Noto Serif KR',serif;font-size:.92rem;font-weight:600;cursor:pointer;letter-spacing:.03em;transition:all .2s;margin-bottom:20px;display:flex;align-items:center;justify-content:center;gap:8px;}
 .copy-btn:hover{background:rgba(200,164,86,.24);border-color:var(--gold2);}
@@ -303,6 +309,7 @@ body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellips
     <div class="slabel">Step 3</div>
     <h2 class="stitle">예약자 정보 및 결제</h2>
     <div class="notice" id="s3summary"></div>
+    <div id="toneArea"></div>
     
     <div class="igroup">
       <label class="ilabel">이름</label>
@@ -469,7 +476,7 @@ const db = firebase.database();
 
 let globalData = {};
 
-const S={menu:null,dur:null,q:0,mixDur:null,liteType:null,date:null,dateObj:null,time:null,name:'',pw:'',pay:null};
+const S={menu:null,dur:null,q:0,mixDur:null,liteType:null,date:null,dateObj:null,time:null,name:'',pw:'',pay:null,tone:null};
 
 // ===== 유입 경로(UTM) 읽기 =====
 // 광고 링크 뒤에 ?utm_source=meta 또는 ?utm_source=insta 를 붙이면
@@ -799,11 +806,44 @@ function buildS3(){
   
   document.getElementById('nameInput').value='';
   document.getElementById('pwInput').value='';
-  S.name='';S.pw='';S.pay=null;
+  S.name='';S.pw='';S.pay=null;S.tone=null;
   document.querySelectorAll('.pay-card').forEach(p=>p.classList.remove('selected'));
   document.getElementById('acctBox').classList.remove('show');
   document.getElementById('btn3').disabled=true;
+  buildTone();
   refreshS3Price();
+}
+
+// 리딩 방향(질문제·혼합) / 리딩 톤(패키지) 선택 렌더 — 선택사항
+function buildTone(){
+  const m=S.menu;
+  const ta=document.getElementById('toneArea');
+  if(!ta){ return; }
+  let opts=null, label='', sub='';
+  if(m==='question'||m==='mixed'){
+    label='리딩 방향 (선택)';
+    sub='어떻게 봐드리면 좋을지 골라주세요. 안 고르셔도 괜찮아요.';
+    opts=['제 질문 위주로 봐주세요','제 질문 + 추천 질문도 들을래요','잘 모르겠어요, 주도적으로 봐주세요'];
+  } else if(m==='lite'||m==='reunion'||m==='weekly'){
+    label='리딩 톤 (선택)';
+    sub='어떤 톤으로 적어드리면 좋을지 골라주세요. 안 고르셔도 괜찮아요.';
+    opts=['작은 가능성도 다 적어주세요','희망고문 싫어요, 확실한 것만 적어주세요'];
+  }
+  if(!opts){ ta.innerHTML=''; return; }
+  ta.innerHTML=`<div class="tone-wrap">
+    <div class="tone-label">${label}</div>
+    <div class="tone-sub">${sub}</div>
+    <div class="orow" id="tonerow">
+      ${opts.map(o=>`<button class="obtn" onclick="selTone(this,'${o.replace(/'/g,"\\'")}')">${o}</button>`).join('')}
+    </div>
+  </div>`;
+}
+
+function selTone(el,val){
+  const already = el.classList.contains('selected');
+  document.querySelectorAll('#tonerow .obtn').forEach(b=>b.classList.remove('selected'));
+  if(already){ S.tone=null; }            // 다시 누르면 선택 해제(선택사항이라 가능)
+  else { el.classList.add('selected'); S.tone=val; }
 }
 
 // Step3 요약·입금액을 현재 선택에 맞게 갱신
@@ -844,6 +884,10 @@ function buildS4(){
   if(m==='mixed'){if(S.mixDur)info+=`· 실시간: ${S.date} ${S.time} (${S.mixDur}분)\n`;if(S.q)info+=`· 질문 수: ${S.q}개\n`;}
   info+=`· 결제 금액: ${calcPrice().toLocaleString()}원\n`;
   info+=`· 결제 방법: ${S.pay==='account'?'계좌이체':'카드결제'}`;
+  if(S.tone){
+    const toneKind = (m==='question'||m==='mixed') ? '리딩 방향' : '리딩 톤';
+    info+=`\n· ${toneKind}: ${S.tone}`;
+  }
 
   const isPkg = (m==='lite'||m==='reunion'||m==='weekly');
   const isReunionLite = (m==='lite' && S.liteType==='재회');
@@ -911,7 +955,7 @@ function buildS4(){
         menu:MENU_NAMES[m], menuKey:m,
         time:S.time, dur:dur, price:calcPrice(),
         dateStr:S.date, mixDur:S.mixDur, q:S.q,
-        blockedKeys, ts:Date.now(), source:BOOKING_SOURCE
+        blockedKeys, ts:Date.now(), source:BOOKING_SOURCE, tone:S.tone||null
       };
       db.ref('hs_admin').set(data);
     }
@@ -920,7 +964,7 @@ function buildS4(){
     data.bookings[bk]={
       name:S.name, pw:S.pw, pay:S.pay,
       menu:MENU_NAMES[m]+(m==='lite'?` (${S.liteType})`:''), menuKey:m, liteType:S.liteType||null,
-      price:calcPrice(), q:S.q, ts:Date.now(), source:BOOKING_SOURCE
+      price:calcPrice(), q:S.q, ts:Date.now(), source:BOOKING_SOURCE, tone:S.tone||null
     };
     db.ref('hs_admin').set(data);
   }
@@ -991,7 +1035,7 @@ function copyForm(tmplId, btnId){
 }
 
 function resetAll(){
-  Object.assign(S,{menu:null,dur:null,q:0,mixDur:null,liteType:null,date:null,dateObj:null,time:null,name:'',pw:'',pay:null});
+  Object.assign(S,{menu:null,dur:null,q:0,mixDur:null,liteType:null,date:null,dateObj:null,time:null,name:'',pw:'',pay:null,tone:null});
   document.querySelectorAll('.menu-card').forEach(c=>c.classList.remove('selected'));
   document.getElementById('btn1').disabled=true;
   document.getElementById('cardPayArea').innerHTML='';
@@ -1033,6 +1077,10 @@ function doCheck(){
   }
   info+=`· 결제 금액: ${(found.price||0).toLocaleString()}원\n`;
   info+=`· 결제 방법: ${found.pay==='account'?'계좌이체':'카드결제'}`;
+  if(found.tone){
+    const toneKind = (found.menuKey==='question'||found.menuKey==='mixed') ? '리딩 방향' : '리딩 톤';
+    info+=`\n· ${toneKind}: ${found.tone}`;
+  }
 
   let html = `<div class="slabel">조회 결과</div>
               <div style="font-size:.82rem; color:var(--text2); line-height:1.7; margin-bottom:16px;">${info.replace(/\n/g, '<br>')}</div>`;
