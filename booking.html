@@ -185,11 +185,16 @@ body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellips
 .q-guide .qg-no{color:#e6b89a;font-weight:500;display:block;margin:12px 0 4px;font-size:.82rem;}
 .q-guide .qg-cta{color:var(--gold2);}
 /* 리딩 방향/톤 선택 */
-.tone-wrap{margin:4px 0 22px;}
+.tone-wrap{margin:0;}
 .tone-wrap .tone-label{font-size:.8rem;color:#c8bea8;margin-bottom:5px;letter-spacing:.05em;font-weight:500;}
 .tone-wrap .tone-sub{font-size:.72rem;color:var(--text3);margin-bottom:11px;line-height:1.5;}
 .tone-wrap .orow{flex-direction:column;}
 .tone-wrap .obtn{width:100%;text-align:left;line-height:1.45;}
+/* Step3 블럭 박스 */
+.s3-block{background:rgba(15,13,28,.5);border:1px solid var(--border);border-radius:12px;padding:18px;margin-bottom:16px;}
+.s3-block .igroup:last-child{margin-bottom:0;}
+.s3-block .pay-list{margin-bottom:0;}
+.s3-block-title{font-size:.62rem;letter-spacing:.3em;color:var(--gold);text-transform:uppercase;margin-bottom:14px;display:block;}
 /* 전체 복사 버튼 */
 .copy-btn{width:100%;background:rgba(200,164,86,.14);border:1px solid var(--border2);border-radius:10px;padding:14px;color:var(--gold2);font-family:'Noto Serif KR',serif;font-size:.92rem;font-weight:600;cursor:pointer;letter-spacing:.03em;transition:all .2s;margin-bottom:20px;display:flex;align-items:center;justify-content:center;gap:8px;}
 .copy-btn:hover{background:rgba(200,164,86,.24);border-color:var(--gold2);}
@@ -311,30 +316,35 @@ body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellips
     <div class="notice" id="s3summary"></div>
     <div id="toneArea"></div>
     
-    <div class="igroup">
-      <label class="ilabel">이름</label>
-      <input class="ifield" id="nameInput" placeholder="이름을 입력해 주세요" oninput="chk3()">
-    </div>
-    <div class="igroup">
-      <label class="ilabel">예약 확인용 비밀번호</label>
-      <input class="ifield" type="password" id="pwInput" maxlength="4" placeholder="비밀번호 4자리 (숫자)" oninput="chk3()">
+    <div class="s3-block">
+      <span class="s3-block-title">예약자 정보</span>
+      <div class="igroup">
+        <label class="ilabel">이름</label>
+        <input class="ifield" id="nameInput" placeholder="이름을 입력해 주세요" oninput="chk3()">
+      </div>
+      <div class="igroup">
+        <label class="ilabel">예약 확인용 비밀번호</label>
+        <input class="ifield" type="password" id="pwInput" maxlength="4" placeholder="비밀번호 4자리 (숫자)" oninput="chk3()">
+      </div>
     </div>
 
-    <div class="slabel" style="margin-bottom:14px;">결제 방법</div>
-    <div class="pay-list">
-      <div class="pay-card" id="pm-account" onclick="selPay('account')">
-        <div class="pay-name">계좌이체</div>
-        <div class="pay-desc">다음 화면에 보이는 계좌정보로 입금 후 양식을 제출해 주세요</div>
-        <div class="account-box" id="acctBox">
-          <div class="arow"><span class="akey">은행</span><span class="aval">카카오뱅크</span></div>
-          <div class="arow"><span class="akey">계좌번호</span><span class="aval" style="color:#e8c87a;text-decoration:none;user-select:all;">3333-37-0910218</span></div>
-          <div class="arow"><span class="akey">예금주</span><span class="aval">한서희</span></div>
-          <div class="arow"><span class="akey">입금액</span><span class="aval" id="acctAmt">—</span></div>
+    <div class="s3-block">
+      <span class="s3-block-title">결제 방법</span>
+      <div class="pay-list">
+        <div class="pay-card" id="pm-account" onclick="selPay('account')">
+          <div class="pay-name">계좌이체</div>
+          <div class="pay-desc">다음 화면에 보이는 계좌정보로 입금 후 양식을 제출해 주세요</div>
+          <div class="account-box" id="acctBox">
+            <div class="arow"><span class="akey">은행</span><span class="aval">카카오뱅크</span></div>
+            <div class="arow"><span class="akey">계좌번호</span><span class="aval" style="color:#e8c87a;text-decoration:none;user-select:all;">3333-37-0910218</span></div>
+            <div class="arow"><span class="akey">예금주</span><span class="aval">한서희</span></div>
+            <div class="arow"><span class="akey">입금액</span><span class="aval" id="acctAmt">—</span></div>
+          </div>
         </div>
-      </div>
-      <div class="pay-card" id="pm-card" onclick="selPay('card')">
-        <div class="pay-name">카드결제</div>
-        <div class="pay-desc">다음 화면에 보이는 사이트에서 결제 후 양식을 제출해 주세요<br><span style="color:#e0b87a;">※ 카드결제 시 스마트스토어 수수료 3.5%가 추가됩니다</span></div>
+        <div class="pay-card" id="pm-card" onclick="selPay('card')">
+          <div class="pay-name">카드결제</div>
+          <div class="pay-desc">다음 화면에 보이는 사이트에서 결제 후 양식을 제출해 주세요<br><span style="color:#e0b87a;">※ 카드결제 시 스마트스토어 수수료 6.5%가 추가됩니다</span></div>
+        </div>
       </div>
     </div>
     <div id="couponNote" style="display:none;"></div>
@@ -814,13 +824,13 @@ function buildS3(){
   refreshS3Price();
 }
 
-// 리딩 방향(질문제·혼합) / 리딩 톤(패키지) 선택 렌더 — 선택사항
+// 리딩 방향(실시간) / 리딩 톤(패키지) 선택 렌더 — 선택사항
 function buildTone(){
   const m=S.menu;
   const ta=document.getElementById('toneArea');
   if(!ta){ return; }
   let opts=null, label='', sub='';
-  if(m==='question'||m==='mixed'){
+  if(m==='realtime'){
     label='리딩 방향 (선택)';
     sub='어떻게 봐드리면 좋을지 골라주세요. 안 고르셔도 괜찮아요.';
     opts=['제 질문 위주로 봐주세요','제 질문 + 추천 질문도 들을래요','잘 모르겠어요, 주도적으로 봐주세요'];
@@ -830,7 +840,7 @@ function buildTone(){
     opts=['작은 가능성도 다 적어주세요','희망고문 싫어요, 확실한 것만 적어주세요'];
   }
   if(!opts){ ta.innerHTML=''; return; }
-  ta.innerHTML=`<div class="tone-wrap">
+  ta.innerHTML=`<div class="s3-block tone-wrap">
     <div class="tone-label">${label}</div>
     <div class="tone-sub">${sub}</div>
     <div class="orow" id="tonerow">
@@ -884,10 +894,6 @@ function buildS4(){
   if(m==='mixed'){if(S.mixDur)info+=`· 실시간: ${S.date} ${S.time} (${S.mixDur}분)\n`;if(S.q)info+=`· 질문 수: ${S.q}개\n`;}
   info+=`· 결제 금액: ${calcPrice().toLocaleString()}원\n`;
   info+=`· 결제 방법: ${S.pay==='account'?'계좌이체':'카드결제'}`;
-  if(S.tone){
-    const toneKind = (m==='question'||m==='mixed') ? '리딩 방향' : '리딩 톤';
-    info+=`\n· ${toneKind}: ${S.tone}`;
-  }
 
   const isPkg = (m==='lite'||m==='reunion'||m==='weekly');
   const isReunionLite = (m==='lite' && S.liteType==='재회');
@@ -1077,10 +1083,6 @@ function doCheck(){
   }
   info+=`· 결제 금액: ${(found.price||0).toLocaleString()}원\n`;
   info+=`· 결제 방법: ${found.pay==='account'?'계좌이체':'카드결제'}`;
-  if(found.tone){
-    const toneKind = (found.menuKey==='question'||found.menuKey==='mixed') ? '리딩 방향' : '리딩 톤';
-    info+=`\n· ${toneKind}: ${found.tone}`;
-  }
 
   let html = `<div class="slabel">조회 결과</div>
               <div style="font-size:.82rem; color:var(--text2); line-height:1.7; margin-bottom:16px;">${info.replace(/\n/g, '<br>')}</div>`;
