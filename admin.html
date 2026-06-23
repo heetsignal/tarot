@@ -101,6 +101,8 @@ body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellips
 .chip-src-profile{background:rgba(120,200,160,.12);border:1px solid rgba(120,200,160,.38);color:#9ce0c0;}
 .chip-src-threads{background:rgba(180,180,200,.12);border:1px solid rgba(180,180,200,.38);color:#d0d0e0;}
 .chip-src-direct{background:rgba(150,150,150,.1);border:1px solid rgba(150,150,150,.3);color:#bbbbbb;}
+.bk-tone{font-size:.74rem;color:#d0c8b0;background:rgba(200,164,86,.07);border:1px solid var(--border);border-radius:7px;padding:7px 10px;margin-bottom:6px;line-height:1.5;}
+.bk-tone-key{color:var(--gold);font-size:.64rem;margin-right:6px;}
 
 /* 유입 경로 집계 박스 */
 .src-summary{background:rgba(15,13,28,.7);border:1px solid var(--border);border-radius:12px;padding:18px 20px;margin-bottom:24px;}
@@ -245,6 +247,10 @@ function contactChips(b){
     h += `<span class="bk-chip chip-coupon">🎁 쿠폰적용 (-5,000원)</span>`;
   }
   h += '</div>';
+  if(b.tone){
+    const toneKind = (b.menuKey==='realtime') ? '리딩 방향' : '리딩 톤';
+    h += `<div class="bk-tone"><span class="bk-tone-key">${toneKind}</span> ${b.tone}</div>`;
+  }
   return h;
 }
 
