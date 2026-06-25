@@ -476,6 +476,7 @@ function renderRtGroups(list){
             <button class="bk-del" onclick="delBooking('${b.k}')">삭제</button>
           </div>
           ${contactChips(b)}
+          <div style="font-size:.72rem;color:var(--text3);margin:2px 0 8px;">신청: ${b.ts?new Date(b.ts).toLocaleString('ko-KR'):'-'}</div>
           <div class="bk-form-toggle">
             <span class="toggle-label">양식 수신:</span>
             <button class="toggle-btn ${b.formReceived?'recv':'not-recv'}" onclick="toggleForm('${b.k}')">${b.formReceived?'✓ 받음':'미수신'}</button>
