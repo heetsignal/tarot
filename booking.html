@@ -275,8 +275,8 @@ body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellips
         <div class="menu-info">재회 · 짝사랑 · 썸 · 솔로 중 1종 선택<br>양식 제출 후 48시간 이내 리딩지 발송</div>
       </div>
       <div class="menu-card" data-menu="reunion" onclick="selMenu(this)">
-        <div class="menu-top"><span class="menu-name">재회 패키지 <span class="mbadge b-48">48H</span></span><span class="menu-price">40,000원</span></div>
-        <div class="menu-info">양식 제출 후 48시간 이내 리딩지 발송</div>
+        <div class="menu-top"><span class="menu-name">시그니처 전략적 패키지 <span class="mbadge b-48">48H</span></span><span class="menu-price">40,000원</span></div>
+        <div class="menu-info">재회 · 썸 중 1종 선택 · 양식 제출 후 48시간 이내 리딩지 발송</div>
       </div>
       <div class="menu-card" data-menu="weekly" onclick="selMenu(this)">
         <div class="menu-top"><span class="menu-name">위클리 패키지 <span class="mbadge b-wk">7DAYS</span></span><span class="menu-price">70,000원</span></div>
@@ -343,7 +343,7 @@ body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellips
         </div>
         <div class="pay-card" id="pm-card" onclick="selPay('card')">
           <div class="pay-name">카드결제</div>
-          <div class="pay-desc">다음 화면에 보이는 사이트에서 결제 후 양식을 제출해 주세요<br><span style="color:#e0b87a;">※ 카드결제 시 스마트스토어 수수료 3.5%가 추가됩니다</span></div>
+          <div class="pay-desc">다음 화면에 보이는 사이트에서 결제 후 양식을 제출해 주세요<br><span style="color:#e0b87a;">※ 카드결제 시 스마트스토어 수수료 6.5%가 추가됩니다</span></div>
         </div>
       </div>
     </div>
@@ -486,7 +486,7 @@ const db = firebase.database();
 
 let globalData = {};
 
-const S={menu:null,dur:null,q:0,mixDur:null,liteType:null,date:null,dateObj:null,time:null,name:'',pw:'',pay:null,tone:null};
+const S={menu:null,dur:null,q:0,mixDur:null,liteType:null,pkgType:null,date:null,dateObj:null,time:null,name:'',pw:'',pay:null,tone:null};
 
 // ===== 유입 경로(UTM) 읽기 =====
 // 광고 링크 뒤에 ?utm_source=meta 또는 ?utm_source=insta 를 붙이면
@@ -499,7 +499,7 @@ function getUtmSource(){
 }
 const BOOKING_SOURCE = getUtmSource();
 // ===== 유입 경로 끝 =====
-const MENU_NAMES={realtime:'실시간 리딩',question:'질문제 리딩',mixed:'혼합 리딩',lite:'Lite 패키지',reunion:'재회 패키지',weekly:'위클리 패키지'};
+const MENU_NAMES={realtime:'실시간 리딩',question:'질문제 리딩',mixed:'혼합 리딩',lite:'Lite 패키지',reunion:'시그니처 전략적 패키지',weekly:'위클리 패키지'};
 
 db.ref('hs_admin').on('value', (snap) => {
   globalData = snap.val() || {};
@@ -528,7 +528,7 @@ function toFmtKey(d) {
 function selMenu(el){
   document.querySelectorAll('.menu-card').forEach(c=>c.classList.remove('selected'));
   el.classList.add('selected');
-  S.menu=el.dataset.menu;S.dur=null;S.q=0;S.mixDur=null;S.liteType=null;S.date=null;S.dateObj=null;S.time=null;
+  S.menu=el.dataset.menu;S.dur=null;S.q=0;S.mixDur=null;S.liteType=null;S.pkgType=null;S.date=null;S.dateObj=null;S.time=null;
   document.getElementById('btn1').disabled=false;
 }
 
@@ -572,13 +572,13 @@ function updSteps(n){
 
 function buildS2(){
   const m=S.menu;
-  const titles={realtime:'시간 선택',question:'질문 수 선택',mixed:'옵션 선택',lite:'Lite 종류 선택',reunion:'예약 확인',weekly:'예약 확인'};
+  const titles={realtime:'시간 선택',question:'질문 수 선택',mixed:'옵션 선택',lite:'Lite 종류 선택',reunion:'종류 선택',weekly:'예약 확인'};
   const descs={
     realtime:'상담 시간과 예약 일정을 선택해 주세요',
     question:'원하시는 질문 개수를 선택해 주세요 (질문당 5,000원)',
     mixed:'실시간 시간과 질문 수를 자유롭게 조합하세요 · 합계 5,000원 할인',
     lite:'재회 · 짝사랑 · 썸 · 솔로 중 1종을 선택해 주세요',
-    reunion:'선택하신 패키지 내역을 확인해 주세요',
+    reunion:'재회 · 썸 중 1종을 선택해 주세요',
     weekly:'선택하신 패키지 내역을 확인해 주세요',
   };
   document.getElementById('s2title').textContent=titles[m];
@@ -603,7 +603,7 @@ function buildS2(){
       <div class="qg-ex">"언제쯤 어떤 방식으로 인연을 만나고, 그 사람 특징은?"<br>→ 새 인연 시기 ① + 만나는 방식 ② + 상대 특징 ③ = <b>3질문</b></div>
       <span class="qg-no">❗ 이런 질문은 질문제로 받지 않아요</span>
       "재회하려면 어떻게 해야 하나요?" 같은 질문은 상대 속마음, 연락 여부·시기, 행동 지침까지 방대하게 봐야 해서 질문 1개로 진행하지 않습니다.<br>
-      <span class="qg-cta">이 경우 재회 Lite 또는 재회 패키지를 이용해 주세요.</span>
+      <span class="qg-cta">이 경우 재회 Lite 또는 시그니처 전략적 패키지를 이용해 주세요.</span>
     </div>
     <div class="ogroup"><div class="olabel">질문 수</div><div class="orow" id="qrow">
       ${[1,2,3,4,5].map(n=>`<button class="obtn" onclick="selQ(this,${n})">${n}개 · ${(n*5000).toLocaleString()}원</button>`).join('')}
@@ -624,6 +624,11 @@ function buildS2(){
       <button class="obtn" onclick="selLite(this,'짝사랑')">짝사랑 Lite</button>
       <button class="obtn" onclick="selLite(this,'썸')">썸 Lite</button>
       <button class="obtn" onclick="selLite(this,'솔로')">솔로 Lite</button>
+    </div></div>`;
+  } else if(m==='reunion'){
+    oa.innerHTML=`<div class="ogroup"><div class="olabel">전략적 패키지 종류</div><div class="orow" id="pkgrow">
+      <button class="obtn" onclick="selPkg(this,'재회')">전략적 재회</button>
+      <button class="obtn" onclick="selPkg(this,'썸')">전략적 썸</button>
     </div></div>`;
   } else {
     oa.innerHTML = `
@@ -661,6 +666,10 @@ function selMQ(el,n){
 function selLite(el,type){
   document.querySelectorAll('#litrow .obtn').forEach(b=>b.classList.remove('selected'));
   el.classList.add('selected');S.liteType=type;buildPrice();chk2();
+}
+function selPkg(el,type){
+  document.querySelectorAll('#pkgrow .obtn').forEach(b=>b.classList.remove('selected'));
+  el.classList.add('selected');S.pkgType=type;buildPrice();chk2();
 }
 
 function showTime(type){
@@ -793,7 +802,7 @@ function buildPrice(){
     if((S.mixDur||0)+(S.q||0)>0)rows+=`<div class="prow disc"><span>혼합 할인</span><span>-5,000원</span></div>`;
   }
   if(m==='lite'&&S.liteType)rows+=`<div class="prow"><span>Lite 패키지 (${S.liteType})</span><span>15,000원</span></div>`;
-  if(m==='reunion')rows+=`<div class="prow"><span>재회 패키지</span><span>40,000원</span></div>`;
+  if(m==='reunion'&&S.pkgType)rows+=`<div class="prow"><span>시그니처 전략적 패키지 (${S.pkgType})</span><span>40,000원</span></div>`;
   if(m==='weekly')rows+=`<div class="prow"><span>위클리 패키지</span><span>70,000원</span></div>`;
   const total=calcPrice();
   const pa=document.getElementById('priceArea');
@@ -807,6 +816,7 @@ function chk2(){
   else if(m==='question')ok=S.q>0;
   else if(m==='mixed'){ok=!!(S.mixDur&&S.q&&S.date&&S.time);}
   else if(m==='lite')ok=!!S.liteType;
+  else if(m==='reunion')ok=!!S.pkgType;
   else ok=true;
   document.getElementById('btn2').disabled=!ok;
 }
@@ -864,6 +874,7 @@ function refreshS3Price(){
   if(m==='question')sum+=` · 질문 ${S.q}개`;
   if(m==='mixed'){if(S.mixDur)sum+=` · 실시간 ${S.mixDur}분`;if(S.q)sum+=` · 질문 ${S.q}개`;if(S.date&&S.time)sum+=` · ${S.date} ${S.time}`;}
   if(m==='lite'&&S.liteType)sum+=` · ${S.liteType}`;
+  if(m==='reunion'&&S.pkgType)sum+=` · ${S.pkgType}`;
   sum+=` · ${calcPrice().toLocaleString()}원`;
   document.getElementById('s3summary').textContent=sum;
   document.getElementById('acctAmt').textContent=calcPrice().toLocaleString()+'원';
@@ -888,7 +899,7 @@ function chk3(){
 
 function buildS4(){
   const m=S.menu;
-  let info=`· 메뉴: ${MENU_NAMES[m]}${m==='lite'?` (${S.liteType})`:''}\n`;
+  let info=`· 메뉴: ${MENU_NAMES[m]}${m==='lite'?` (${S.liteType})`:''}${m==='reunion'?` (${S.pkgType})`:''}\n`;
   if(m==='realtime')info+=`· 예약 시간: ${S.date} ${S.time} (${S.dur}분)\n`;
   if(m==='question')info+=`· 질문 수: ${S.q}개\n`;
   if(m==='mixed'){if(S.mixDur)info+=`· 실시간: ${S.date} ${S.time} (${S.mixDur}분)\n`;if(S.q)info+=`· 질문 수: ${S.q}개\n`;}
@@ -921,7 +932,7 @@ function buildS4(){
       </div>
       <button class="copy-btn" id="acctCopyBtn" onclick="copyAccount('acctCopyBtn')">📋 계좌번호 복사하기</button>`;
   } else if(S.pay==='card'){
-    cpa.innerHTML=`<div style="font-size:.78rem;color:#e0b87a;text-align:center;margin-bottom:8px;line-height:1.5;">※ 카드결제 시 스마트스토어 수수료 3.5%가 추가됩니다</div><a class="card-pay-btn" href="https://mkt.shopping.naver.com/link/69f9aa055358056105d6b7b0" target="_blank">💳 카드결제하기 (네이버 스마트스토어) →</a>`;
+    cpa.innerHTML=`<div style="font-size:.78rem;color:#e0b87a;text-align:center;margin-bottom:8px;line-height:1.5;">※ 카드결제 시 스마트스토어 수수료 6.5%가 추가됩니다</div><a class="card-pay-btn" href="https://mkt.shopping.naver.com/link/69f9aa055358056105d6b7b0" target="_blank">💳 카드결제하기 (네이버 스마트스토어) →</a>`;
   } else {
     cpa.innerHTML='';
   }
@@ -969,7 +980,7 @@ function buildS4(){
     const bk=`other_${Date.now()}`;
     data.bookings[bk]={
       name:S.name, pw:S.pw, pay:S.pay,
-      menu:MENU_NAMES[m]+(m==='lite'?` (${S.liteType})`:''), menuKey:m, liteType:S.liteType||null,
+      menu:MENU_NAMES[m]+(m==='lite'?` (${S.liteType})`:'')+(m==='reunion'?` (${S.pkgType})`:''), menuKey:m, liteType:S.liteType||null, pkgType:S.pkgType||null,
       price:calcPrice(), q:S.q, ts:Date.now(), source:BOOKING_SOURCE, tone:S.tone||null
     };
     db.ref('hs_admin').set(data);
@@ -1041,7 +1052,7 @@ function copyForm(tmplId, btnId){
 }
 
 function resetAll(){
-  Object.assign(S,{menu:null,dur:null,q:0,mixDur:null,liteType:null,date:null,dateObj:null,time:null,name:'',pw:'',pay:null,tone:null});
+  Object.assign(S,{menu:null,dur:null,q:0,mixDur:null,liteType:null,pkgType:null,date:null,dateObj:null,time:null,name:'',pw:'',pay:null,tone:null});
   document.querySelectorAll('.menu-card').forEach(c=>c.classList.remove('selected'));
   document.getElementById('btn1').disabled=true;
   document.getElementById('cardPayArea').innerHTML='';
