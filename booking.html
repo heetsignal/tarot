@@ -595,7 +595,7 @@ function buildS2(){
 
   if(m==='realtime'){
     oa.innerHTML=`
-    <div class="rt-notice">📌 <b>연애 관련 첫 방문은 20분 이상부터 가능해요.</b><br>연애는 질문 외에 파악해야 할 부분이 많아, 10분으로는 명확한 상담이 어렵습니다. 재방문부터는 10분 상담도 가능해요.</div>
+    <div class="rt-notice">📌 <b>연애 관련 첫 방문은 20분 이상부터 가능해요.</b><br>연애는 질문 외에 파악해야 할 부분이 많아, <br>10분으로는 명확한 상담이 어렵습니다. <br>재방문부터는 10분 상담도 가능해요.</div>
     <div class="ogroup"><div class="olabel">상담 주제</div><div class="orow" id="topicrow">
       ${['연애','합격','진로','사업','기타'].map(t=>`<button class="obtn" onclick="selTopic(this,'${t}')">${t}</button>`).join('')}
     </div></div>
