@@ -195,6 +195,11 @@ body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellips
 .s3-block .igroup:last-child{margin-bottom:0;}
 .s3-block .pay-list{margin-bottom:0;}
 .s3-block-title{font-size:.62rem;letter-spacing:.3em;color:var(--gold);text-transform:uppercase;margin-bottom:14px;display:block;}
+/* 실시간 첫방문 안내 */
+.rt-notice{background:rgba(100,150,210,.08);border-left:3px solid rgba(120,170,220,.7);border-radius:0 8px 8px 0;padding:14px 16px;margin-bottom:22px;font-size:.82rem;color:#cdd8ea;line-height:1.75;}
+.rt-notice b{color:#e8eefc;}
+.dur-warn{margin-top:10px;font-size:.8rem;color:#f08a8a;line-height:1.55;}
+.obtn.disabled{opacity:.3;cursor:not-allowed;pointer-events:none;}
 /* 전체 복사 버튼 */
 .copy-btn{width:100%;background:rgba(200,164,86,.14);border:1px solid var(--border2);border-radius:10px;padding:14px;color:var(--gold2);font-family:'Noto Serif KR',serif;font-size:.92rem;font-weight:600;cursor:pointer;letter-spacing:.03em;transition:all .2s;margin-bottom:20px;display:flex;align-items:center;justify-content:center;gap:8px;}
 .copy-btn:hover{background:rgba(200,164,86,.24);border-color:var(--gold2);}
@@ -276,7 +281,7 @@ body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellips
       </div>
       <div class="menu-card" data-menu="reunion" onclick="selMenu(this)">
         <div class="menu-top"><span class="menu-name">시그니처 전략적 패키지 <span class="mbadge b-48">48H</span></span><span class="menu-price">40,000원</span></div>
-        <div class="menu-info">재회 · 썸 중 1종 선택<br>양식 제출 후 48시간 이내 리딩지 발송</div>
+        <div class="menu-info">재회 · 썸 중 1종 선택 · 양식 제출 후 48시간 이내 리딩지 발송</div>
       </div>
       <div class="menu-card" data-menu="weekly" onclick="selMenu(this)">
         <div class="menu-top"><span class="menu-name">위클리 패키지 <span class="mbadge b-wk">7DAYS</span></span><span class="menu-price">70,000원</span></div>
@@ -343,7 +348,7 @@ body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellips
         </div>
         <div class="pay-card" id="pm-card" onclick="selPay('card')">
           <div class="pay-name">카드결제</div>
-          <div class="pay-desc">다음 화면에 보이는 사이트에서 결제 후 양식을 제출해 주세요<br><span style="color:#e0b87a;">※ 카드결제 시 스마트스토어 수수료 6.5%가 추가됩니다</span></div>
+          <div class="pay-desc">다음 화면에 보이는 사이트에서 결제 후 양식을 제출해 주세요<br><span style="color:#e0b87a;">※ 카드결제 시 스마트스토어 수수료 3.5%가 추가됩니다</span></div>
         </div>
       </div>
     </div>
@@ -486,7 +491,7 @@ const db = firebase.database();
 
 let globalData = {};
 
-const S={menu:null,dur:null,q:0,mixDur:null,liteType:null,pkgType:null,date:null,dateObj:null,time:null,name:'',pw:'',pay:null,tone:null};
+const S={menu:null,dur:null,q:0,mixDur:null,liteType:null,pkgType:null,topic:null,visit:null,date:null,dateObj:null,time:null,name:'',pw:'',pay:null,tone:null};
 
 // ===== 유입 경로(UTM) 읽기 =====
 // 광고 링크 뒤에 ?utm_source=meta 또는 ?utm_source=insta 를 붙이면
@@ -528,7 +533,7 @@ function toFmtKey(d) {
 function selMenu(el){
   document.querySelectorAll('.menu-card').forEach(c=>c.classList.remove('selected'));
   el.classList.add('selected');
-  S.menu=el.dataset.menu;S.dur=null;S.q=0;S.mixDur=null;S.liteType=null;S.pkgType=null;S.date=null;S.dateObj=null;S.time=null;
+  S.menu=el.dataset.menu;S.dur=null;S.q=0;S.mixDur=null;S.liteType=null;S.pkgType=null;S.topic=null;S.visit=null;S.date=null;S.dateObj=null;S.time=null;
   document.getElementById('btn1').disabled=false;
 }
 
@@ -589,11 +594,16 @@ function buildS2(){
   document.getElementById('btn2').disabled=true;
 
   if(m==='realtime'){
-    oa.innerHTML=`<div class="ogroup"><div class="olabel">상담 시간</div><div class="orow">
-      <button class="obtn" onclick="selDur(this,10)">10분 · 10,000원</button>
-      <button class="obtn" onclick="selDur(this,20)">20분 · 20,000원</button>
-      <button class="obtn" onclick="selDur(this,30)">30분 · 30,000원</button>
-    </div></div>`;
+    oa.innerHTML=`
+    <div class="rt-notice">📌 <b>연애 관련 첫 방문은 20분 이상부터 가능해요.</b><br>연애는 질문 외에 파악해야 할 부분이 많아, 10분으로는 명확한 상담이 어렵습니다. 재방문부터는 10분 상담도 가능해요.</div>
+    <div class="ogroup"><div class="olabel">상담 주제</div><div class="orow" id="topicrow">
+      ${['연애','합격','진로','사업','기타'].map(t=>`<button class="obtn" onclick="selTopic(this,'${t}')">${t}</button>`).join('')}
+    </div></div>
+    <div class="ogroup" id="visitGroup" style="display:none"><div class="olabel">방문 여부</div><div class="orow" id="visitrow">
+      <button class="obtn" onclick="selVisit(this,'첫 방문')">첫 방문</button>
+      <button class="obtn" onclick="selVisit(this,'재방문')">재방문</button>
+    </div></div>
+    <div class="ogroup" id="durGroup" style="display:none"><div class="olabel">상담 시간</div><div id="durArea"></div></div>`;
   } else if(m==='question'){
     oa.innerHTML=`
     <div class="q-guide">
@@ -644,10 +654,44 @@ function buildS2(){
   buildPrice();
 }
 
+function selTopic(el,t){
+  document.querySelectorAll('#topicrow .obtn').forEach(b=>b.classList.remove('selected'));
+  el.classList.add('selected'); S.topic=t;
+  document.getElementById('visitGroup').style.display='block';
+  clearDurAndTime();
+  if(S.visit){ renderDurations(); }
+  chk2();
+}
+function selVisit(el,v){
+  document.querySelectorAll('#visitrow .obtn').forEach(b=>b.classList.remove('selected'));
+  el.classList.add('selected'); S.visit=v;
+  document.getElementById('durGroup').style.display='block';
+  clearDurAndTime();
+  renderDurations();
+  chk2();
+}
+function renderDurations(){
+  const da=document.getElementById('durArea');
+  if(!da) return;
+  const lockTen = (S.topic==='연애' && S.visit==='첫 방문');
+  let html='<div class="orow" id="durrow">';
+  [10,20,30].forEach(min=>{
+    const disabled=(min===10 && lockTen);
+    html += `<button class="obtn${disabled?' disabled':''}" ${disabled?'':`onclick="selDur(this,${min})"`}>${min}분 · ${(min*1000).toLocaleString()}원</button>`;
+  });
+  html+='</div>';
+  if(lockTen){ html+='<div class="dur-warn">* 연애 관련 첫 방문은 20분 이상 상담 가능합니다.</div>'; }
+  da.innerHTML=html;
+}
+function clearDurAndTime(){
+  S.dur=null; S.time=null; S.date=null; S.dateObj=null;
+  const ta=document.getElementById('timeArea'); if(ta) ta.style.display='none';
+  buildPrice();
+}
 function selDur(el,min){
-  document.querySelectorAll('#optArea .obtn').forEach(b=>b.classList.remove('selected'));
+  document.querySelectorAll('#durrow .obtn').forEach(b=>b.classList.remove('selected'));
   el.classList.add('selected');S.dur=min;
-  showTime('realtime');buildPrice();
+  showTime('realtime');buildPrice();chk2();
 }
 function selQ(el,n){
   document.querySelectorAll('#qrow .obtn').forEach(b=>b.classList.remove('selected'));
@@ -812,7 +856,7 @@ function buildPrice(){
 
 function chk2(){
   const m=S.menu;let ok=false;
-  if(m==='realtime')ok=!!(S.dur&&S.date&&S.time);
+  if(m==='realtime')ok=!!(S.topic&&S.visit&&S.dur&&S.date&&S.time);
   else if(m==='question')ok=S.q>0;
   else if(m==='mixed'){ok=!!(S.mixDur&&S.q&&S.date&&S.time);}
   else if(m==='lite')ok=!!S.liteType;
@@ -846,7 +890,7 @@ function buildTone(){
     opts=['제 질문 위주로 봐주세요','제 질문 + 추천 질문도 들을래요','잘 모르겠어요, 주도적으로 봐주세요'];
   } else if(m==='lite'||m==='reunion'||m==='weekly'){
     label='리딩 톤 (선택)';
-    sub='(선택) 어떤 톤으로 적어드리면 좋을지 골라주세요.';
+    sub='어떤 톤으로 적어드리면 좋을지 골라주세요. 안 고르셔도 괜찮아요.';
     opts=['작은 가능성도 다 적어주세요','희망고문 싫어요, 확실한 것만 적어주세요'];
   }
   if(!opts){ ta.innerHTML=''; return; }
@@ -870,7 +914,7 @@ function selTone(el,val){
 function refreshS3Price(){
   const m=S.menu;
   let sum=MENU_NAMES[m];
-  if(m==='realtime')sum+=` · ${S.dur}분 · ${S.date} ${S.time}`;
+  if(m==='realtime')sum+=` · ${S.topic}/${S.visit} · ${S.dur}분 · ${S.date} ${S.time}`;
   if(m==='question')sum+=` · 질문 ${S.q}개`;
   if(m==='mixed'){if(S.mixDur)sum+=` · 실시간 ${S.mixDur}분`;if(S.q)sum+=` · 질문 ${S.q}개`;if(S.date&&S.time)sum+=` · ${S.date} ${S.time}`;}
   if(m==='lite'&&S.liteType)sum+=` · ${S.liteType}`;
@@ -900,7 +944,7 @@ function chk3(){
 function buildS4(){
   const m=S.menu;
   let info=`· 메뉴: ${MENU_NAMES[m]}${m==='lite'?` (${S.liteType})`:''}${m==='reunion'?` (${S.pkgType})`:''}\n`;
-  if(m==='realtime')info+=`· 예약 시간: ${S.date} ${S.time} (${S.dur}분)\n`;
+  if(m==='realtime')info+=`· 상담 주제: ${S.topic} (${S.visit})\n· 예약 시간: ${S.date} ${S.time} (${S.dur}분)\n`;
   if(m==='question')info+=`· 질문 수: ${S.q}개\n`;
   if(m==='mixed'){if(S.mixDur)info+=`· 실시간: ${S.date} ${S.time} (${S.mixDur}분)\n`;if(S.q)info+=`· 질문 수: ${S.q}개\n`;}
   info+=`· 결제 금액: ${calcPrice().toLocaleString()}원\n`;
@@ -972,7 +1016,7 @@ function buildS4(){
         menu:MENU_NAMES[m], menuKey:m,
         time:S.time, dur:dur, price:calcPrice(),
         dateStr:S.date, mixDur:S.mixDur, q:S.q,
-        blockedKeys, ts:Date.now(), source:BOOKING_SOURCE, tone:S.tone||null
+        blockedKeys, ts:Date.now(), source:BOOKING_SOURCE, tone:S.tone||null, topic:S.topic||null, visit:S.visit||null
       };
       db.ref('hs_admin').set(data);
     }
@@ -1052,7 +1096,7 @@ function copyForm(tmplId, btnId){
 }
 
 function resetAll(){
-  Object.assign(S,{menu:null,dur:null,q:0,mixDur:null,liteType:null,pkgType:null,date:null,dateObj:null,time:null,name:'',pw:'',pay:null,tone:null});
+  Object.assign(S,{menu:null,dur:null,q:0,mixDur:null,liteType:null,pkgType:null,topic:null,visit:null,date:null,dateObj:null,time:null,name:'',pw:'',pay:null,tone:null});
   document.querySelectorAll('.menu-card').forEach(c=>c.classList.remove('selected'));
   document.getElementById('btn1').disabled=true;
   document.getElementById('cardPayArea').innerHTML='';
@@ -1086,7 +1130,7 @@ function doCheck(){
   }
 
   let info = `· 메뉴: ${found.menu}\n`;
-  if(found.menuKey==='realtime') info+=`· 예약 시간: ${found.dateStr||''} ${found.time||''} (${found.dur||0}분)\n`;
+  if(found.menuKey==='realtime') info+=`${found.topic?`· 상담 주제: ${found.topic} (${found.visit||''})\n`:''}· 예약 시간: ${found.dateStr||''} ${found.time||''} (${found.dur||0}분)\n`;
   if(found.menuKey==='question') info+=`· 질문 수: ${found.q||0}개\n`;
   if(found.menuKey==='mixed'){
     if(found.mixDur) info+=`· 실시간: ${found.dateStr||''} ${found.time||''} (${found.mixDur}분)\n`;
