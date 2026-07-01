@@ -475,6 +475,7 @@ function renderRtGroups(list){
             <span class="bk-time-badge">${b.time||'—'}</span>
             <span class="bk-name">${b.name||'—'}</span>
             <span class="bk-min">${b.dur?b.dur+'분':''}</span>
+            ${b.menu==='비방'?'<span class="bk-min" style="color:#c8a8e8;">· 비방</span>':''}
             <button class="bk-del" onclick="delBooking('${b.k}')">삭제</button>
           </div>
           ${contactChips(b)}
@@ -524,8 +525,8 @@ function renderBookings(){
   const rt = [], others = [];
   
   Object.entries(bookings).forEach(([k,b])=>{
-    if(b.menu === '실시간 리딩' || (b.menu === '혼합 리딩' && b.time)) rt.push({k, ...b});
-    if(b.menu !== '실시간 리딩') others.push({k, ...b});
+    if(b.menu === '실시간 리딩' || b.menu === '비방' || (b.menu === '혼합 리딩' && b.time)) rt.push({k, ...b});
+    if(b.menu !== '실시간 리딩' && b.menu !== '비방') others.push({k, ...b});
   });
 
   // --- 실시간 상담: 지난 예약(시간 경과)을 토글로 분리 ---
