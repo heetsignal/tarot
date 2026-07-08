@@ -33,6 +33,7 @@ src="https://www.facebook.com/tr?id=1498731927904141&ev=PageView&noscript=1"
 <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,300&family=Noto+Serif+KR:wght@300;400;500&display=swap" rel="stylesheet">
 <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
 <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
+<script src="https://t1.daumcdn.net/mapjsapi/bundle/postcode/prod/postcode.v2.js"></script>
 
 <style>
 :root{
@@ -412,6 +413,13 @@ textarea.ifield{resize:vertical;min-height:70px;line-height:1.6;}
   </div>
 </div>
 
+<div id="postcodeLayer" style="display:none;position:fixed;inset:0;z-index:1000;background:rgba(8,7,15,.9);padding:16px;">
+  <div style="max-width:500px;margin:32px auto 0;background:#fff;border-radius:12px;overflow:hidden;position:relative;height:82vh;box-shadow:0 10px 40px rgba(0,0,0,.5);">
+    <button onclick="closePostcode()" style="position:absolute;top:8px;right:10px;z-index:3;background:#08070f;color:#fff;border:none;border-radius:7px;padding:7px 13px;cursor:pointer;font-family:'Noto Serif KR',serif;font-size:.85rem;">닫기 ✕</button>
+    <div id="postcodeBox" style="width:100%;height:100%;"></div>
+  </div>
+</div>
+
 <div class="modal-bg" id="chkModal">
   <div class="modal-content">
     <button class="close-modal" onclick="closeCheckModal()">×</button>
@@ -499,7 +507,7 @@ const db = firebase.database();
 
 let globalData = {};
 
-const S={menu:null,dur:null,q:0,mixDur:null,liteType:null,pkgType:null,topic:null,visit:null,spellTopic:null,phone:'',addr:'',wish:'',date:null,dateObj:null,time:null,name:'',pw:'',pay:null,tone:null};
+const S={menu:null,dur:null,q:0,mixDur:null,liteType:null,pkgType:null,topic:null,visit:null,spellTopic:null,phone:'',zip:'',roadAddr:'',addrDetail:'',addr:'',wish:'',date:null,dateObj:null,time:null,name:'',pw:'',pay:null,tone:null};
 
 // ===== 유입 경로(UTM) 읽기 =====
 function getUtmSource(){
@@ -539,7 +547,7 @@ function toFmtKey(d) {
 function selMenu(el){
   document.querySelectorAll('.menu-card').forEach(c=>c.classList.remove('selected'));
   el.classList.add('selected');
-  S.menu=el.dataset.menu;S.dur=null;S.q=0;S.mixDur=null;S.liteType=null;S.pkgType=null;S.topic=null;S.visit=null;S.spellTopic=null;S.phone='';S.addr='';S.wish='';S.date=null;S.dateObj=null;S.time=null;
+  S.menu=el.dataset.menu;S.dur=null;S.q=0;S.mixDur=null;S.liteType=null;S.pkgType=null;S.topic=null;S.visit=null;S.spellTopic=null;S.phone='';S.zip='';S.roadAddr='';S.addrDetail='';S.addr='';S.wish='';S.date=null;S.dateObj=null;S.time=null;
   document.getElementById('btn1').disabled=false;
 }
 
@@ -889,7 +897,7 @@ function buildS3(){
 function buildSpellFields(){
   const sf=document.getElementById('spellFields');
   if(!sf) return;
-  if(S.menu!=='spell'){ sf.innerHTML=''; S.phone='';S.addr='';S.wish=''; return; }
+  if(S.menu!=='spell'){ sf.innerHTML=''; S.phone='';S.zip='';S.roadAddr='';S.addrDetail='';S.addr='';S.wish=''; return; }
   sf.innerHTML=`<div class="s3-block">
     <span class="s3-block-title">배송 정보 (스펠자)</span>
     <div class="igroup">
@@ -898,7 +906,12 @@ function buildSpellFields(){
     </div>
     <div class="igroup">
       <label class="ilabel">배송지</label>
-      <input class="ifield" id="spellAddr" placeholder="받으실 주소를 입력해 주세요" oninput="onSpellInput()">
+      <div style="display:flex;gap:8px;margin-bottom:8px;">
+        <input class="ifield" id="spellZip" placeholder="우편번호" readonly style="flex:1;background:rgba(255,255,255,.02);cursor:default;">
+        <button type="button" class="btn-ghost" style="width:auto;white-space:nowrap;margin-bottom:0;padding:0 18px;" onclick="openPostcode()">주소 검색</button>
+      </div>
+      <input class="ifield" id="spellRoad" placeholder="주소 검색 버튼을 눌러주세요" readonly style="background:rgba(255,255,255,.02);cursor:default;margin-bottom:8px;">
+      <input class="ifield" id="spellDetail" placeholder="상세주소 (동·호수 등)" oninput="onSpellInput()">
     </div>
     <div class="igroup">
       <label class="ilabel">가장 원하는 소망 한 가지</label>
@@ -906,10 +919,37 @@ function buildSpellFields(){
     </div>
   </div>`;
 }
+function openPostcode(){
+  if(typeof daum==='undefined' || !daum.Postcode){
+    alert('주소 검색을 불러오지 못했어요. 잠시 후 다시 시도해 주세요.');
+    return;
+  }
+  const layer=document.getElementById('postcodeLayer');
+  const box=document.getElementById('postcodeBox');
+  box.innerHTML='';
+  layer.style.display='block';
+  new daum.Postcode({
+    oncomplete:function(data){
+      S.zip=data.zonecode;
+      S.roadAddr=data.roadAddress || data.jibunAddress;
+      document.getElementById('spellZip').value=S.zip;
+      document.getElementById('spellRoad').value=S.roadAddr;
+      layer.style.display='none';
+      const det=document.getElementById('spellDetail');
+      if(det) det.focus();
+      onSpellInput();
+    },
+    width:'100%',
+    height:'100%'
+  }).embed(box);
+}
+function closePostcode(){ document.getElementById('postcodeLayer').style.display='none'; }
 function onSpellInput(){
   S.phone=(document.getElementById('spellPhone')?.value||'').trim();
-  S.addr=(document.getElementById('spellAddr')?.value||'').trim();
+  S.addrDetail=(document.getElementById('spellDetail')?.value||'').trim();
   S.wish=(document.getElementById('spellWish')?.value||'').trim();
+  // 최종 배송지 = (우편번호) 도로명주소 + 상세주소
+  S.addr = S.roadAddr ? `(${S.zip}) ${S.roadAddr}${S.addrDetail?' '+S.addrDetail:''}` : '';
   chk3();
 }
 
@@ -973,7 +1013,7 @@ function chk3(){
   S.name=document.getElementById('nameInput').value.trim();
   S.pw=document.getElementById('pwInput').value.trim();
   let ok = (S.name && S.pw.length >= 4 && S.pay);
-  if(S.menu==='spell'){ ok = ok && S.phone && S.addr && S.wish; }
+  if(S.menu==='spell'){ ok = ok && S.phone && S.roadAddr && S.addrDetail && S.wish; }
   document.getElementById('btn3').disabled=!ok;
 }
 
@@ -1007,7 +1047,7 @@ function buildS4(){
     data.bookings[bk]={
       name:S.name, pw:S.pw, pay:S.pay,
       menu:'스펠자', menuKey:'spell', spellTopic:S.spellTopic||null,
-      phone:S.phone||null, addr:S.addr||null, wish:S.wish||null,
+      phone:S.phone||null, addr:S.addr||null, zip:S.zip||null, roadAddr:S.roadAddr||null, addrDetail:S.addrDetail||null, wish:S.wish||null,
       price:calcPrice(), ts:Date.now(), source:BOOKING_SOURCE
     };
     db.ref('hs_admin').set(data);
@@ -1171,7 +1211,7 @@ function copyForm(tmplId, btnId){
 }
 
 function resetAll(){
-  Object.assign(S,{menu:null,dur:null,q:0,mixDur:null,liteType:null,pkgType:null,topic:null,visit:null,spellTopic:null,phone:'',addr:'',wish:'',date:null,dateObj:null,time:null,name:'',pw:'',pay:null,tone:null});
+  Object.assign(S,{menu:null,dur:null,q:0,mixDur:null,liteType:null,pkgType:null,topic:null,visit:null,spellTopic:null,phone:'',zip:'',roadAddr:'',addrDetail:'',addr:'',wish:'',date:null,dateObj:null,time:null,name:'',pw:'',pay:null,tone:null});
   document.querySelectorAll('.menu-card').forEach(c=>c.classList.remove('selected'));
   document.getElementById('btn1').disabled=true;
   document.getElementById('cardPayArea').innerHTML='';
