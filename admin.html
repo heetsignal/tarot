@@ -95,6 +95,19 @@ body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellips
 .tg-open{background:rgba(255,225,0,.1);color:#e8d878;border:1px solid rgba(255,225,0,.22);}
 .tg-biz{background:rgba(255,255,255,.06);color:#b8b0a0;border:1px solid rgba(255,255,255,.14);}
 .tg-none{background:rgba(200,80,80,.1);color:#e0a0a0;border:1px solid rgba(200,80,80,.28);}
+/* 할 일 한 줄 표기: 시간 | 메뉴 | 이름 (닉네임) */
+.tk-main{display:flex;align-items:baseline;flex-wrap:wrap;gap:7px;line-height:1.5;}
+.tk-menu{font-size:.84rem;font-weight:600;}
+.ml-rt{color:#e8c87a;}
+.ml-dl{color:#90b8e0;}
+.ml-rit{color:#b890e0;}
+.ml-wk{color:#e090b8;}
+.ml-shp{color:#88c8a0;}
+.tk-sep{color:var(--text3);opacity:.5;font-size:.78rem;}
+.tk-person{font-size:.86rem;color:var(--text);}
+.tk-nick{font-size:.8rem;color:#e8d878;}
+.tk-biz{font-size:.74rem;color:#8a8578;}
+.tk-nochan{font-size:.72rem;color:#e0a0a0;background:rgba(200,80,80,.1);border:1px solid rgba(200,80,80,.28);border-radius:4px;padding:1px 6px;}
 .ch-edit{background:none;border:none;color:var(--gold);font-size:.66rem;cursor:pointer;padding:1px 5px;text-decoration:underline;}
 .ch-edit:hover{color:var(--gold2);}
 .task-del{background:none;border:none;color:#c08080;font-size:.68rem;cursor:pointer;padding:2px 4px;flex-shrink:0;}
@@ -812,9 +825,9 @@ function autoTasks(){
         const when = new Date(dk.split('-')[0], dk.split('-')[1]-1, dk.split('-')[2], h, mi||0);
         out.push({
           id:'auto_rt_'+k, when, chKey:'bk_'+k, chName:b.name||'',
-          title:`${b.name||'-'} · ${b.menu||''} ${b.dur?b.dur+'분':''}`,
+          menuLabel:`${b.menu||''}${b.dur?' '+b.dur+'분':''}`, person:b.name||'-',
           meta:(b.topic?`${b.topic}${b.visit?' / '+b.visit:''}`:'') + (b.isPaid?' · 입금완료':' · 미입금'),
-          tag:'상담', tagCls:'tg-rt'
+          cls:'ml-rt'
         });
       }
     }
@@ -825,9 +838,9 @@ function autoTasks(){
       const when = new Date(new Date(b.formRecvTime).getTime() + hrs*3600000);
       out.push({
         id:'auto_dl_'+k, when, chKey:'bk_'+k, chName:b.name||'',
-        title:`${b.name||'-'} · ${b.menu||''} 리딩지 마감`,
+        menuLabel:`${b.menu||''} 마감`, person:b.name||'-',
         meta:`양식 수신 후 ${hrs}시간`,
-        tag:'마감', tagCls:'tg-dl'
+        cls:'ml-dl'
       });
     }
 
@@ -838,9 +851,9 @@ function autoTasks(){
       when.setHours(12,0,0,0);
       out.push({
         id:'auto_sp_'+k, when, chKey:'bk_'+k, chName:b.name||'',
-        title:`${b.name||'-'} · 스펠자 발송 기한`,
+        menuLabel:'스펠자 발송', person:b.name||'-',
         meta:`${b.spellTopic||''} · ${b.addr||'주소 미입력'}`,
-        tag:'배송', tagCls:'tg-shp'
+        cls:'ml-shp'
       });
     }
 
@@ -852,18 +865,18 @@ function autoTasks(){
         w.setHours(22,0,0,0);
         out.push({
           id:`auto_bf_${k}_${i}`, when:w, chKey:'bk_'+k, chName:b.name||'',
-          title:`${b.name||'-'} · 나비주술 ${i}일차 사진 발송`,
-          meta:`5일 중 ${i}일차${i===5?' (마지막)':''}`,
-          tag:'주술', tagCls:'tg-rit'
+          menuLabel:`나비주술 ${i}일차`, person:b.name||'-',
+          meta:`사진 발송 · 5일 중 ${i}일차${i===5?' (마지막)':''}`,
+          cls:'ml-rit'
         });
       }
       // 미니 스펠자 발송 기한
       const ship = new Date(b.ts); ship.setDate(ship.getDate()+14); ship.setHours(12,0,0,0);
       out.push({
         id:'auto_bfs_'+k, when:ship, chKey:'bk_'+k, chName:b.name||'',
-        title:`${b.name||'-'} · 미니 스펠자 발송 기한`,
+        menuLabel:'미니 스펠자 발송', person:b.name||'-',
         meta:`${b.addr||'주소 미입력'}`,
-        tag:'배송', tagCls:'tg-shp'
+        cls:'ml-shp'
       });
     }
   });
@@ -887,13 +900,16 @@ function getChannel(t){
   return null;
 }
 
-function channelChip(t){
+// 이름 옆에 붙일 채널 표기 (오픈채팅=노란 괄호 닉네임 / 비즈니스=표시 없음)
+function personHtml(t){
   const c = getChannel(t);
-  const btn = `<button class="ch-edit" onclick="openChModal('${t.chKey}','${(t.chName||'').replace(/'/g,"\\'")}')">${c?'수정':'＋ 채널'}</button>`;
-  if(!c) return `<span class="task-tag tg-none">채널 미등록</span>${btn}`;
-  return c.open
-    ? `<span class="task-tag tg-open">오픈채팅 · ${c.nick||'닉네임 없음'}</span>${btn}`
-    : `<span class="task-tag tg-biz">비즈니스 채널</span>${btn}`;
+  const name = `<span class="tk-person">${t.person||'-'}</span>`;
+  if(!c) return `${name} <span class="tk-nochan">채널 미등록</span>`;
+  if(c.open) return `${name} <span class="tk-nick">(${c.nick||'닉네임 없음'})</span>`;
+  return `${name} <span class="tk-biz">· 비즈니스</span>`;
+}
+function chEditBtn(t){
+  return `<button class="ch-edit" onclick="openChModal('${t.chKey}','${(t.chName||'').replace(/'/g,"\\'")}')">채널</button>`;
 }
 
 function manualTasks(){
@@ -911,12 +927,13 @@ function manualTasks(){
       const notify = new Date(y, mo-1, dd+i+(v.nextDay?1:0));
       notify.setHours(hh, mm||0, 0, 0);
       const ch = parseChannel(v.name);
+      const dayTxt = days>1 ? ` ${i+1}일차` : '';
       out.push({
         id:`man_${id}_${i}`, when:notify, manualId:id, chKey:'tk_'+id, chName:ch.real,
-        title:`${ch.real||'-'} · ${v.menu} ${days>1?(i+1)+'일차':''}`.trim(),
-        meta:`__CH__<br>진행일 ${runDay.getMonth()+1}/${runDay.getDate()}${v.nextDay?' · 다음날 사진 발송':''}${days>1?` · ${days}일 중 ${i+1}`:''}`,
+        menuLabel:`${v.menu}${dayTxt}`, person:ch.real||'-',
+        meta:`진행일 ${runDay.getMonth()+1}/${runDay.getDate()}${v.nextDay?' · 다음날 사진 발송':''}${days>1?` · ${days}일 중 ${i+1}`:''}`,
         fallbackCh: ch.open ? {open:true, nick:ch.nick} : null,
-        tag:'주술', tagCls:'tg-rit'
+        cls: v.menu==='위클리' ? 'ml-wk' : 'ml-rit'
       });
     }
   });
@@ -976,15 +993,16 @@ function renderTasks(){
 
     const items = groups[k].map(t=>{
       const isDone = !!done[t.id];
-      const chip = t.chKey ? channelChip(t) : '';
-      let meta = t.meta || '';
-      if(meta.includes('__CH__')) meta = meta.replace('__CH__', chip);
-      else if(chip) meta = chip + (meta?`<br>${meta}`:'');
       return `<div class="task-item${isDone?' done':''}">
         <button class="task-chk${isDone?' on':''}" onclick="toggleTaskDone('${t.id}')">${isDone?'✓':''}</button>
         <div class="task-body">
-          <div><span class="task-time">${hhmm(t.when)}</span><span class="task-tag ${t.tagCls}">${t.tag}</span><span class="task-name">${t.title}</span></div>
-          ${meta?`<div class="task-meta">${meta}</div>`:''}
+          <div class="tk-main">
+            <span class="task-time">${hhmm(t.when)}</span>
+            <span class="tk-menu ${t.cls||''}">${t.menuLabel||''}</span>
+            <span class="tk-sep">|</span>
+            ${personHtml(t)}
+          </div>
+          <div class="task-meta">${t.meta||''} ${chEditBtn(t)}</div>
         </div>
         ${t.manualId?`<button class="task-del" onclick="delTask('${t.manualId}')">삭제</button>`:''}
       </div>`;
@@ -1252,4 +1270,3 @@ function commitBulk(){
 </script>
 </body>
 </html>
-
