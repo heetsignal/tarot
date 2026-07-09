@@ -201,7 +201,10 @@ body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellips
   </div>
 
   <div class="tab-panel active" id="tab-tasks">
-    <button class="task-add-btn" onclick="openTaskModal()">＋ 일정 추가</button>
+    <div style="display:flex;gap:8px;margin-bottom:18px;">
+      <button class="task-add-btn" style="margin-bottom:0;" onclick="openTaskModal()">＋ 일정 추가</button>
+      <button class="task-add-btn" style="margin-bottom:0;" onclick="openBulkModal()">📥 일괄 등록</button>
+    </div>
     <div id="taskList"></div>
   </div>
 
@@ -251,6 +254,26 @@ body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellips
     <div class="tm-hint" id="tmHint">비방은 진행일 다음날 새벽 1시에 사진 발송됩니다.</div>
 
     <button class="tm-save" onclick="saveTask()">일정 등록</button>
+  </div>
+</div>
+
+<div class="task-modal" id="bulkModal">
+  <div class="task-modal-box" style="max-width:520px;">
+    <button class="task-modal-close" onclick="closeBulkModal()">✕</button>
+    <div class="task-modal-title">일정 일괄 등록</div>
+
+    <div class="tm-hint" style="margin-bottom:12px;line-height:1.7;">
+      한 줄에 하나씩 붙여넣으세요.<br>
+      <b style="color:var(--gold2);">메뉴, 이름, 시작날짜, 일수</b> (시각은 선택)<br>
+      메뉴: 리츄얼 비방 / 나비주술 / 위클리 / 스펠자 발송 / 기타
+    </div>
+
+    <textarea class="tm-input" id="bulkText" style="min-height:190px;line-height:1.7;font-size:.8rem;" placeholder="리츄얼 비방, 김서연, 2026-07-10, 3
+나비주술, 이하늘, 2026-07-12, 5
+기타, 강서은 실시간20분, 2026-07-09, 1, 15:15"></textarea>
+
+    <button class="tm-save" onclick="previewBulk()">미리보기</button>
+    <div id="bulkPreview"></div>
   </div>
 </div>
 
@@ -993,6 +1016,122 @@ function saveTask(){
 
   closeTaskModal();
   showToast(`${name} · ${tmMenu} ${days}일 일정이 등록되었습니다`);
+  renderTasks();
+}
+
+/* ---- 일괄 등록 ---- */
+const MENU_PRESET = {
+  '리츄얼 비방': { time:'01:00', nextDay:true },
+  '나비주술':   { time:'22:00', nextDay:false },
+  '위클리':     { time:'10:00', nextDay:false },
+  '스펠자 발송': { time:'12:00', nextDay:false },
+  '기타':       { time:'12:00', nextDay:false },
+};
+
+function openBulkModal(){
+  document.getElementById('bulkText').value='';
+  document.getElementById('bulkPreview').innerHTML='';
+  document.getElementById('bulkModal').classList.add('show');
+}
+function closeBulkModal(){ document.getElementById('bulkModal').classList.remove('show'); }
+
+// 한 줄 파싱 → {ok, task|error}
+function parseBulkLine(line){
+  const raw = line.trim();
+  if(!raw) return null;
+  const p = raw.split(',').map(s=>s.trim());
+  if(p.length < 4) return { ok:false, line:raw, error:'항목이 4개보다 적습니다' };
+
+  const menu = p[0];
+  if(!MENU_PRESET[menu]) return { ok:false, line:raw, error:`메뉴명 오류 ("${menu}")` };
+
+  const name = p[1];
+  if(!name) return { ok:false, line:raw, error:'이름이 비었습니다' };
+
+  const date = p[2];
+  if(!/^\d{4}-\d{2}-\d{2}$/.test(date)) return { ok:false, line:raw, error:`날짜 형식 오류 ("${date}")` };
+
+  const days = parseInt(p[3],10);
+  if(!days || days < 1 || days > 30) return { ok:false, line:raw, error:`일수 오류 ("${p[3]}")` };
+
+  const preset = MENU_PRESET[menu];
+  let time = preset.time;
+  if(p[4]){
+    if(!/^\d{1,2}:\d{2}$/.test(p[4])) return { ok:false, line:raw, error:`시각 형식 오류 ("${p[4]}")` };
+    const [hh,mm]=p[4].split(':').map(Number);
+    if(hh>23||mm>59) return { ok:false, line:raw, error:`시각 범위 오류 ("${p[4]}")` };
+    time = String(hh).padStart(2,'0')+':'+String(mm).padStart(2,'0');
+  }
+  return { ok:true, task:{ menu, name, startDate:date, days, time, nextDay:preset.nextDay } };
+}
+
+let bulkParsed = [];
+
+function previewBulk(){
+  const text = document.getElementById('bulkText').value;
+  const lines = text.split('\n');
+  const results = lines.map(parseBulkLine).filter(Boolean);
+  const good = results.filter(r=>r.ok);
+  const bad  = results.filter(r=>!r.ok);
+  bulkParsed = good.map(r=>r.task);
+
+  const el = document.getElementById('bulkPreview');
+  if(!results.length){ el.innerHTML='<div class="tm-hint" style="margin-top:14px;">입력된 줄이 없습니다.</div>'; return; }
+
+  const wd=['일','월','화','수','목','금','토'];
+  let html = `<div style="margin-top:20px;padding-top:16px;border-top:1px solid var(--border);">`;
+
+  if(bad.length){
+    html += `<div style="background:rgba(200,80,80,.1);border:1px solid rgba(220,120,120,.4);border-radius:8px;padding:11px 13px;margin-bottom:14px;font-size:.76rem;color:#f0c8c0;line-height:1.7;">
+      <b>❗ ${bad.length}줄에 문제가 있어 제외됩니다</b><br>
+      ${bad.map(b=>`· ${b.error}<br><span style="color:#c09890;font-size:.72rem;">${b.line}</span>`).join('<br>')}
+    </div>`;
+  }
+
+  if(good.length){
+    let totalItems = 0;
+    const rows = good.map(r=>{
+      const t=r.task;
+      totalItems += t.days;
+      const [y,mo,dd]=t.startDate.split('-').map(Number);
+      const s=new Date(y,mo-1,dd);
+      const e=new Date(y,mo-1,dd+t.days-1);
+      const range = t.days>1
+        ? `${s.getMonth()+1}/${s.getDate()} ~ ${e.getMonth()+1}/${e.getDate()}`
+        : `${s.getMonth()+1}/${s.getDate()}(${wd[s.getDay()]})`;
+      const note = t.nextDay ? `다음날 ${t.time} 사진` : `당일 ${t.time}`;
+      return `<div style="font-size:.76rem;color:var(--text2);padding:7px 0;border-bottom:1px solid rgba(200,164,86,.08);line-height:1.6;">
+        <b style="color:var(--gold2);">${t.menu}</b> · ${t.name}<br>
+        <span style="color:var(--text3);">${range} · ${t.days}일 · ${note}</span>
+      </div>`;
+    }).join('');
+
+    html += `<div style="font-size:.8rem;color:var(--gold2);margin-bottom:8px;">✔ 등록될 일정 ${good.length}건 (할 일 ${totalItems}개 생성)</div>
+      ${rows}
+      <button class="tm-save" onclick="commitBulk()">이대로 ${good.length}건 등록하기</button>`;
+  } else {
+    html += `<div class="tm-hint">등록 가능한 줄이 없습니다.</div>`;
+  }
+
+  html += `</div>`;
+  el.innerHTML = html;
+}
+
+function commitBulk(){
+  if(!bulkParsed.length){ alert('등록할 일정이 없습니다.'); return; }
+  if(!confirm(`${bulkParsed.length}건을 등록할까요?`)) return;
+
+  const data = ad();
+  if(!data.tasks) data.tasks = {};
+  const base = Date.now();
+  bulkParsed.forEach((t,i)=>{
+    data.tasks['t'+(base+i)] = { ...t, ts:base+i };
+  });
+  sad(data);
+
+  closeBulkModal();
+  showToast(`${bulkParsed.length}건의 일정이 등록되었습니다`);
+  bulkParsed = [];
   renderTasks();
 }
 </script>
