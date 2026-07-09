@@ -71,6 +71,43 @@ body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellips
 
 .bk-section{margin-bottom:28px;}
 .bk-section-title{font-family:'Cormorant Garamond',serif;font-size:1.1rem;color:var(--gold2);margin-bottom:14px;padding-bottom:8px;border-bottom:1px solid var(--border);}
+/* ===== 할 일 화면 ===== */
+.task-add-btn{width:100%;background:rgba(200,164,86,.14);border:1px solid var(--border2);border-radius:10px;padding:13px;color:var(--gold2);font-family:'Noto Serif KR',serif;font-size:.9rem;font-weight:600;cursor:pointer;margin-bottom:18px;}
+.task-add-btn:hover{background:rgba(200,164,86,.24);}
+.task-day{margin-bottom:24px;}
+.task-day-head{font-size:.9rem;color:var(--gold2);margin-bottom:10px;padding-bottom:7px;border-bottom:1px solid var(--border);display:flex;justify-content:space-between;align-items:center;}
+.task-day-head .cnt{font-size:.72rem;color:var(--text3);}
+.task-day.today .task-day-head{color:#f5dfa0;}
+.task-item{display:flex;align-items:flex-start;gap:10px;background:rgba(15,13,28,.55);border:1px solid var(--border);border-radius:9px;padding:11px 13px;margin-bottom:8px;}
+.task-item.done{opacity:.42;}
+.task-item.done .task-name{text-decoration:line-through;}
+.task-chk{width:20px;height:20px;flex-shrink:0;border-radius:5px;border:1.5px solid var(--border2);background:transparent;cursor:pointer;color:var(--gold2);font-size:.72rem;line-height:1;display:flex;align-items:center;justify-content:center;margin-top:2px;}
+.task-chk.on{background:rgba(200,164,86,.7);color:#08070f;border-color:var(--gold2);}
+.task-body{flex:1;min-width:0;}
+.task-time{font-family:'Cormorant Garamond',serif;font-size:.95rem;color:var(--gold2);margin-right:8px;}
+.task-name{font-size:.87rem;color:var(--text);}
+.task-meta{font-size:.72rem;color:var(--text3);margin-top:3px;line-height:1.5;}
+.task-tag{display:inline-block;font-size:.62rem;padding:2px 7px;border-radius:4px;margin-right:5px;vertical-align:middle;}
+.tg-rt{background:rgba(200,164,86,.12);color:var(--gold);border:1px solid rgba(200,164,86,.25);}
+.tg-dl{background:rgba(100,150,210,.12);color:#90b8e0;border:1px solid rgba(100,150,210,.25);}
+.tg-rit{background:rgba(150,100,200,.12);color:#b890e0;border:1px solid rgba(150,100,200,.25);}
+.tg-shp{background:rgba(120,180,140,.12);color:#88c8a0;border:1px solid rgba(120,180,140,.25);}
+.task-del{background:none;border:none;color:#c08080;font-size:.68rem;cursor:pointer;padding:2px 4px;flex-shrink:0;}
+.task-empty{padding:26px;text-align:center;font-size:.82rem;color:var(--text3);border:1px dashed var(--border);border-radius:10px;}
+/* 일정 추가 모달 */
+.task-modal{display:none;position:fixed;inset:0;background:rgba(8,7,15,.9);z-index:900;padding:18px;overflow-y:auto;}
+.task-modal.show{display:block;}
+.task-modal-box{max-width:420px;margin:28px auto;background:var(--bg2);border:1px solid var(--border);border-radius:12px;padding:24px;position:relative;}
+.task-modal-close{position:absolute;top:14px;right:16px;background:none;border:none;color:var(--text3);font-size:1.3rem;cursor:pointer;}
+.task-modal-title{font-family:'Cormorant Garamond',serif;font-size:1.4rem;color:var(--gold2);margin-bottom:20px;text-align:center;}
+.tm-label{font-size:.72rem;color:var(--text2);letter-spacing:.08em;margin:14px 0 7px;}
+.tm-row{display:flex;flex-wrap:wrap;gap:6px;}
+.tm-btn{border:1.5px solid rgba(200,164,86,.35);border-radius:8px;padding:9px 12px;background:rgba(255,255,255,.04);color:#d8ceb8;font-family:'Noto Serif KR',serif;font-size:.78rem;cursor:pointer;}
+.tm-btn.selected{background:rgba(200,164,86,.75);color:#08070f;border-color:var(--gold2);font-weight:600;}
+.tm-input{width:100%;background:rgba(255,255,255,.04);border:1px solid var(--border);border-radius:8px;padding:11px 13px;color:var(--text);font-family:'Noto Serif KR',serif;font-size:.87rem;outline:none;}
+.tm-input:focus{border-color:var(--gold);}
+.tm-hint{font-size:.7rem;color:var(--text3);margin-top:6px;line-height:1.5;}
+.tm-save{width:100%;background:linear-gradient(135deg,#7a5810,var(--gold),#7a5810);border:none;border-radius:9px;padding:14px;color:#08070f;font-family:'Noto Serif KR',serif;font-size:.9rem;font-weight:600;cursor:pointer;margin-top:20px;}
 .bk-date-group{margin-bottom:18px;}
 .bk-date-label{font-size:.7rem;color:var(--gold);letter-spacing:.15em;margin-bottom:10px;display:flex;align-items:center;gap:8px;}
 .bk-date-label::after{content:'';flex:1;height:1px;background:var(--border);}
@@ -105,7 +142,7 @@ body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellips
 .bk-tone-key{color:var(--gold);font-size:.64rem;margin-right:6px;}
 .bk-spell{background:rgba(120,180,140,.08);border:1px solid rgba(120,180,140,.28);border-radius:8px;padding:10px 12px;margin-bottom:8px;font-size:.78rem;color:#cfe4d6;line-height:1.7;}
 .bk-spell-row{display:flex;gap:8px;}
-.bk-spell-key{color:#88c8a0;font-size:.66rem;min-width:42px;flex-shrink:0;font-weight:600;}
+.bk-spell-key{color:#88c8a0;font-size:.66rem;min-width:54px;flex-shrink:0;font-weight:600;}
 .bk-topic{font-size:.74rem;color:#a8c8ec;background:rgba(100,150,210,.1);border:1px solid rgba(100,150,210,.28);border-radius:7px;padding:6px 10px;margin-bottom:6px;display:inline-block;}
 .bk-topic-key{color:#7aa8e0;font-size:.62rem;margin-right:6px;}
 
@@ -158,11 +195,17 @@ body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellips
     <span class="admin-sub">Hecate · Tarot</span>
   </div>
   <div class="tabs">
-    <div class="tab active" onclick="switchTab('slots')">시간 관리</div>
+    <div class="tab active" onclick="switchTab('tasks')">할 일</div>
+    <div class="tab" onclick="switchTab('slots')">시간 관리</div>
     <div class="tab" onclick="switchTab('bookings')">예약 내역</div>
   </div>
 
-  <div class="tab-panel active" id="tab-slots">
+  <div class="tab-panel active" id="tab-tasks">
+    <button class="task-add-btn" onclick="openTaskModal()">＋ 일정 추가</button>
+    <div id="taskList"></div>
+  </div>
+
+  <div class="tab-panel" id="tab-slots">
     <div class="plabel">날짜별 시간 설정 (15분 단위)</div>
     <div id="dayPanels"></div>
   </div>
@@ -177,6 +220,37 @@ body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellips
       <div class="bk-section-title">📋 그 외 메뉴</div>
       <div id="otherBookings"></div>
     </div>
+  </div>
+</div>
+
+<div class="task-modal" id="taskModal">
+  <div class="task-modal-box">
+    <button class="task-modal-close" onclick="closeTaskModal()">✕</button>
+    <div class="task-modal-title">일정 추가</div>
+
+    <div class="tm-label">메뉴 선택</div>
+    <div class="tm-row" id="tmMenuRow">
+      <button class="tm-btn" onclick="tmSelMenu(this,'리츄얼 비방',3)">리츄얼 비방 (3일)</button>
+      <button class="tm-btn" onclick="tmSelMenu(this,'나비주술',5)">나비주술 (5일)</button>
+      <button class="tm-btn" onclick="tmSelMenu(this,'위클리',7)">위클리 (7일)</button>
+      <button class="tm-btn" onclick="tmSelMenu(this,'스펠자 발송',1)">스펠자 발송</button>
+      <button class="tm-btn" onclick="tmSelMenu(this,'기타',1)">기타</button>
+    </div>
+
+    <div class="tm-label">이름</div>
+    <input class="tm-input" id="tmName" placeholder="내담자 이름">
+
+    <div class="tm-label">시작 날짜</div>
+    <input class="tm-input" type="date" id="tmDate">
+
+    <div class="tm-label">진행 일수</div>
+    <input class="tm-input" type="number" id="tmDays" min="1" max="30" value="3">
+
+    <div class="tm-label">알림 시각 (사진/진행)</div>
+    <input class="tm-input" type="time" id="tmTime" value="01:00">
+    <div class="tm-hint" id="tmHint">비방은 진행일 다음날 새벽 1시에 사진 발송됩니다.</div>
+
+    <button class="tm-save" onclick="saveTask()">일정 등록</button>
   </div>
 </div>
 
@@ -202,6 +276,7 @@ db.ref('hs_admin').on('value', (snap) => {
   globalData = snap.val() || {};
   if(document.getElementById('dayPanels')) renderDays();
   if(document.getElementById('rtBookings')) renderBookings();
+  if(document.getElementById('taskList')) renderTasks();
 });
 
 function ad() { return globalData; }
@@ -299,10 +374,11 @@ function renderSourceSummary(){
 }
 
 function switchTab(t){
-  document.querySelectorAll('.tab').forEach((el,i)=>el.classList.toggle('active',['slots','bookings'][i]===t));
+  document.querySelectorAll('.tab').forEach((el,i)=>el.classList.toggle('active',['tasks','slots','bookings'][i]===t));
   document.querySelectorAll('.tab-panel').forEach(el=>el.classList.remove('active'));
   document.getElementById('tab-'+t).classList.add('active');
   if(t==='bookings') renderBookings();
+  if(t==='tasks') renderTasks();
 }
 
 function getKST(addDays = 0) {
@@ -512,11 +588,12 @@ function renderOtherItem(b){
       </div>
     </div>
     ${contactChips(b)}
-    ${b.menuKey==='spell'?`<div class="bk-spell">
-      <div class="bk-spell-row"><span class="bk-spell-key">주제</span> ${b.spellTopic||'-'}</div>
+    ${(b.menuKey==='spell'||b.menuKey==='butterfly')?`<div class="bk-spell">
+      ${b.spellTopic?`<div class="bk-spell-row"><span class="bk-spell-key">주제</span> ${b.spellTopic}</div>`:''}
+      ${b.birth?`<div class="bk-spell-row"><span class="bk-spell-key">생년월일</span> ${b.birth}</div>`:''}
       <div class="bk-spell-row"><span class="bk-spell-key">전화</span> ${b.phone||'-'}</div>
       <div class="bk-spell-row"><span class="bk-spell-key">배송지</span> ${b.addr||'-'}</div>
-      <div class="bk-spell-row"><span class="bk-spell-key">소망</span> ${b.wish||'-'}</div>
+      ${b.wish?`<div class="bk-spell-row"><span class="bk-spell-key">소망</span> ${b.wish}</div>`:''}
     </div>`:''}
     <div style="font-size:.72rem;color:var(--text3);margin-bottom:8px;">접수: ${b.ts?new Date(b.ts).toLocaleString('ko-KR'):'-'} · ${(b.price||0).toLocaleString()}원</div>
     <div class="bko-recv-row">
@@ -652,6 +729,271 @@ function showToast(msg){
   const t = document.getElementById('toast');
   t.textContent=msg; t.style.display='block';
   setTimeout(()=>t.style.display='none', 2500);
+}
+
+/* ==========================================================
+   할 일 (오늘 해야 할 작업 통합 화면)
+   - 자동: 예약 데이터에서 계산 (실시간/비방상담/마감/스펠자)
+   - 수동: 직접 등록한 일정 (리츄얼 비방·나비주술 등 다일차)
+   - 완료 체크는 firebase의 taskDone 에 저장
+   ========================================================== */
+
+function dkey(d){
+  const y=d.getFullYear(), m=String(d.getMonth()+1).padStart(2,'0'), da=String(d.getDate()).padStart(2,'0');
+  return `${y}-${m}-${da}`;
+}
+function addDays(d,n){ const x=new Date(d); x.setDate(x.getDate()+n); return x; }
+function hhmm(d){ return String(d.getHours()).padStart(2,'0')+':'+String(d.getMinutes()).padStart(2,'0'); }
+
+// 예약(자동)에서 할 일 뽑기
+function autoTasks(){
+  const data = ad();
+  const out = [];
+  const bookings = data.bookings || {};
+
+  Object.entries(bookings).forEach(([k,b])=>{
+    if(!b) return;
+
+    // 1) 실시간 상담 / 비방 전 상담: 예약된 시각에 진행
+    if((b.menuKey==='realtime'||b.menuKey==='bibang') && b.time && b.dateStr){
+      const dk = k.split('_')[0];
+      if(/^\d{4}-\d{2}-\d{2}$/.test(dk)){
+        const [h,mi]=b.time.split(':').map(Number);
+        const when = new Date(dk.split('-')[0], dk.split('-')[1]-1, dk.split('-')[2], h, mi||0);
+        out.push({
+          id:'auto_rt_'+k, when,
+          title:`${b.name||'-'} · ${b.menu||''} ${b.dur?b.dur+'분':''}`,
+          meta:(b.topic?`${b.topic}${b.visit?' / '+b.visit:''}`:'') + (b.isPaid?' · 입금완료':' · 미입금'),
+          tag:'상담', tagCls:'tg-rt'
+        });
+      }
+    }
+
+    // 2) 리딩지 마감 (질문제/Lite/전략적/위클리)
+    const hrs = MENU_DEADLINE[b.menuKey];
+    if(hrs && b.formRecvTime){
+      const when = new Date(new Date(b.formRecvTime).getTime() + hrs*3600000);
+      out.push({
+        id:'auto_dl_'+k, when,
+        title:`${b.name||'-'} · ${b.menu||''} 리딩지 마감`,
+        meta:`양식 수신 후 ${hrs}시간`,
+        tag:'마감', tagCls:'tg-dl'
+      });
+    }
+
+    // 3) 스펠자: 제작·발송 (접수일 기준 안내, 최대 2주)
+    if(b.menuKey==='spell' && b.ts){
+      const when = new Date(b.ts);
+      when.setDate(when.getDate()+14);
+      when.setHours(12,0,0,0);
+      out.push({
+        id:'auto_sp_'+k, when,
+        title:`${b.name||'-'} · 스펠자 발송 기한`,
+        meta:`${b.spellTopic||''} · ${b.addr||'주소 미입력'}`,
+        tag:'배송', tagCls:'tg-shp'
+      });
+    }
+
+    // 4) 나비주술: 신청 다음날부터 5일, 매일 밤 10시 사진
+    if(b.menuKey==='butterfly' && b.ts){
+      const base = new Date(b.ts);
+      for(let i=1;i<=5;i++){
+        const w = addDays(base, i);
+        w.setHours(22,0,0,0);
+        out.push({
+          id:`auto_bf_${k}_${i}`, when:w,
+          title:`${b.name||'-'} · 나비주술 ${i}일차 사진 발송`,
+          meta:`5일 중 ${i}일차${i===5?' (마지막)':''}`,
+          tag:'주술', tagCls:'tg-rit'
+        });
+      }
+      // 미니 스펠자 발송 기한
+      const ship = new Date(b.ts); ship.setDate(ship.getDate()+14); ship.setHours(12,0,0,0);
+      out.push({
+        id:'auto_bfs_'+k, when:ship,
+        title:`${b.name||'-'} · 미니 스펠자 발송 기한`,
+        meta:`${b.addr||'주소 미입력'}`,
+        tag:'배송', tagCls:'tg-shp'
+      });
+    }
+  });
+  return out;
+}
+
+// 수동 등록 일정 펼치기
+function manualTasks(){
+  const data = ad();
+  const t = data.tasks || {};
+  const out = [];
+  Object.entries(t).forEach(([id,v])=>{
+    if(!v || !v.startDate) return;
+    const days = v.days || 1;
+    const [hh,mm] = (v.time||'01:00').split(':').map(Number);
+    const [y,mo,dd] = v.startDate.split('-').map(Number);
+    for(let i=0;i<days;i++){
+      // 비방 등: 진행일 다음날 새벽에 사진 → offset 적용
+      const runDay = new Date(y, mo-1, dd+i);         // 실제 진행일
+      const notify = new Date(y, mo-1, dd+i+(v.nextDay?1:0));
+      notify.setHours(hh, mm||0, 0, 0);
+      out.push({
+        id:`man_${id}_${i}`, when:notify, manualId:id,
+        title:`${v.name||'-'} · ${v.menu} ${days>1?(i+1)+'일차':''}`.trim(),
+        meta:`진행일 ${runDay.getMonth()+1}/${runDay.getDate()}${v.nextDay?' · 다음날 사진 발송':''}${days>1?` · ${days}일 중 ${i+1}`:''}`,
+        tag:'주술', tagCls:'tg-rit'
+      });
+    }
+  });
+  return out;
+}
+
+let showDoneTasks = false;
+function toggleDoneTasks(){ showDoneTasks=!showDoneTasks; renderTasks(); }
+
+function renderTasks(){
+  const el = document.getElementById('taskList');
+  if(!el) return;
+  const data = ad();
+  const done = data.taskDone || {};
+
+  let all = [...autoTasks(), ...manualTasks()];
+  all.sort((a,b)=>a.when - b.when);
+
+  // 오늘 0시 ~ 이후 14일치만 표시 (지난 건 완료 안 된 것만)
+  const now = new Date();
+  const todayStart = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+  const limit = addDays(todayStart, 14);
+
+  all = all.filter(t=>{
+    const isDone = !!done[t.id];
+    if(isDone && !showDoneTasks) return false;
+    if(t.when >= limit) return false;
+    if(t.when < todayStart && isDone) return false;  // 지난 완료건 숨김
+    return true;
+  });
+
+  if(!all.length){
+    el.innerHTML = `<div class="task-empty">표시할 할 일이 없습니다</div>
+      <button class="past-toggle" onclick="toggleDoneTasks()">${showDoneTasks?'▾ 완료 항목 숨기기':'▸ 완료 항목 보기'}</button>`;
+    return;
+  }
+
+  // 날짜별 그룹
+  const groups = {};
+  all.forEach(t=>{
+    const k = dkey(t.when);
+    (groups[k] = groups[k] || []).push(t);
+  });
+
+  const todayKey = dkey(now);
+  const tmwKey = dkey(addDays(now,1));
+  const wd = ['일','월','화','수','목','금','토'];
+
+  let html = '';
+  Object.keys(groups).sort().forEach(k=>{
+    const [y,m,d] = k.split('-').map(Number);
+    const dt = new Date(y,m-1,d);
+    let label = `${m}/${d}(${wd[dt.getDay()]})`;
+    if(k===todayKey) label = `오늘 · ${label}`;
+    else if(k===tmwKey) label = `내일 · ${label}`;
+    else if(k < todayKey) label = `⚠️ 지난 일정 · ${label}`;
+
+    const items = groups[k].map(t=>{
+      const isDone = !!done[t.id];
+      return `<div class="task-item${isDone?' done':''}">
+        <button class="task-chk${isDone?' on':''}" onclick="toggleTaskDone('${t.id}')">${isDone?'✓':''}</button>
+        <div class="task-body">
+          <div><span class="task-time">${hhmm(t.when)}</span><span class="task-tag ${t.tagCls}">${t.tag}</span><span class="task-name">${t.title}</span></div>
+          ${t.meta?`<div class="task-meta">${t.meta}</div>`:''}
+        </div>
+        ${t.manualId?`<button class="task-del" onclick="delTask('${t.manualId}')">삭제</button>`:''}
+      </div>`;
+    }).join('');
+
+    html += `<div class="task-day${k===todayKey?' today':''}">
+      <div class="task-day-head"><span>${label}</span><span class="cnt">${groups[k].length}건</span></div>
+      ${items}
+    </div>`;
+  });
+
+  html += `<button class="past-toggle" onclick="toggleDoneTasks()">${showDoneTasks?'▾ 완료 항목 숨기기':'▸ 완료 항목 보기'}</button>`;
+  el.innerHTML = html;
+}
+
+function toggleTaskDone(id){
+  const data = ad();
+  if(!data.taskDone) data.taskDone = {};
+  if(data.taskDone[id]) delete data.taskDone[id];
+  else data.taskDone[id] = true;
+  sad(data);
+}
+
+function delTask(manualId){
+  if(!confirm('이 일정을 삭제할까요? (등록된 전체 일차가 삭제됩니다)')) return;
+  const data = ad();
+  if(data.tasks && data.tasks[manualId]) delete data.tasks[manualId];
+  sad(data);
+  showToast('일정이 삭제되었습니다');
+}
+
+/* ---- 일정 추가 모달 ---- */
+let tmMenu = null, tmNextDay = false;
+
+function openTaskModal(){
+  tmMenu=null; tmNextDay=false;
+  document.querySelectorAll('#tmMenuRow .tm-btn').forEach(b=>b.classList.remove('selected'));
+  document.getElementById('tmName').value='';
+  document.getElementById('tmDate').value = dkey(new Date());
+  document.getElementById('tmDays').value = 3;
+  document.getElementById('tmTime').value = '01:00';
+  document.getElementById('tmHint').textContent='메뉴를 선택하면 기본값이 채워집니다.';
+  document.getElementById('taskModal').classList.add('show');
+}
+function closeTaskModal(){ document.getElementById('taskModal').classList.remove('show'); }
+
+function tmSelMenu(el, menu, days){
+  document.querySelectorAll('#tmMenuRow .tm-btn').forEach(b=>b.classList.remove('selected'));
+  el.classList.add('selected');
+  tmMenu = menu;
+  document.getElementById('tmDays').value = days;
+
+  if(menu==='리츄얼 비방'){
+    tmNextDay = true;
+    document.getElementById('tmTime').value='01:00';
+    document.getElementById('tmHint').textContent='진행일 다음날 새벽 1시에 사진을 발송합니다. (예: 8~10일 진행 → 9~11일 01:00 사진)';
+  } else if(menu==='나비주술'){
+    tmNextDay = false;
+    document.getElementById('tmTime').value='22:00';
+    document.getElementById('tmHint').textContent='진행일 당일 밤 10시에 사진을 발송합니다. (예약에서 자동 생성되니 보통 수동 등록 불필요)';
+  } else if(menu==='위클리'){
+    tmNextDay = false;
+    document.getElementById('tmTime').value='10:00';
+    document.getElementById('tmHint').textContent='7일간 매일 상담 진행 일정으로 등록됩니다.';
+  } else {
+    tmNextDay = false;
+    document.getElementById('tmTime').value='12:00';
+    document.getElementById('tmHint').textContent='시작 날짜와 일수, 시각을 자유롭게 설정하세요.';
+  }
+}
+
+function saveTask(){
+  const name = document.getElementById('tmName').value.trim();
+  const date = document.getElementById('tmDate').value;
+  const days = parseInt(document.getElementById('tmDays').value,10) || 1;
+  const time = document.getElementById('tmTime').value || '01:00';
+
+  if(!tmMenu){ alert('메뉴를 선택해 주세요.'); return; }
+  if(!name){ alert('이름을 입력해 주세요.'); return; }
+  if(!date){ alert('시작 날짜를 선택해 주세요.'); return; }
+
+  const data = ad();
+  if(!data.tasks) data.tasks = {};
+  const id = 't'+Date.now();
+  data.tasks[id] = { menu:tmMenu, name, startDate:date, days, time, nextDay:tmNextDay, ts:Date.now() };
+  sad(data);
+
+  closeTaskModal();
+  showToast(`${name} · ${tmMenu} ${days}일 일정이 등록되었습니다`);
+  renderTasks();
 }
 </script>
 </body>
