@@ -97,15 +97,11 @@ body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellips
 .tg-none{background:rgba(200,80,80,.1);color:#e0a0a0;border:1px solid rgba(200,80,80,.28);}
 /* 할 일 한 줄 표기: 시간 | 메뉴 | 이름 (닉네임) */
 .tk-main{display:flex;align-items:baseline;flex-wrap:wrap;gap:7px;line-height:1.5;}
-.tk-menu{font-size:.84rem;font-weight:600;}
-.ml-rt{color:#e8c87a;}
-.ml-dl{color:#90b8e0;}
-.ml-rit{color:#b890e0;}
-.ml-wk{color:#e090b8;}
-.ml-shp{color:#88c8a0;}
+.tk-menu{font-size:.84rem;font-weight:600;color:var(--text);}
+.tk-chan{font-size:.78rem;color:#b0a890;}
 .tk-sep{color:var(--text3);opacity:.5;font-size:.78rem;}
 .tk-person{font-size:.86rem;color:var(--text);}
-.tk-nick{font-size:.8rem;color:#e8d878;}
+.tk-nick{font-size:.8rem;color:var(--text2);}
 .tk-biz{font-size:.74rem;color:#8a8578;}
 .tk-nochan{font-size:.72rem;color:#e0a0a0;background:rgba(200,80,80,.1);border:1px solid rgba(200,80,80,.28);border-radius:4px;padding:1px 6px;}
 .ch-edit{background:none;border:none;color:var(--gold);font-size:.66rem;cursor:pointer;padding:1px 5px;text-decoration:underline;}
@@ -255,11 +251,19 @@ body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellips
       <button class="tm-btn" onclick="tmSelMenu(this,'나비주술',5)">나비주술 (5일)</button>
       <button class="tm-btn" onclick="tmSelMenu(this,'위클리',7)">위클리 (7일)</button>
       <button class="tm-btn" onclick="tmSelMenu(this,'스펠자 발송',1)">스펠자 발송</button>
-      <button class="tm-btn" onclick="tmSelMenu(this,'기타',1)">기타</button>
     </div>
 
-    <div class="tm-label">이름</div>
-    <input class="tm-input" id="tmName" placeholder="내담자 이름">
+    <div class="tm-label">메뉴명 직접 입력 (위 버튼 대신 사용 가능)</div>
+    <input class="tm-input" id="tmMenuFree" placeholder="예) 실시간 리딩 20분" oninput="tmFreeMenu()">
+
+    <div class="tm-label">이름 (닉네임은 괄호로)</div>
+    <input class="tm-input" id="tmName" placeholder="예) 최혜리(티비보는 라이언)">
+
+    <div class="tm-label">채널</div>
+    <div class="tm-row" id="tmChRow">
+      <button class="tm-btn" onclick="tmSelCh(this,'채널')">비즈니스 채널</button>
+      <button class="tm-btn" onclick="tmSelCh(this,'오픈')">오픈채팅</button>
+    </div>
 
     <div class="tm-label">시작 날짜</div>
     <input class="tm-input" type="date" id="tmDate">
@@ -282,13 +286,14 @@ body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellips
 
     <div class="tm-hint" style="margin-bottom:12px;line-height:1.7;">
       한 줄에 하나씩 붙여넣으세요.<br>
-      <b style="color:var(--gold2);">메뉴, 이름, 시작날짜, 일수</b> (시각은 선택)<br>
-      메뉴: 리츄얼 비방 / 나비주술 / 위클리 / 스펠자 발송 / 기타
+      <b style="color:var(--gold2);">메뉴, 이름(닉네임), 시작날짜, 일수, 채널, 시각(선택)</b><br>
+      채널은 <b>오픈</b> 또는 <b>채널</b> 로 적어주세요.<br>
+      메뉴명은 자유롭게 적어도 되며, 리츄얼 비방·나비주술·위클리는 시각이 자동 지정됩니다.
     </div>
 
-    <textarea class="tm-input" id="bulkText" style="min-height:190px;line-height:1.7;font-size:.8rem;" placeholder="리츄얼 비방, 김서연, 2026-07-10, 3
-나비주술, 이하늘, 2026-07-12, 5
-기타, 강서은 실시간20분, 2026-07-09, 1, 15:15"></textarea>
+    <textarea class="tm-input" id="bulkText" style="min-height:190px;line-height:1.7;font-size:.8rem;" placeholder="리츄얼 비방, 최혜리(티비보는 라이언), 2026-07-06, 5, 오픈
+위클리, 정고운, 2026-07-06, 7, 채널
+실시간 리딩 20분, 강서은, 2026-07-09, 1, 채널, 15:15"></textarea>
 
     <button class="tm-save" onclick="previewBulk()">미리보기</button>
     <div id="bulkPreview"></div>
@@ -305,11 +310,6 @@ body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellips
     <div class="tm-row" id="chTypeRow">
       <button class="tm-btn" onclick="chSelType(this,false)">비즈니스 채널</button>
       <button class="tm-btn" onclick="chSelType(this,true)">오픈채팅</button>
-    </div>
-
-    <div id="chNickWrap" style="display:none;">
-      <div class="tm-label">오픈채팅 닉네임</div>
-      <input class="tm-input" id="chNick" placeholder="예) 티비보는 라이언">
     </div>
 
     <button class="tm-save" onclick="saveChannel()">저장</button>
@@ -825,9 +825,8 @@ function autoTasks(){
         const when = new Date(dk.split('-')[0], dk.split('-')[1]-1, dk.split('-')[2], h, mi||0);
         out.push({
           id:'auto_rt_'+k, when, chKey:'bk_'+k, chName:b.name||'',
-          menuLabel:`${b.menu||''}${b.dur?' '+b.dur+'분':''}`, person:b.name||'-',
-          meta:(b.topic?`${b.topic}${b.visit?' / '+b.visit:''}`:'') + (b.isPaid?' · 입금완료':' · 미입금'),
-          cls:'ml-rt'
+          menuLabel:`${b.menu||''}${b.dur?' '+b.dur+'분':''}`, person:parseChannel(b.name).real||'-', nick:parseChannel(b.name).nick,
+          meta:(b.topic?`${b.topic}${b.visit?' / '+b.visit:''}`:'') + (b.isPaid?' · 입금완료':' · 미입금')
         });
       }
     }
@@ -838,9 +837,8 @@ function autoTasks(){
       const when = new Date(new Date(b.formRecvTime).getTime() + hrs*3600000);
       out.push({
         id:'auto_dl_'+k, when, chKey:'bk_'+k, chName:b.name||'',
-        menuLabel:`${b.menu||''} 마감`, person:b.name||'-',
+        menuLabel:`${b.menu||''} 마감`, person:parseChannel(b.name).real||'-', nick:parseChannel(b.name).nick,
         meta:`양식 수신 후 ${hrs}시간`,
-        cls:'ml-dl'
       });
     }
 
@@ -851,9 +849,8 @@ function autoTasks(){
       when.setHours(12,0,0,0);
       out.push({
         id:'auto_sp_'+k, when, chKey:'bk_'+k, chName:b.name||'',
-        menuLabel:'스펠자 발송', person:b.name||'-',
+        menuLabel:'스펠자 발송', person:parseChannel(b.name).real||'-', nick:parseChannel(b.name).nick,
         meta:`${b.spellTopic||''} · ${b.addr||'주소 미입력'}`,
-        cls:'ml-shp'
       });
     }
 
@@ -865,18 +862,16 @@ function autoTasks(){
         w.setHours(22,0,0,0);
         out.push({
           id:`auto_bf_${k}_${i}`, when:w, chKey:'bk_'+k, chName:b.name||'',
-          menuLabel:`나비주술 ${i}일차`, person:b.name||'-',
+          menuLabel:`나비주술 ${i}일차`, person:parseChannel(b.name).real||'-', nick:parseChannel(b.name).nick,
           meta:`사진 발송 · 5일 중 ${i}일차${i===5?' (마지막)':''}`,
-          cls:'ml-rit'
         });
       }
       // 미니 스펠자 발송 기한
       const ship = new Date(b.ts); ship.setDate(ship.getDate()+14); ship.setHours(12,0,0,0);
       out.push({
         id:'auto_bfs_'+k, when:ship, chKey:'bk_'+k, chName:b.name||'',
-        menuLabel:'미니 스펠자 발송', person:b.name||'-',
+        menuLabel:'미니 스펠자 발송', person:parseChannel(b.name).real||'-', nick:parseChannel(b.name).nick,
         meta:`${b.addr||'주소 미입력'}`,
-        cls:'ml-shp'
       });
     }
   });
@@ -891,22 +886,24 @@ function parseChannel(name){
   return { real:String(name||'').trim(), nick:'', open:false };
 }
 
-// 저장된 채널(taskChannel) 우선, 없으면 수동일정의 괄호값(fallback)
+// 저장된 채널(taskChannel) 우선, 없으면 일정에 기록된 채널(bulk 등록값)
 function getChannel(t){
   const data = ad();
   const saved = (data.taskChannel||{})[t.chKey];
-  if(saved) return saved;                       // {open:bool, nick:string}
-  if(t.fallbackCh) return t.fallbackCh;
+  if(saved) return saved;                       // {open:bool}
+  if(t.regCh) return t.regCh;                   // 일괄/수동 등록 시 지정한 채널
   return null;
 }
 
-// 이름 옆에 붙일 채널 표기 (오픈채팅=노란 괄호 닉네임 / 비즈니스=표시 없음)
+// 이름 (닉네임) | 채널  — 닉네임은 채널과 무관하게 항상 표시
 function personHtml(t){
   const c = getChannel(t);
-  const name = `<span class="tk-person">${t.person||'-'}</span>`;
-  if(!c) return `${name} <span class="tk-nochan">채널 미등록</span>`;
-  if(c.open) return `${name} <span class="tk-nick">(${c.nick||'닉네임 없음'})</span>`;
-  return `${name} <span class="tk-biz">· 비즈니스</span>`;
+  const nick = t.nick ? ` <span class="tk-nick">(${t.nick})</span>` : '';
+  const name = `<span class="tk-person">${t.person||'-'}</span>${nick}`;
+  let chTxt;
+  if(!c) chTxt = `<span class="tk-nochan">채널 미등록</span>`;
+  else chTxt = `<span class="tk-chan">${c.open?'오픈채팅':'비즈니스 채널'}</span>`;
+  return `${name} <span class="tk-sep">|</span> ${chTxt}`;
 }
 function chEditBtn(t){
   return `<button class="ch-edit" onclick="openChModal('${t.chKey}','${(t.chName||'').replace(/'/g,"\\'")}')">채널</button>`;
@@ -930,10 +927,9 @@ function manualTasks(){
       const dayTxt = days>1 ? ` ${i+1}일차` : '';
       out.push({
         id:`man_${id}_${i}`, when:notify, manualId:id, chKey:'tk_'+id, chName:ch.real,
-        menuLabel:`${v.menu}${dayTxt}`, person:ch.real||'-',
-        meta:`진행일 ${runDay.getMonth()+1}/${runDay.getDate()}${v.nextDay?' · 다음날 사진 발송':''}${days>1?` · ${days}일 중 ${i+1}`:''}`,
-        fallbackCh: ch.open ? {open:true, nick:ch.nick} : null,
-        cls: v.menu==='위클리' ? 'ml-wk' : 'ml-rit'
+        menuLabel:`${v.menu}${dayTxt}`, person:ch.real||'-', nick:ch.nick||'',
+        regCh: (v.channel==='오픈') ? {open:true} : (v.channel==='채널' ? {open:false} : null),
+        meta:`진행일 ${runDay.getMonth()+1}/${runDay.getDate()}${v.nextDay?' · 다음날 사진 발송':''}${days>1?` · ${days}일 중 ${i+1}`:''}`
       });
     }
   });
@@ -998,7 +994,7 @@ function renderTasks(){
         <div class="task-body">
           <div class="tk-main">
             <span class="task-time">${hhmm(t.when)}</span>
-            <span class="tk-menu ${t.cls||''}">${t.menuLabel||''}</span>
+            <span class="tk-menu">${t.menuLabel||''}</span>
             <span class="tk-sep">|</span>
             ${personHtml(t)}
           </div>
@@ -1038,8 +1034,10 @@ function delTask(manualId){
 let tmMenu = null, tmNextDay = false;
 
 function openTaskModal(){
-  tmMenu=null; tmNextDay=false;
+  tmMenu=null; tmNextDay=false; tmChannel=null;
   document.querySelectorAll('#tmMenuRow .tm-btn').forEach(b=>b.classList.remove('selected'));
+  document.querySelectorAll('#tmChRow .tm-btn').forEach(b=>b.classList.remove('selected'));
+  const fm=document.getElementById('tmMenuFree'); if(fm) fm.value='';
   document.getElementById('tmName').value='';
   document.getElementById('tmDate').value = dkey(new Date());
   document.getElementById('tmDays').value = 3;
@@ -1052,6 +1050,7 @@ function closeTaskModal(){ document.getElementById('taskModal').classList.remove
 function tmSelMenu(el, menu, days){
   document.querySelectorAll('#tmMenuRow .tm-btn').forEach(b=>b.classList.remove('selected'));
   el.classList.add('selected');
+  const fm=document.getElementById('tmMenuFree'); if(fm) fm.value='';
   tmMenu = menu;
   document.getElementById('tmDays').value = days;
 
@@ -1074,20 +1073,35 @@ function tmSelMenu(el, menu, days){
   }
 }
 
+function tmFreeMenu(){
+  const v=document.getElementById('tmMenuFree').value.trim();
+  if(v){
+    document.querySelectorAll('#tmMenuRow .tm-btn').forEach(b=>b.classList.remove('selected'));
+    tmMenu=v; tmNextDay=false;
+    document.getElementById('tmHint').textContent='직접 입력한 메뉴입니다. 시각을 확인해 주세요.';
+  }
+}
+let tmChannel = null;
+function tmSelCh(el, ch){
+  document.querySelectorAll('#tmChRow .tm-btn').forEach(b=>b.classList.remove('selected'));
+  el.classList.add('selected'); tmChannel=ch;
+}
+
 function saveTask(){
   const name = document.getElementById('tmName').value.trim();
   const date = document.getElementById('tmDate').value;
   const days = parseInt(document.getElementById('tmDays').value,10) || 1;
   const time = document.getElementById('tmTime').value || '01:00';
 
-  if(!tmMenu){ alert('메뉴를 선택해 주세요.'); return; }
+  if(!tmMenu){ alert('메뉴를 선택하거나 직접 입력해 주세요.'); return; }
   if(!name){ alert('이름을 입력해 주세요.'); return; }
   if(!date){ alert('시작 날짜를 선택해 주세요.'); return; }
+  if(!tmChannel){ alert('채널을 선택해 주세요.'); return; }
 
   const data = ad();
   if(!data.tasks) data.tasks = {};
   const id = 't'+Date.now();
-  data.tasks[id] = { menu:tmMenu, name, startDate:date, days, time, nextDay:tmNextDay, ts:Date.now() };
+  data.tasks[id] = { menu:tmMenu, name, startDate:date, days, time, nextDay:tmNextDay, channel:tmChannel, ts:Date.now() };
   sad(data);
 
   closeTaskModal();
@@ -1105,14 +1119,10 @@ function openChModal(key, name){
 
   document.getElementById('chWho').textContent = name ? `${name} 님의 연락 채널` : '연락 채널';
   document.querySelectorAll('#chTypeRow .tm-btn').forEach(b=>b.classList.remove('selected'));
-  document.getElementById('chNick').value = saved && saved.open ? (saved.nick||'') : '';
-  document.getElementById('chNickWrap').style.display = 'none';
-
   if(saved){
     chIsOpen = !!saved.open;
     const btns = document.querySelectorAll('#chTypeRow .tm-btn');
     btns[saved.open?1:0].classList.add('selected');
-    if(saved.open) document.getElementById('chNickWrap').style.display='block';
   }
   document.getElementById('chModal').classList.add('show');
 }
@@ -1122,17 +1132,13 @@ function chSelType(el, isOpen){
   document.querySelectorAll('#chTypeRow .tm-btn').forEach(b=>b.classList.remove('selected'));
   el.classList.add('selected');
   chIsOpen = isOpen;
-  document.getElementById('chNickWrap').style.display = isOpen ? 'block' : 'none';
 }
 
 function saveChannel(){
   if(chIsOpen===null){ alert('채널 종류를 선택해 주세요.'); return; }
-  const nick = document.getElementById('chNick').value.trim();
-  if(chIsOpen && !nick){ alert('오픈채팅 닉네임을 입력해 주세요.'); return; }
-
   const data = ad();
   if(!data.taskChannel) data.taskChannel = {};
-  data.taskChannel[chTargetKey] = chIsOpen ? {open:true, nick} : {open:false};
+  data.taskChannel[chTargetKey] = { open: chIsOpen };
   sad(data);
   closeChModal();
   showToast('채널 정보가 저장되었습니다');
@@ -1155,7 +1161,6 @@ const MENU_PRESET = {
   '나비주술':   { time:'22:00', nextDay:false },
   '위클리':     { time:'10:00', nextDay:false },
   '스펠자 발송': { time:'12:00', nextDay:false },
-  '기타':       { time:'12:00', nextDay:false },
 };
 
 function openBulkModal(){
@@ -1166,14 +1171,15 @@ function openBulkModal(){
 function closeBulkModal(){ document.getElementById('bulkModal').classList.remove('show'); }
 
 // 한 줄 파싱 → {ok, task|error}
+// 양식: 메뉴, 이름(닉네임), 시작날짜, 일수, 채널, 시각(선택)
 function parseBulkLine(line){
   const raw = line.trim();
   if(!raw) return null;
   const p = raw.split(',').map(s=>s.trim());
-  if(p.length < 4) return { ok:false, line:raw, error:'항목이 4개보다 적습니다' };
+  if(p.length < 5) return { ok:false, line:raw, error:'항목이 5개보다 적습니다 (메뉴, 이름, 날짜, 일수, 채널)' };
 
   const menu = p[0];
-  if(!MENU_PRESET[menu]) return { ok:false, line:raw, error:`메뉴명 오류 ("${menu}")` };
+  if(!menu) return { ok:false, line:raw, error:'메뉴명이 비었습니다' };
 
   const name = p[1];
   if(!name) return { ok:false, line:raw, error:'이름이 비었습니다' };
@@ -1184,15 +1190,20 @@ function parseBulkLine(line){
   const days = parseInt(p[3],10);
   if(!days || days < 1 || days > 30) return { ok:false, line:raw, error:`일수 오류 ("${p[3]}")` };
 
-  const preset = MENU_PRESET[menu];
+  const chRaw = p[4];
+  if(chRaw!=='오픈' && chRaw!=='채널') return { ok:false, line:raw, error:`채널은 "오픈" 또는 "채널" 이어야 합니다 ("${chRaw}")` };
+  const channel = chRaw;
+
+  // 아는 메뉴면 기본 시각/다음날 규칙 적용, 그 외는 12:00 당일
+  const preset = MENU_PRESET[menu] || { time:'12:00', nextDay:false };
   let time = preset.time;
-  if(p[4]){
-    if(!/^\d{1,2}:\d{2}$/.test(p[4])) return { ok:false, line:raw, error:`시각 형식 오류 ("${p[4]}")` };
-    const [hh,mm]=p[4].split(':').map(Number);
-    if(hh>23||mm>59) return { ok:false, line:raw, error:`시각 범위 오류 ("${p[4]}")` };
+  if(p[5]){
+    if(!/^\d{1,2}:\d{2}$/.test(p[5])) return { ok:false, line:raw, error:`시각 형식 오류 ("${p[5]}")` };
+    const [hh,mm]=p[5].split(':').map(Number);
+    if(hh>23||mm>59) return { ok:false, line:raw, error:`시각 범위 오류 ("${p[5]}")` };
     time = String(hh).padStart(2,'0')+':'+String(mm).padStart(2,'0');
   }
-  return { ok:true, task:{ menu, name, startDate:date, days, time, nextDay:preset.nextDay } };
+  return { ok:true, task:{ menu, name, startDate:date, days, time, nextDay:preset.nextDay, channel } };
 }
 
 let bulkParsed = [];
@@ -1231,10 +1242,10 @@ function previewBulk(){
         : `${s.getMonth()+1}/${s.getDate()}(${wd[s.getDay()]})`;
       const note = t.nextDay ? `다음날 ${t.time} 사진` : `당일 ${t.time}`;
       const c = parseChannel(t.name);
-      const chTxt = c.open ? `오픈채팅 · ${c.nick}` : `비즈니스 채널`;
+      const nick = c.nick ? ` (${c.nick})` : '';
+      const chTxt = t.channel==='오픈' ? '오픈채팅' : '비즈니스 채널';
       return `<div style="font-size:.76rem;color:var(--text2);padding:7px 0;border-bottom:1px solid rgba(200,164,86,.08);line-height:1.6;">
-        <b style="color:var(--gold2);">${t.menu}</b> · ${c.real}<br>
-        <span style="color:${c.open?'#e8d878':'#b8b0a0'};font-size:.72rem;">${chTxt}</span><br>
+        <b style="color:var(--gold2);">${t.menu}</b> | ${c.real}${nick} | ${chTxt}<br>
         <span style="color:var(--text3);">${range} · ${t.days}일 · ${note}</span>
       </div>`;
     }).join('');
