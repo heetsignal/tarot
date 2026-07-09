@@ -86,12 +86,17 @@ body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellips
 .task-body{flex:1;min-width:0;}
 .task-time{font-family:'Cormorant Garamond',serif;font-size:.95rem;color:var(--gold2);margin-right:8px;}
 .task-name{font-size:.87rem;color:var(--text);}
-.task-meta{font-size:.72rem;color:var(--text3);margin-top:3px;line-height:1.5;}
+.task-meta{font-size:.72rem;color:var(--text3);margin-top:5px;line-height:1.8;}
 .task-tag{display:inline-block;font-size:.62rem;padding:2px 7px;border-radius:4px;margin-right:5px;vertical-align:middle;}
 .tg-rt{background:rgba(200,164,86,.12);color:var(--gold);border:1px solid rgba(200,164,86,.25);}
 .tg-dl{background:rgba(100,150,210,.12);color:#90b8e0;border:1px solid rgba(100,150,210,.25);}
 .tg-rit{background:rgba(150,100,200,.12);color:#b890e0;border:1px solid rgba(150,100,200,.25);}
 .tg-shp{background:rgba(120,180,140,.12);color:#88c8a0;border:1px solid rgba(120,180,140,.25);}
+.tg-open{background:rgba(255,225,0,.1);color:#e8d878;border:1px solid rgba(255,225,0,.22);}
+.tg-biz{background:rgba(255,255,255,.06);color:#b8b0a0;border:1px solid rgba(255,255,255,.14);}
+.tg-none{background:rgba(200,80,80,.1);color:#e0a0a0;border:1px solid rgba(200,80,80,.28);}
+.ch-edit{background:none;border:none;color:var(--gold);font-size:.66rem;cursor:pointer;padding:1px 5px;text-decoration:underline;}
+.ch-edit:hover{color:var(--gold2);}
 .task-del{background:none;border:none;color:#c08080;font-size:.68rem;cursor:pointer;padding:2px 4px;flex-shrink:0;}
 .task-empty{padding:26px;text-align:center;font-size:.82rem;color:var(--text3);border:1px dashed var(--border);border-radius:10px;}
 /* 일정 추가 모달 */
@@ -274,6 +279,28 @@ body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellips
 
     <button class="tm-save" onclick="previewBulk()">미리보기</button>
     <div id="bulkPreview"></div>
+  </div>
+</div>
+
+<div class="task-modal" id="chModal">
+  <div class="task-modal-box" style="max-width:380px;">
+    <button class="task-modal-close" onclick="closeChModal()">✕</button>
+    <div class="task-modal-title">채널 등록</div>
+    <div class="tm-hint" id="chWho" style="text-align:center;margin-bottom:16px;"></div>
+
+    <div class="tm-label">채널 종류</div>
+    <div class="tm-row" id="chTypeRow">
+      <button class="tm-btn" onclick="chSelType(this,false)">비즈니스 채널</button>
+      <button class="tm-btn" onclick="chSelType(this,true)">오픈채팅</button>
+    </div>
+
+    <div id="chNickWrap" style="display:none;">
+      <div class="tm-label">오픈채팅 닉네임</div>
+      <input class="tm-input" id="chNick" placeholder="예) 티비보는 라이언">
+    </div>
+
+    <button class="tm-save" onclick="saveChannel()">저장</button>
+    <button class="task-add-btn" style="margin-top:8px;margin-bottom:0;" onclick="clearChannel()">채널 정보 지우기</button>
   </div>
 </div>
 
@@ -784,7 +811,7 @@ function autoTasks(){
         const [h,mi]=b.time.split(':').map(Number);
         const when = new Date(dk.split('-')[0], dk.split('-')[1]-1, dk.split('-')[2], h, mi||0);
         out.push({
-          id:'auto_rt_'+k, when,
+          id:'auto_rt_'+k, when, chKey:'bk_'+k, chName:b.name||'',
           title:`${b.name||'-'} · ${b.menu||''} ${b.dur?b.dur+'분':''}`,
           meta:(b.topic?`${b.topic}${b.visit?' / '+b.visit:''}`:'') + (b.isPaid?' · 입금완료':' · 미입금'),
           tag:'상담', tagCls:'tg-rt'
@@ -797,7 +824,7 @@ function autoTasks(){
     if(hrs && b.formRecvTime){
       const when = new Date(new Date(b.formRecvTime).getTime() + hrs*3600000);
       out.push({
-        id:'auto_dl_'+k, when,
+        id:'auto_dl_'+k, when, chKey:'bk_'+k, chName:b.name||'',
         title:`${b.name||'-'} · ${b.menu||''} 리딩지 마감`,
         meta:`양식 수신 후 ${hrs}시간`,
         tag:'마감', tagCls:'tg-dl'
@@ -810,7 +837,7 @@ function autoTasks(){
       when.setDate(when.getDate()+14);
       when.setHours(12,0,0,0);
       out.push({
-        id:'auto_sp_'+k, when,
+        id:'auto_sp_'+k, when, chKey:'bk_'+k, chName:b.name||'',
         title:`${b.name||'-'} · 스펠자 발송 기한`,
         meta:`${b.spellTopic||''} · ${b.addr||'주소 미입력'}`,
         tag:'배송', tagCls:'tg-shp'
@@ -824,7 +851,7 @@ function autoTasks(){
         const w = addDays(base, i);
         w.setHours(22,0,0,0);
         out.push({
-          id:`auto_bf_${k}_${i}`, when:w,
+          id:`auto_bf_${k}_${i}`, when:w, chKey:'bk_'+k, chName:b.name||'',
           title:`${b.name||'-'} · 나비주술 ${i}일차 사진 발송`,
           meta:`5일 중 ${i}일차${i===5?' (마지막)':''}`,
           tag:'주술', tagCls:'tg-rit'
@@ -833,7 +860,7 @@ function autoTasks(){
       // 미니 스펠자 발송 기한
       const ship = new Date(b.ts); ship.setDate(ship.getDate()+14); ship.setHours(12,0,0,0);
       out.push({
-        id:'auto_bfs_'+k, when:ship,
+        id:'auto_bfs_'+k, when:ship, chKey:'bk_'+k, chName:b.name||'',
         title:`${b.name||'-'} · 미니 스펠자 발송 기한`,
         meta:`${b.addr||'주소 미입력'}`,
         tag:'배송', tagCls:'tg-shp'
@@ -844,6 +871,31 @@ function autoTasks(){
 }
 
 // 수동 등록 일정 펼치기
+// 이름에서 채널 구분: 괄호 있으면 오픈채팅(닉네임), 없으면 비즈니스 채널
+function parseChannel(name){
+  const m = String(name||'').match(/^(.*?)\s*\((.+)\)\s*$/);
+  if(m) return { real:m[1].trim(), nick:m[2].trim(), open:true };
+  return { real:String(name||'').trim(), nick:'', open:false };
+}
+
+// 저장된 채널(taskChannel) 우선, 없으면 수동일정의 괄호값(fallback)
+function getChannel(t){
+  const data = ad();
+  const saved = (data.taskChannel||{})[t.chKey];
+  if(saved) return saved;                       // {open:bool, nick:string}
+  if(t.fallbackCh) return t.fallbackCh;
+  return null;
+}
+
+function channelChip(t){
+  const c = getChannel(t);
+  const btn = `<button class="ch-edit" onclick="openChModal('${t.chKey}','${(t.chName||'').replace(/'/g,"\\'")}')">${c?'수정':'＋ 채널'}</button>`;
+  if(!c) return `<span class="task-tag tg-none">채널 미등록</span>${btn}`;
+  return c.open
+    ? `<span class="task-tag tg-open">오픈채팅 · ${c.nick||'닉네임 없음'}</span>${btn}`
+    : `<span class="task-tag tg-biz">비즈니스 채널</span>${btn}`;
+}
+
 function manualTasks(){
   const data = ad();
   const t = data.tasks || {};
@@ -858,10 +910,12 @@ function manualTasks(){
       const runDay = new Date(y, mo-1, dd+i);         // 실제 진행일
       const notify = new Date(y, mo-1, dd+i+(v.nextDay?1:0));
       notify.setHours(hh, mm||0, 0, 0);
+      const ch = parseChannel(v.name);
       out.push({
-        id:`man_${id}_${i}`, when:notify, manualId:id,
-        title:`${v.name||'-'} · ${v.menu} ${days>1?(i+1)+'일차':''}`.trim(),
-        meta:`진행일 ${runDay.getMonth()+1}/${runDay.getDate()}${v.nextDay?' · 다음날 사진 발송':''}${days>1?` · ${days}일 중 ${i+1}`:''}`,
+        id:`man_${id}_${i}`, when:notify, manualId:id, chKey:'tk_'+id, chName:ch.real,
+        title:`${ch.real||'-'} · ${v.menu} ${days>1?(i+1)+'일차':''}`.trim(),
+        meta:`__CH__<br>진행일 ${runDay.getMonth()+1}/${runDay.getDate()}${v.nextDay?' · 다음날 사진 발송':''}${days>1?` · ${days}일 중 ${i+1}`:''}`,
+        fallbackCh: ch.open ? {open:true, nick:ch.nick} : null,
         tag:'주술', tagCls:'tg-rit'
       });
     }
@@ -922,11 +976,15 @@ function renderTasks(){
 
     const items = groups[k].map(t=>{
       const isDone = !!done[t.id];
+      const chip = t.chKey ? channelChip(t) : '';
+      let meta = t.meta || '';
+      if(meta.includes('__CH__')) meta = meta.replace('__CH__', chip);
+      else if(chip) meta = chip + (meta?`<br>${meta}`:'');
       return `<div class="task-item${isDone?' done':''}">
         <button class="task-chk${isDone?' on':''}" onclick="toggleTaskDone('${t.id}')">${isDone?'✓':''}</button>
         <div class="task-body">
           <div><span class="task-time">${hhmm(t.when)}</span><span class="task-tag ${t.tagCls}">${t.tag}</span><span class="task-name">${t.title}</span></div>
-          ${t.meta?`<div class="task-meta">${t.meta}</div>`:''}
+          ${meta?`<div class="task-meta">${meta}</div>`:''}
         </div>
         ${t.manualId?`<button class="task-del" onclick="delTask('${t.manualId}')">삭제</button>`:''}
       </div>`;
@@ -1019,6 +1077,60 @@ function saveTask(){
   renderTasks();
 }
 
+/* ---- 채널 등록/수정 ---- */
+let chTargetKey = null, chIsOpen = null;
+
+function openChModal(key, name){
+  chTargetKey = key; chIsOpen = null;
+  const data = ad();
+  const saved = (data.taskChannel||{})[key];
+
+  document.getElementById('chWho').textContent = name ? `${name} 님의 연락 채널` : '연락 채널';
+  document.querySelectorAll('#chTypeRow .tm-btn').forEach(b=>b.classList.remove('selected'));
+  document.getElementById('chNick').value = saved && saved.open ? (saved.nick||'') : '';
+  document.getElementById('chNickWrap').style.display = 'none';
+
+  if(saved){
+    chIsOpen = !!saved.open;
+    const btns = document.querySelectorAll('#chTypeRow .tm-btn');
+    btns[saved.open?1:0].classList.add('selected');
+    if(saved.open) document.getElementById('chNickWrap').style.display='block';
+  }
+  document.getElementById('chModal').classList.add('show');
+}
+function closeChModal(){ document.getElementById('chModal').classList.remove('show'); }
+
+function chSelType(el, isOpen){
+  document.querySelectorAll('#chTypeRow .tm-btn').forEach(b=>b.classList.remove('selected'));
+  el.classList.add('selected');
+  chIsOpen = isOpen;
+  document.getElementById('chNickWrap').style.display = isOpen ? 'block' : 'none';
+}
+
+function saveChannel(){
+  if(chIsOpen===null){ alert('채널 종류를 선택해 주세요.'); return; }
+  const nick = document.getElementById('chNick').value.trim();
+  if(chIsOpen && !nick){ alert('오픈채팅 닉네임을 입력해 주세요.'); return; }
+
+  const data = ad();
+  if(!data.taskChannel) data.taskChannel = {};
+  data.taskChannel[chTargetKey] = chIsOpen ? {open:true, nick} : {open:false};
+  sad(data);
+  closeChModal();
+  showToast('채널 정보가 저장되었습니다');
+  renderTasks();
+}
+
+function clearChannel(){
+  if(!confirm('이 채널 정보를 지울까요?')) return;
+  const data = ad();
+  if(data.taskChannel && data.taskChannel[chTargetKey]) delete data.taskChannel[chTargetKey];
+  sad(data);
+  closeChModal();
+  showToast('채널 정보가 삭제되었습니다');
+  renderTasks();
+}
+
 /* ---- 일괄 등록 ---- */
 const MENU_PRESET = {
   '리츄얼 비방': { time:'01:00', nextDay:true },
@@ -1100,8 +1212,11 @@ function previewBulk(){
         ? `${s.getMonth()+1}/${s.getDate()} ~ ${e.getMonth()+1}/${e.getDate()}`
         : `${s.getMonth()+1}/${s.getDate()}(${wd[s.getDay()]})`;
       const note = t.nextDay ? `다음날 ${t.time} 사진` : `당일 ${t.time}`;
+      const c = parseChannel(t.name);
+      const chTxt = c.open ? `오픈채팅 · ${c.nick}` : `비즈니스 채널`;
       return `<div style="font-size:.76rem;color:var(--text2);padding:7px 0;border-bottom:1px solid rgba(200,164,86,.08);line-height:1.6;">
-        <b style="color:var(--gold2);">${t.menu}</b> · ${t.name}<br>
+        <b style="color:var(--gold2);">${t.menu}</b> · ${c.real}<br>
+        <span style="color:${c.open?'#e8d878':'#b8b0a0'};font-size:.72rem;">${chTxt}</span><br>
         <span style="color:var(--text3);">${range} · ${t.days}일 · ${note}</span>
       </div>`;
     }).join('');
@@ -1137,3 +1252,4 @@ function commitBulk(){
 </script>
 </body>
 </html>
+
