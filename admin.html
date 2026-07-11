@@ -336,6 +336,9 @@ body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellips
       <button class="tm-btn" onclick="chSelType(this,true)">오픈채팅</button>
     </div>
 
+    <div class="tm-label">채팅방 이름 / 닉네임 (선택)</div>
+    <input class="tm-input" id="chNick" placeholder="예) 티비보는 라이언">
+
     <button class="tm-save" onclick="saveChannel()">저장</button>
     <button class="task-add-btn" style="margin-top:8px;margin-bottom:0;" onclick="clearChannel()">채널 정보 지우기</button>
   </div>
@@ -924,7 +927,8 @@ function getChannel(t){
 // 이름 (닉네임) | 채널  — 닉네임은 채널과 무관하게 항상 표시
 function personHtml(t){
   const c = getChannel(t);
-  const nick = t.nick ? ` <span class="tk-nick">(${t.nick})</span>` : '';
+  const nickVal = (c && c.nick) ? c.nick : (t.nick || '');   // 저장 닉네임 우선
+  const nick = nickVal ? ` <span class="tk-nick">(${nickVal})</span>` : '';
   const name = `<span class="tk-person">${t.person||'-'}</span>${nick}`;
   let chTxt;
   if(!c) chTxt = `<span class="tk-nochan">채널 미등록</span>`;
@@ -932,7 +936,8 @@ function personHtml(t){
   return `${name} <span class="tk-sep">|</span> ${chTxt}`;
 }
 function chEditBtn(t){
-  return `<button class="ch-edit" onclick="openChModal('${t.chKey}','${(t.chName||'').replace(/'/g,"\\'")}')">채널</button>`;
+  const dn = (t.nick||'').replace(/'/g,"\\'");
+  return `<button class="ch-edit" onclick="openChModal('${t.chKey}','${(t.chName||'').replace(/'/g,"\\'")}','${dn}')">채널/닉네임</button>`;
 }
 
 function manualTasks(){
@@ -985,12 +990,18 @@ function renderShipSection(all, done){
     const od = t.orderTs ? new Date(t.orderTs) : null;
     const odTxt = od ? `${od.getMonth()+1}/${od.getDate()} 주문` : '';
 
+    // 채널/닉네임 (shipKey를 채널 키로 사용)
+    const sc = (data.taskChannel||{})[t.shipKey];
+    const scNick = (sc && sc.nick) ? sc.nick : (t.nick||'');
+    const scTxt = sc ? (sc.open?'오픈채팅':'비즈니스 채널') : '<span class="tk-nochan">채널 미등록</span>';
+
     return `<div class="sp-item${isDone?' done':''}">
       <div class="sp-top">
         <button class="task-chk${isDone?' on':''}" onclick="toggleTaskDone('${t.id}')">${isDone?'✓':''}</button>
         <div class="sp-main">
-          <div class="sp-title">${t.menuLabel} | ${t.person}${t.nick?` (${t.nick})`:''}</div>
+          <div class="sp-title">${t.menuLabel} | ${t.person}${scNick?` (${scNick})`:''}</div>
           <div class="sp-sub">${odTxt} · 발송기한 ${t.when.getMonth()+1}/${t.when.getDate()} <span class="sp-dday ${ddCls}">${ddTxt}</span></div>
+          <div class="sp-sub" style="margin-top:3px;">${scTxt} <button class="ch-edit" onclick="openChModal('${t.shipKey}','${(t.person||'').replace(/'/g,"\\'")}','${(t.nick||'').replace(/'/g,"\\'")}')">채널/닉네임</button></div>
         </div>
       </div>
       <div class="sp-addr">${t.addr||'주소 미입력'}${t.phone?` · ${t.phone}`:''}</div>
@@ -1197,13 +1208,15 @@ function saveTask(){
 /* ---- 채널 등록/수정 ---- */
 let chTargetKey = null, chIsOpen = null;
 
-function openChModal(key, name){
+function openChModal(key, name, defaultNick){
   chTargetKey = key; chIsOpen = null;
+  const chDefaultNick = defaultNick || '';
   const data = ad();
   const saved = (data.taskChannel||{})[key];
 
   document.getElementById('chWho').textContent = name ? `${name} 님의 연락 채널` : '연락 채널';
   document.querySelectorAll('#chTypeRow .tm-btn').forEach(b=>b.classList.remove('selected'));
+  document.getElementById('chNick').value = (saved && saved.nick) ? saved.nick : (chDefaultNick||'');
   if(saved){
     chIsOpen = !!saved.open;
     const btns = document.querySelectorAll('#chTypeRow .tm-btn');
@@ -1221,9 +1234,10 @@ function chSelType(el, isOpen){
 
 function saveChannel(){
   if(chIsOpen===null){ alert('채널 종류를 선택해 주세요.'); return; }
+  const nick = (document.getElementById('chNick').value||'').trim();
   const data = ad();
   if(!data.taskChannel) data.taskChannel = {};
-  data.taskChannel[chTargetKey] = { open: chIsOpen };
+  data.taskChannel[chTargetKey] = { open: chIsOpen, nick };
   sad(data);
   closeChModal();
   showToast('채널 정보가 저장되었습니다');
