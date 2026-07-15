@@ -123,6 +123,12 @@ body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellips
 .sp-save{background:rgba(200,164,86,.16);border:1px solid var(--border2);border-radius:7px;padding:0 15px;color:var(--gold2);font-family:'Noto Serif KR',serif;font-size:.78rem;cursor:pointer;white-space:nowrap;}
 .sp-save:hover{background:rgba(200,164,86,.28);}
 .sp-saved{font-size:.7rem;color:#88c8a0;margin:7px 0 0 30px;}
+.sp-purpose{margin:8px 0 0 30px;}
+.sp-pill{display:inline-block;font-size:.72rem;font-weight:600;color:#e8c87a;background:rgba(200,164,86,.14);border:1px solid rgba(200,164,86,.3);border-radius:5px;padding:3px 10px;}
+.sp-birth{margin:8px 0 0 30px;font-size:.75rem;color:var(--text2);line-height:1.75;}
+.sp-wish{margin:8px 0 0 30px;font-size:.75rem;color:var(--text2);line-height:1.6;background:rgba(255,255,255,.03);border-radius:6px;padding:8px 10px;word-break:break-word;}
+.sp-bk{color:#88c8a0;font-size:.68rem;font-weight:600;margin-right:6px;}
+.sp-raw{color:var(--text3);font-size:.68rem;}
 .tk-sep{color:var(--text3);opacity:.5;font-size:.78rem;}
 .tk-person{font-size:.86rem;color:var(--text);}
 .tk-nick{font-size:.8rem;color:var(--text2);}
@@ -878,6 +884,8 @@ function autoTasks(){
         id:'auto_sp_'+k, when, chKey:'bk_'+k, chName:b.name||'',
         menuLabel:'스펠자 발송', person:parseChannel(b.name).real||'-', nick:parseChannel(b.name).nick,
         kind:'ship', shipKey:'sp_'+k, orderTs:b.ts, addr:b.addr||'', phone:b.phone||'',
+        purpose:b.spellTopic||'', wish:b.wish||'', birthLunar:b.birthLunar||'', pBirthLunar:b.pBirthLunar||'',
+        birthRaw:b.birthRaw||'', pBirthRaw:b.pBirthRaw||'',
         meta:`${b.spellTopic||''} · ${b.addr||'주소 미입력'}`,
       });
     }
@@ -900,6 +908,8 @@ function autoTasks(){
         id:'auto_bfs_'+k, when:ship, chKey:'bk_'+k, chName:b.name||'',
         menuLabel:'미니 스펠자 발송', person:parseChannel(b.name).real||'-', nick:parseChannel(b.name).nick,
         kind:'ship', shipKey:'bf_'+k, orderTs:b.ts, addr:b.addr||'', phone:b.phone||'',
+        purpose:b.wishPurpose||'', wish:b.wish||'', birthLunar:b.birthLunar||'', pBirthLunar:b.pBirthLunar||'',
+        birthRaw:b.birthRaw||'', pBirthRaw:b.pBirthRaw||'',
         meta:`${b.addr||'주소 미입력'}`,
       });
     }
@@ -1004,6 +1014,12 @@ function renderShipSection(all, done){
           <div class="sp-sub" style="margin-top:3px;">${scTxt} <button class="ch-edit" onclick="openChModal('${t.shipKey}','${(t.person||'').replace(/'/g,"\\'")}','${(t.nick||'').replace(/'/g,"\\'")}')">채널/닉네임</button></div>
         </div>
       </div>
+      ${t.purpose?`<div class="sp-purpose"><span class="sp-pill">${t.purpose}</span></div>`:''}
+      ${(t.birthLunar||t.pBirthLunar)?`<div class="sp-birth">
+        ${t.birthLunar?`<div><span class="sp-bk">내담자</span> ${t.birthLunar}${t.birthRaw?` <span class="sp-raw">(입력: ${t.birthRaw})</span>`:''}</div>`:''}
+        ${t.pBirthLunar?`<div><span class="sp-bk">상대방</span> ${t.pBirthLunar}${t.pBirthRaw?` <span class="sp-raw">(입력: ${t.pBirthRaw})</span>`:''}</div>`:''}
+      </div>`:''}
+      ${t.wish?`<div class="sp-wish"><span class="sp-bk">소원</span> ${t.wish}</div>`:''}
       <div class="sp-addr">${t.addr||'주소 미입력'}${t.phone?` · ${t.phone}`:''}</div>
       <div class="sp-track">
         <input class="sp-input" id="trk_${t.shipKey}" value="${(info.tracking||'').replace(/"/g,'&quot;')}" placeholder="운송장 번호">
