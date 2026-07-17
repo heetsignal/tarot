@@ -221,6 +221,7 @@ textarea.ifield{resize:vertical;min-height:70px;line-height:1.6;}
 .cal-err{color:#f08a8a;}
 /* 소원 블록 */
 .wish-box{background:rgba(200,164,86,.05);border:1px solid var(--border);border-radius:10px;padding:15px;}
+.opt-mark{color:var(--text3);font-size:.68rem;letter-spacing:0;}
 /* 전체 복사 버튼 */
 .copy-btn{width:100%;background:rgba(200,164,86,.14);border:1px solid var(--border2);border-radius:10px;padding:14px;color:var(--gold2);font-family:'Noto Serif KR',serif;font-size:.92rem;font-weight:600;cursor:pointer;letter-spacing:.03em;transition:all .2s;margin-bottom:20px;display:flex;align-items:center;justify-content:center;gap:8px;}
 .copy-btn:hover{background:rgba(200,164,86,.24);border-color:var(--gold2);}
@@ -525,7 +526,7 @@ const db = firebase.database();
 
 let globalData = {};
 
-const S={menu:null,dur:null,q:0,mixDur:null,liteType:null,pkgType:null,topic:null,visit:null,spellTopic:null,phone:'',birth:'',birthCal:'양력',birthLunar:'',pBirth:'',pBirthCal:'양력',pBirthLunar:'',wishPurpose:null,zip:'',roadAddr:'',addrDetail:'',addr:'',wish:'',date:null,dateObj:null,time:null,name:'',pw:'',pay:null,tone:null};
+const S={menu:null,dur:null,q:0,mixDur:null,liteType:null,pkgType:null,topic:null,visit:null,spellTopic:null,phone:'',pName:'',birth:'',birthCal:'양력',birthLunar:'',pBirth:'',pBirthCal:'양력',pBirthLunar:'',wishPurpose:null,zip:'',roadAddr:'',addrDetail:'',addr:'',wish:'',date:null,dateObj:null,time:null,name:'',pw:'',pay:null,tone:null};
 
 // ===== 유입 경로(UTM) 읽기 =====
 function getUtmSource(){
@@ -565,7 +566,7 @@ function toFmtKey(d) {
 function selMenu(el){
   document.querySelectorAll('.menu-card').forEach(c=>c.classList.remove('selected'));
   el.classList.add('selected');
-  S.menu=el.dataset.menu;S.dur=null;S.q=0;S.mixDur=null;S.liteType=null;S.pkgType=null;S.topic=null;S.visit=null;S.spellTopic=null;S.phone='';S.birth='';S.birthCal='양력';S.birthLunar='';S.pBirth='';S.pBirthCal='양력';S.pBirthLunar='';S.wishPurpose=null;S.zip='';S.roadAddr='';S.addrDetail='';S.addr='';S.wish='';S.date=null;S.dateObj=null;S.time=null;
+  S.menu=el.dataset.menu;S.dur=null;S.q=0;S.mixDur=null;S.liteType=null;S.pkgType=null;S.topic=null;S.visit=null;S.spellTopic=null;S.phone='';S.pName='';S.birth='';S.birthCal='양력';S.birthLunar='';S.pBirth='';S.pBirthCal='양력';S.pBirthLunar='';S.wishPurpose=null;S.zip='';S.roadAddr='';S.addrDetail='';S.addr='';S.wish='';S.date=null;S.dateObj=null;S.time=null;
   document.getElementById('btn1').disabled=false;
 }
 
@@ -612,7 +613,7 @@ function buildS2(){
     lite:'재회 · 짝사랑 · 썸 · 솔로 중 1종을 선택해 주세요',
     reunion:'재회 · 썸 중 1종을 선택해 주세요',
     weekly:'선택하신 패키지 내역을 확인해 주세요',
-    spell:'재회 · 새인연 · 금전 · 합격 중 원하는 주제를 선택해 주세요',
+    spell:'재회 · 새인연 · 썸/짝사랑 · 금전 · 합격 중 원하는 주제를 선택해 주세요',
     butterfly:'선택하신 내용을 확인해 주세요',
   };
   document.getElementById('s2title').textContent=titles[m];
@@ -645,7 +646,7 @@ function buildS2(){
     oa.innerHTML=`
     <div class="spell-notice">📌 <b>재료 하나하나 헤카가 직접 공수해</b><br>정화 및 기도까지 하여 마음을 눌러담아<br>직접 제작하는 1:1 제작입니다.<br>주문 후 배송까지는 최대 2주 소요됩니다.<br><br><span class="warn">주문 후 한 시간 뒤 제작이 시작되므로<br>환불 및 취소는 어렵습니다.</span><br><br>타인에게 선물 용도는 사전에 꼭 말씀해 주세요.</div>
     <div class="ogroup"><div class="olabel">주제</div><div class="orow" id="spellrow">
-      ${['재회','새인연','금전','합격'].map(t=>`<button class="obtn" onclick="selSpell(this,'${t}')">${t}</button>`).join('')}
+      ${['재회','새인연','썸/짝사랑','금전','합격'].map(t=>`<button class="obtn" onclick="selSpell(this,'${t}')">${t}</button>`).join('')}
     </div></div>`;
   } else if(m==='butterfly'){
     oa.innerHTML=`
@@ -990,7 +991,7 @@ function buildSpellFields(){
   const isDelivery = (S.menu==='spell' || S.menu==='butterfly');
   if(!isDelivery){
     sf.innerHTML='';
-    S.phone='';S.birth='';S.birthLunar='';S.pBirth='';S.pBirthLunar='';S.wishPurpose=null;
+    S.phone='';S.pName='';S.birth='';S.birthLunar='';S.pBirth='';S.pBirthLunar='';S.wishPurpose=null;
     S.zip='';S.roadAddr='';S.addrDetail='';S.addr='';S.wish='';
     return;
   }
@@ -998,14 +999,23 @@ function buildSpellFields(){
   const isSpell = (S.menu==='spell');
   const title = isSpell ? '배송 정보 (스펠자)' : '주술 · 배송 정보 (나비주술)';
 
-  // 스펠자: 주제가 재회일 때만 양쪽 생년월일
+  // 스펠자: 재회 = 상대방 이름·생년월일 필수 / 썸·짝사랑 = 이름 필수, 생년월일 선택
   const spellReunion = isSpell && S.spellTopic==='재회';
+  const spellCrush   = isSpell && S.spellTopic==='썸/짝사랑';
+  const spellPartner = spellReunion || spellCrush;
   // 나비주술: 내담자 생년월일 항상, 소원 주목적이 재회면 상대방 추가
   const bfReunion = !isSpell && S.wishPurpose==='재회';
 
+  const pNameField = (req)=>`<div class="igroup">
+      <label class="ilabel">상대방 이름${req?'':' <span class="opt-mark">(선택)</span>'}</label>
+      <input class="ifield" id="spellPName" value="${S.pName||''}" placeholder="상대방 이름을 입력해 주세요" oninput="onSpellInput()">
+    </div>`;
+
   let birthBlock='';
-  if(spellReunion){
-    birthBlock = birthField('me','내담자 생년월일') + birthField('p','상대방 생년월일');
+  if(spellPartner){
+    birthBlock = birthField('me','내담자 생년월일')
+               + pNameField(true)
+               + birthField('p', spellCrush ? '상대방 생년월일 <span class="opt-mark">(모르면 비워두세요)</span>' : '상대방 생년월일');
   } else if(!isSpell){
     birthBlock = birthField('me','내담자 생년월일');
   }
@@ -1025,7 +1035,10 @@ function buildSpellFields(){
         <button type="button" class="obtn${S.wishPurpose==='재회'?' selected':''}" onclick="selPurpose('재회')">재회</button>
         <button type="button" class="obtn${S.wishPurpose==='새인연'?' selected':''}" onclick="selPurpose('새인연')">새인연</button>
       </div>
-      ${bfReunion ? birthField('p','상대방 생년월일') : ''}
+      ${bfReunion ? `<div class="igroup">
+        <label class="ilabel">상대방 이름</label>
+        <input class="ifield" id="spellPName" value="${S.pName||''}" placeholder="상대방 이름을 입력해 주세요" oninput="onSpellInput()">
+      </div>` + birthField('p','상대방 생년월일') : ''}
       <div class="igroup" style="margin-bottom:0;">
         <label class="ilabel">자유 작성</label>
         <textarea class="ifield" id="spellWish" placeholder="이루고 싶은 소원을 자유롭게 적어주세요" oninput="onSpellInput()">${S.wish||''}</textarea>
@@ -1059,7 +1072,7 @@ function buildSpellFields(){
 
 function selPurpose(v){
   S.wishPurpose = v;
-  if(v!=='재회'){ S.pBirth=''; S.pBirthLunar=''; }
+  if(v!=='재회'){ S.pBirth=''; S.pBirthLunar=''; S.pName=''; }
   buildSpellFields();
   chk3();
 }
@@ -1091,6 +1104,7 @@ function openPostcode(){
 function closePostcode(){ document.getElementById('postcodeLayer').style.display='none'; }
 function onSpellInput(){
   S.phone=(document.getElementById('spellPhone')?.value||'').trim();
+  S.pName=(document.getElementById('spellPName')?.value||'').trim();
   S.addrDetail=(document.getElementById('spellDetail')?.value||'').trim();
   S.wish=(document.getElementById('spellWish')?.value||'').trim();
   // 최종 배송지 = (우편번호) 도로명주소 + 상세주소
@@ -1160,11 +1174,14 @@ function chk3(){
   let ok = (S.name && S.pw.length >= 4 && S.pay);
   if(S.menu==='spell'){
     ok = ok && S.phone && S.roadAddr && S.addrDetail && S.wish;
-    if(S.spellTopic==='재회') ok = ok && S.birthLunar && S.pBirthLunar;   // 재회는 양쪽 생년월일 필수
+    // 재회: 내담자 생일 + 상대방 이름 + 상대방 생일 모두 필수
+    if(S.spellTopic==='재회') ok = ok && S.birthLunar && S.pName && S.pBirthLunar;
+    // 썸/짝사랑: 내담자 생일 + 상대방 이름 필수, 상대방 생일은 선택(단, 적었으면 유효해야 함)
+    if(S.spellTopic==='썸/짝사랑') ok = ok && S.birthLunar && S.pName && (!S.pBirth || !!S.pBirthLunar);
   }
   if(S.menu==='butterfly'){
     ok = ok && S.birthLunar && S.phone && S.roadAddr && S.addrDetail && S.wishPurpose && S.wish;
-    if(S.wishPurpose==='재회') ok = ok && S.pBirthLunar;                  // 재회면 상대방 생년월일 필수
+    if(S.wishPurpose==='재회') ok = ok && S.pName && S.pBirthLunar;       // 재회면 상대방 이름·생년월일 필수
   }
   document.getElementById('btn3').disabled=!ok;
 }
@@ -1200,6 +1217,7 @@ function buildS4(){
       name:S.name, pw:S.pw, pay:S.pay,
       menu:'스펠자', menuKey:'spell', spellTopic:S.spellTopic||null,
       phone:S.phone||null, addr:S.addr||null, zip:S.zip||null, roadAddr:S.roadAddr||null, addrDetail:S.addrDetail||null, wish:S.wish||null,
+      pName:S.pName||null,
       birthLunar:S.birthLunar||null, birthRaw:S.birth?`${S.birth} (${S.birthCal})`:null,
       pBirthLunar:S.pBirthLunar||null, pBirthRaw:S.pBirth?`${S.pBirth} (${S.pBirthCal})`:null,
       price:calcPrice(), ts:Date.now(), source:BOOKING_SOURCE
@@ -1240,7 +1258,7 @@ function buildS4(){
       name:S.name, pw:S.pw, pay:S.pay,
       menu:'나비주술', menuKey:'butterfly',
       phone:S.phone||null, addr:S.addr||null, zip:S.zip||null, roadAddr:S.roadAddr||null, addrDetail:S.addrDetail||null,
-      wishPurpose:S.wishPurpose||null, wish:S.wish||null,
+      wishPurpose:S.wishPurpose||null, wish:S.wish||null, pName:S.pName||null,
       birthLunar:S.birthLunar||null, birthRaw:S.birth?`${S.birth} (${S.birthCal})`:null,
       pBirthLunar:S.pBirthLunar||null, pBirthRaw:S.pBirth?`${S.pBirth} (${S.pBirthCal})`:null,
       price:calcPrice(), ts:Date.now(), source:BOOKING_SOURCE
@@ -1406,7 +1424,7 @@ function copyForm(tmplId, btnId){
 }
 
 function resetAll(){
-  Object.assign(S,{menu:null,dur:null,q:0,mixDur:null,liteType:null,pkgType:null,topic:null,visit:null,spellTopic:null,phone:'',birth:'',birthCal:'양력',birthLunar:'',pBirth:'',pBirthCal:'양력',pBirthLunar:'',wishPurpose:null,zip:'',roadAddr:'',addrDetail:'',addr:'',wish:'',date:null,dateObj:null,time:null,name:'',pw:'',pay:null,tone:null});
+  Object.assign(S,{menu:null,dur:null,q:0,mixDur:null,liteType:null,pkgType:null,topic:null,visit:null,spellTopic:null,phone:'',pName:'',birth:'',birthCal:'양력',birthLunar:'',pBirth:'',pBirthCal:'양력',pBirthLunar:'',wishPurpose:null,zip:'',roadAddr:'',addrDetail:'',addr:'',wish:'',date:null,dateObj:null,time:null,name:'',pw:'',pay:null,tone:null});
   document.querySelectorAll('.menu-card').forEach(c=>c.classList.remove('selected'));
   document.getElementById('btn1').disabled=true;
   document.getElementById('cardPayArea').innerHTML='';
