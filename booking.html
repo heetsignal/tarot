@@ -212,6 +212,33 @@ textarea.ifield{resize:vertical;min-height:70px;line-height:1.6;}
 .spell-notice{background:rgba(120,180,140,.08);border-left:3px solid rgba(120,190,150,.7);border-radius:0 8px 8px 0;padding:14px 16px;margin-bottom:22px;font-size:.82rem;color:#cfe4d6;line-height:1.85;}
 .spell-notice b{color:#e6f4ea;}
 .spell-notice .warn{color:#f0c8a8;}
+/* 생년월일 입력칸 — 네이티브 날짜칸이 튀어보이지 않게 정리 */
+input[type="date"].ifield{
+  -webkit-appearance:none;
+  appearance:none;
+  height:45px;
+  line-height:normal;
+  text-align:left;
+  color:var(--text);
+  font-family:'Noto Serif KR',serif;
+  font-size:.9rem;
+}
+/* iOS: 날짜 값이 위로 붙거나 가운데로 쏠리는 문제 방지 */
+input[type="date"].ifield::-webkit-date-and-time-value{
+  text-align:left;
+  margin:0;
+  line-height:19px;
+}
+input[type="date"].ifield::-webkit-datetime-edit{ padding:0; }
+/* 달력 아이콘: 검은색이라 안 보이던 것 → 금색으로 */
+input[type="date"].ifield::-webkit-calendar-picker-indicator{
+  filter:invert(84%) sepia(24%) saturate(602%) hue-rotate(357deg) brightness(93%) contrast(89%);
+  opacity:.7;
+  cursor:pointer;
+}
+input[type="date"].ifield::-webkit-calendar-picker-indicator:hover{ opacity:1; }
+/* 비어 있을 때 안내 글씨 색 */
+input[type="date"].ifield:not(:valid){ color:var(--text3); }
 /* 생년월일 · 양력/음력 */
 .cal-row{display:flex;gap:7px;margin-top:8px;}
 .cal-btn{flex:1;border:1.5px solid rgba(200,164,86,.35);border-radius:8px;padding:9px;background:rgba(255,255,255,.04);color:#d8ceb8;font-family:'Noto Serif KR',serif;font-size:.82rem;cursor:pointer;-webkit-appearance:none;appearance:none;}
@@ -1003,8 +1030,10 @@ function buildSpellFields(){
   const spellReunion = isSpell && S.spellTopic==='재회';
   const spellCrush   = isSpell && S.spellTopic==='썸/짝사랑';
   const spellPartner = spellReunion || spellCrush;
-  // 나비주술: 내담자 생년월일 항상, 소원 주목적이 재회면 상대방 추가
+  // 나비주술: 내담자 생년월일 항상, 주목적이 재회/썸·짝사랑이면 상대방 추가
   const bfReunion = !isSpell && S.wishPurpose==='재회';
+  const bfCrush   = !isSpell && S.wishPurpose==='썸/짝사랑';
+  const bfPartner = bfReunion || bfCrush;
 
   const pNameField = (req)=>`<div class="igroup">
       <label class="ilabel">상대방 이름${req?'':' <span class="opt-mark">(선택)</span>'}</label>
@@ -1034,11 +1063,12 @@ function buildSpellFields(){
       <div class="orow" id="purposeRow" style="margin-bottom:14px;">
         <button type="button" class="obtn${S.wishPurpose==='재회'?' selected':''}" onclick="selPurpose('재회')">재회</button>
         <button type="button" class="obtn${S.wishPurpose==='새인연'?' selected':''}" onclick="selPurpose('새인연')">새인연</button>
+        <button type="button" class="obtn${S.wishPurpose==='썸/짝사랑'?' selected':''}" onclick="selPurpose('썸/짝사랑')">썸/짝사랑</button>
       </div>
-      ${bfReunion ? `<div class="igroup">
+      ${bfPartner ? `<div class="igroup">
         <label class="ilabel">상대방 이름</label>
         <input class="ifield" id="spellPName" value="${S.pName||''}" placeholder="상대방 이름을 입력해 주세요" oninput="onSpellInput()">
-      </div>` + birthField('p','상대방 생년월일') : ''}
+      </div>` + birthField('p', bfCrush ? '상대방 생년월일 <span class="opt-mark">(모르면 비워두세요)</span>' : '상대방 생년월일') : ''}
       <div class="igroup" style="margin-bottom:0;">
         <label class="ilabel">자유 작성</label>
         <textarea class="ifield" id="spellWish" placeholder="이루고 싶은 소원을 자유롭게 적어주세요" oninput="onSpellInput()">${S.wish||''}</textarea>
@@ -1072,7 +1102,7 @@ function buildSpellFields(){
 
 function selPurpose(v){
   S.wishPurpose = v;
-  if(v!=='재회'){ S.pBirth=''; S.pBirthLunar=''; S.pName=''; }
+  if(v!=='재회' && v!=='썸/짝사랑'){ S.pBirth=''; S.pBirthLunar=''; S.pName=''; }
   buildSpellFields();
   chk3();
 }
@@ -1181,7 +1211,9 @@ function chk3(){
   }
   if(S.menu==='butterfly'){
     ok = ok && S.birthLunar && S.phone && S.roadAddr && S.addrDetail && S.wishPurpose && S.wish;
-    if(S.wishPurpose==='재회') ok = ok && S.pName && S.pBirthLunar;       // 재회면 상대방 이름·생년월일 필수
+    // 재회: 상대방 이름·생년월일 필수 / 썸·짝사랑: 이름 필수, 생년월일 선택
+    if(S.wishPurpose==='재회') ok = ok && S.pName && S.pBirthLunar;
+    if(S.wishPurpose==='썸/짝사랑') ok = ok && S.pName && (!S.pBirth || !!S.pBirthLunar);
   }
   document.getElementById('btn3').disabled=!ok;
 }
