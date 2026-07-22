@@ -884,7 +884,7 @@ function autoTasks(){
         id:'auto_sp_'+k, when, chKey:'bk_'+k, chName:b.name||'',
         menuLabel:'스펠자 발송', person:parseChannel(b.name).real||'-', nick:parseChannel(b.name).nick,
         kind:'ship', shipKey:'sp_'+k, orderTs:b.ts, addr:b.addr||'', phone:b.phone||'',
-        purpose:b.spellTopic||'', wish:b.wish||'', birthLunar:b.birthLunar||'', pBirthLunar:b.pBirthLunar||'',
+        purpose:b.spellTopic||'', wish:b.wish||'', pName:b.pName||'', birthLunar:b.birthLunar||'', pBirthLunar:b.pBirthLunar||'',
         birthRaw:b.birthRaw||'', pBirthRaw:b.pBirthRaw||'',
         meta:`${b.spellTopic||''} · ${b.addr||'주소 미입력'}`,
       });
@@ -908,7 +908,7 @@ function autoTasks(){
         id:'auto_bfs_'+k, when:ship, chKey:'bk_'+k, chName:b.name||'',
         menuLabel:'미니 스펠자 발송', person:parseChannel(b.name).real||'-', nick:parseChannel(b.name).nick,
         kind:'ship', shipKey:'bf_'+k, orderTs:b.ts, addr:b.addr||'', phone:b.phone||'',
-        purpose:b.wishPurpose||'', wish:b.wish||'', birthLunar:b.birthLunar||'', pBirthLunar:b.pBirthLunar||'',
+        purpose:b.wishPurpose||'', wish:b.wish||'', pName:b.pName||'', birthLunar:b.birthLunar||'', pBirthLunar:b.pBirthLunar||'',
         birthRaw:b.birthRaw||'', pBirthRaw:b.pBirthRaw||'',
         meta:`${b.addr||'주소 미입력'}`,
       });
@@ -1015,9 +1015,10 @@ function renderShipSection(all, done){
         </div>
       </div>
       ${t.purpose?`<div class="sp-purpose"><span class="sp-pill">${t.purpose}</span></div>`:''}
-      ${(t.birthLunar||t.pBirthLunar)?`<div class="sp-birth">
+      ${(t.birthLunar||t.pBirthLunar||t.pName)?`<div class="sp-birth">
         ${t.birthLunar?`<div><span class="sp-bk">내담자</span> ${t.birthLunar}${t.birthRaw?` <span class="sp-raw">(입력: ${t.birthRaw})</span>`:''}</div>`:''}
-        ${t.pBirthLunar?`<div><span class="sp-bk">상대방</span> ${t.pBirthLunar}${t.pBirthRaw?` <span class="sp-raw">(입력: ${t.pBirthRaw})</span>`:''}</div>`:''}
+        ${t.pName?`<div><span class="sp-bk">상대방</span> ${t.pName}${t.pBirthLunar?` · ${t.pBirthLunar}${t.pBirthRaw?` <span class="sp-raw">(입력: ${t.pBirthRaw})</span>`:''}`:` <span class="sp-raw">· 생년월일 미입력</span>`}</div>`
+          :(t.pBirthLunar?`<div><span class="sp-bk">상대방</span> ${t.pBirthLunar}${t.pBirthRaw?` <span class="sp-raw">(입력: ${t.pBirthRaw})</span>`:''}</div>`:'')}
       </div>`:''}
       ${t.wish?`<div class="sp-wish"><span class="sp-bk">소원</span> ${t.wish}</div>`:''}
       <div class="sp-addr">${t.addr||'주소 미입력'}${t.phone?` · ${t.phone}`:''}</div>
