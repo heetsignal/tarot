@@ -104,6 +104,8 @@ body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellips
 .sp-head{font-size:.95rem;color:#a8d8bc;margin-bottom:4px;display:flex;align-items:center;gap:8px;}
 .sp-cnt{font-size:.7rem;color:#7fae92;background:rgba(120,180,140,.14);border-radius:4px;padding:2px 7px;}
 .sp-note{font-size:.72rem;color:var(--text3);margin-bottom:14px;}
+.sp-export{width:100%;background:rgba(120,180,140,.14);border:1px solid rgba(120,180,140,.4);border-radius:9px;padding:12px;color:#a8d8bc;font-family:'Noto Serif KR',serif;font-size:.85rem;font-weight:600;cursor:pointer;margin-bottom:14px;}
+.sp-export:hover{background:rgba(120,180,140,.24);}
 .sp-item{background:rgba(15,13,28,.5);border:1px solid var(--border);border-radius:9px;padding:12px 13px;margin-bottom:10px;}
 .sp-item.done{opacity:.45;}
 .sp-item:last-child{margin-bottom:0;}
@@ -883,7 +885,7 @@ function autoTasks(){
       out.push({
         id:'auto_sp_'+k, when, chKey:'bk_'+k, chName:b.name||'',
         menuLabel:'스펠자 발송', person:parseChannel(b.name).real||'-', nick:parseChannel(b.name).nick,
-        kind:'ship', shipKey:'sp_'+k, orderTs:b.ts, addr:b.addr||'', phone:b.phone||'',
+        kind:'ship', shipKey:'sp_'+k, orderTs:b.ts, addr:b.addr||'', phone:b.phone||'', zip:b.zip||'', roadAddr:b.roadAddr||'', addrDetail:b.addrDetail||'',
         purpose:b.spellTopic||'', wish:b.wish||'', pName:b.pName||'', birthLunar:b.birthLunar||'', pBirthLunar:b.pBirthLunar||'',
         birthRaw:b.birthRaw||'', pBirthRaw:b.pBirthRaw||'',
         meta:`${b.spellTopic||''} · ${b.addr||'주소 미입력'}`,
@@ -907,7 +909,7 @@ function autoTasks(){
       out.push({
         id:'auto_bfs_'+k, when:ship, chKey:'bk_'+k, chName:b.name||'',
         menuLabel:'미니 스펠자 발송', person:parseChannel(b.name).real||'-', nick:parseChannel(b.name).nick,
-        kind:'ship', shipKey:'bf_'+k, orderTs:b.ts, addr:b.addr||'', phone:b.phone||'',
+        kind:'ship', shipKey:'bf_'+k, orderTs:b.ts, addr:b.addr||'', phone:b.phone||'', zip:b.zip||'', roadAddr:b.roadAddr||'', addrDetail:b.addrDetail||'',
         purpose:b.wishPurpose||'', wish:b.wish||'', pName:b.pName||'', birthLunar:b.birthLunar||'', pBirthLunar:b.pBirthLunar||'',
         birthRaw:b.birthRaw||'', pBirthRaw:b.pBirthRaw||'',
         meta:`${b.addr||'주소 미입력'}`,
@@ -1033,8 +1035,93 @@ function renderShipSection(all, done){
   return `<div class="sp-section">
     <div class="sp-head">📦 스펠자 발송 <span class="sp-cnt">${items.length}건</span></div>
     <div class="sp-note">주문일 +10일 이내 발송 (도착 기한 14일)</div>
+    <button class="sp-export" onclick="exportShipXlsx()">📥 택배 접수 양식 내보내기 (미발송 ${items.filter(t=>!done[t.id]).length}건)</button>
     ${rows}
   </div>`;
+}
+
+// ===== 택배 접수 양식(xlsx) 내보내기 =====
+// 스펠자 발송 섹션의 "미발송(완료 체크 안 된)" 건만 대상
+function collectShipRows(){
+  const data = ad();
+  const done = data.taskDone || {};
+  const all = [...autoTasks(), ...manualTasks()].filter(t=>t.kind==='ship' && !done[t.id]);
+  all.sort((a,b)=>a.when-b.when);
+
+  // 주소 분리: 저장된 zip/roadAddr/addrDetail 우선, 없으면 합쳐진 addr에서 파싱
+  function splitAddr(t){
+    if(t.zip || t.roadAddr){
+      return { zip:t.zip||'', road:t.roadAddr||'', detail:t.addrDetail||'' };
+    }
+    // "(우편번호) 도로명 상세" 형태에서 최대한 분리
+    const a = t.addr || '';
+    const m = a.match(/^\((\d{5})\)\s*(.*)$/);
+    if(m){ return { zip:m[1], road:m[2], detail:'' }; }
+    return { zip:'', road:a, detail:'' };
+  }
+
+  return all.map((t,i)=>{
+    const ad2 = splitAddr(t);
+    let name = (t.person||'').slice(0,10);   // 한글 10자 제한
+    return {
+      순번: i+1,
+      이름: name,
+      핸드폰번호: t.phone||'',
+      연락처: '',
+      우편번호: ad2.zip,
+      주소: ad2.road,
+      상세주소: ad2.detail,
+      박스타입: 'A',
+      물품명: '잡화',
+      제품단가: 10,
+      요청사항: ''
+    };
+  });
+}
+
+const SHIP_HEADERS = ['순번','이름','핸드폰번호','연락처','우편번호','주소','상세주소','박스타입','물품명','제품단가','요청사항'];
+
+function exportShipXlsx(){
+  const rows = collectShipRows();
+  if(!rows.length){ alert('내보낼 미발송 건이 없습니다.'); return; }
+
+  const doExport = ()=>{
+    try{
+      const aoa = [SHIP_HEADERS, ...rows.map(r=>SHIP_HEADERS.map(h=>r[h]))];
+      const ws = XLSX.utils.aoa_to_sheet(aoa);
+      const wb = XLSX.utils.book_new();
+      XLSX.utils.book_append_sheet(wb, ws, 'sample');
+      const today = new Date();
+      const fn = `배송접수_${today.getMonth()+1}월${today.getDate()}일_${rows.length}건.xlsx`;
+      XLSX.writeFile(wb, fn);
+      showToast(`${rows.length}건 내보내기 완료`);
+    }catch(e){ exportShipCsv(rows); }
+  };
+
+  if(typeof XLSX !== 'undefined'){ doExport(); return; }
+  // SheetJS 필요 시에만 로드
+  showToast('양식 준비 중…');
+  const sc = document.createElement('script');
+  sc.src = 'https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js';
+  sc.onload = doExport;
+  sc.onerror = ()=>exportShipCsv(rows);   // CDN 실패 시 CSV로 대체
+  document.head.appendChild(sc);
+}
+
+// CDN 실패 대비: CSV로 저장 (엑셀에서 열림)
+function exportShipCsv(rows){
+  const esc = v => `"${String(v==null?'':v).replace(/"/g,'""')}"`;
+  const lines = [SHIP_HEADERS.join(','), ...rows.map(r=>SHIP_HEADERS.map(h=>esc(r[h])).join(','))];
+  const csv = '\ufeff' + lines.join('\r\n');   // BOM: 한글 깨짐 방지
+  const blob = new Blob([csv], {type:'text/csv;charset=utf-8;'});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  const today = new Date();
+  a.href = url;
+  a.download = `배송접수_${today.getMonth()+1}월${today.getDate()}일_${rows.length}건.csv`;
+  document.body.appendChild(a); a.click(); document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+  showToast(`${rows.length}건 내보내기 완료 (CSV)`);
 }
 
 function saveTracking(shipKey){
