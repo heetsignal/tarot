@@ -383,6 +383,9 @@ function sad(d) { db.ref('hs_admin').set(d); }
 
 // 메뉴별 마감 기한 (양식 수신 시점부터)
 const MENU_DEADLINE = { question:24, mixed:24, lite:48, reunion:48, weekly:168 };
+// 사진 발송 정책 변경 시점: 이 시각 이후 접수/등록분부터 "마지막날 1건"으로 발송
+// (그 전 건은 기존 "매일 발송" 유지 — 진행 중 손님 보호)
+const POLICY_LASTDAY_TS = new Date(2026, 6, 29, 18, 0, 0).getTime();  // 2026-07-29 18:00 (월 0-based)
 
 // 결제수단 한글 라벨 + 색상 클래스
 function payLabel(pay){ return pay==='account' ? '계좌이체' : (pay==='card' ? '카드결제' : '미선택'); }
@@ -893,17 +896,30 @@ function autoTasks(){
       });
     }
 
-    // 4) 나비주술: 신청 다음날부터 5일 진행, 마지막날(5일차) 밤 10시에 사진 1건
+    // 4) 나비주술: 신청 다음날부터 5일 진행
+    //    - 2026-07-29 18:00 이후 접수분: 마지막날(5일차) 밤 10시에 사진 1건 (새 정책)
+    //    - 그 전 접수분: 매일 밤 10시 5일치 (기존 진행 건 보호)
     if(b.menuKey==='butterfly' && b.ts){
       const base = new Date(b.ts);
-      const startRun = addDays(base, 1);              // 진행 시작(신청 다음날)
-      const lastRun  = addDays(base, 5);              // 5일차(마지막 진행일)
-      const notify = new Date(lastRun); notify.setHours(22,0,0,0);
-      out.push({
-        id:`auto_bf_${k}`, when:notify, chKey:'bf_'+k, chName:b.name||'',
-        menuLabel:'나비주술 완료 사진', person:parseChannel(b.name).real||'-', nick:parseChannel(b.name).nick,
-        meta:`진행 ${startRun.getMonth()+1}/${startRun.getDate()}~${lastRun.getMonth()+1}/${lastRun.getDate()} (5일) · 마지막날 밤 사진 발송`,
-      });
+      if(b.ts >= POLICY_LASTDAY_TS){
+        const startRun = addDays(base, 1);
+        const lastRun  = addDays(base, 5);
+        const notify = new Date(lastRun); notify.setHours(22,0,0,0);
+        out.push({
+          id:`auto_bf_${k}`, when:notify, chKey:'bf_'+k, chName:b.name||'',
+          menuLabel:'나비주술 완료 사진', person:parseChannel(b.name).real||'-', nick:parseChannel(b.name).nick,
+          meta:`진행 ${startRun.getMonth()+1}/${startRun.getDate()}~${lastRun.getMonth()+1}/${lastRun.getDate()} (5일) · 마지막날 밤 사진 발송`,
+        });
+      } else {
+        for(let i=1;i<=5;i++){
+          const w = addDays(base, i); w.setHours(22,0,0,0);
+          out.push({
+            id:`auto_bf_${k}_${i}`, when:w, chKey:'bf_'+k, chName:b.name||'',
+            menuLabel:`나비주술 ${i}일차`, person:parseChannel(b.name).real||'-', nick:parseChannel(b.name).nick,
+            meta:`사진 발송 · 5일 중 ${i}일차${i===5?' (마지막)':''}`,
+          });
+        }
+      }
       // 미니 스펠자 발송 기한
       const ship = new Date(b.ts); ship.setDate(ship.getDate()+10); ship.setHours(12,0,0,0);
       out.push({
@@ -963,8 +979,10 @@ function manualTasks(){
     const [y,mo,dd] = v.startDate.split('-').map(Number);
     const ch = parseChannel(v.name);
 
-    // 리츄얼 비방: 마지막 진행일 다음날 새벽에 사진 1건만
-    if(v.menu==='리츄얼 비방'){
+    // 리츄얼 비방
+    //  - 2026-07-29 18:00 이후 등록분: 마지막날 다음새벽 사진 1건 (새 정책)
+    //  - 그 전 등록분(또는 등록시각 없음): 매일 (기존 진행 건 보호)
+    if(v.menu==='리츄얼 비방' && v.ts && v.ts >= POLICY_LASTDAY_TS){
       const lastRun = new Date(y, mo-1, dd+days-1);           // 마지막 진행일
       const notify  = new Date(y, mo-1, dd+days-1+1);          // 그 다음날
       notify.setHours(hh, mm||0, 0, 0);
@@ -978,6 +996,22 @@ function manualTasks(){
         regCh: (v.channel==='오픈') ? {open:true} : (v.channel==='채널' ? {open:false} : null),
         meta:`${rangeTxt} · 마지막날 다음새벽 사진 발송`
       });
+      return;
+    }
+
+    // (정책 이전) 리츄얼 비방: 매일 진행일 다음날 새벽 사진
+    if(v.menu==='리츄얼 비방'){
+      for(let i=0;i<days;i++){
+        const runDay = new Date(y, mo-1, dd+i);
+        const notify = new Date(y, mo-1, dd+i+1);   // 다음날 새벽
+        notify.setHours(hh, mm||0, 0, 0);
+        out.push({
+          id:`man_${id}_${i}`, when:notify, manualId:id, chKey:'tk_'+id, chName:ch.real,
+          menuLabel:`${v.menu}${days>1?` ${i+1}일차`:''}`, person:ch.real||'-', nick:ch.nick||'',
+          regCh: (v.channel==='오픈') ? {open:true} : (v.channel==='채널' ? {open:false} : null),
+          meta:`진행일 ${runDay.getMonth()+1}/${runDay.getDate()} · 다음날 사진${days>1?` · ${days}일 중 ${i+1}`:''}`
+        });
+      }
       return;
     }
 
