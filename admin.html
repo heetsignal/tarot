@@ -892,18 +892,17 @@ function autoTasks(){
       });
     }
 
-    // 4) 나비주술: 신청 다음날부터 5일, 매일 밤 10시 사진
+    // 4) 나비주술: 신청 다음날부터 5일 진행, 마지막날(5일차) 밤 10시에 사진 1건
     if(b.menuKey==='butterfly' && b.ts){
       const base = new Date(b.ts);
-      for(let i=1;i<=5;i++){
-        const w = addDays(base, i);
-        w.setHours(22,0,0,0);
-        out.push({
-          id:`auto_bf_${k}_${i}`, when:w, chKey:'bk_'+k, chName:b.name||'',
-          menuLabel:`나비주술 ${i}일차`, person:parseChannel(b.name).real||'-', nick:parseChannel(b.name).nick,
-          meta:`사진 발송 · 5일 중 ${i}일차${i===5?' (마지막)':''}`,
-        });
-      }
+      const startRun = addDays(base, 1);              // 진행 시작(신청 다음날)
+      const lastRun  = addDays(base, 5);              // 5일차(마지막 진행일)
+      const notify = new Date(lastRun); notify.setHours(22,0,0,0);
+      out.push({
+        id:`auto_bf_${k}`, when:notify, chKey:'bf_'+k, chName:b.name||'',
+        menuLabel:'나비주술 완료 사진', person:parseChannel(b.name).real||'-', nick:parseChannel(b.name).nick,
+        meta:`진행 ${startRun.getMonth()+1}/${startRun.getDate()}~${lastRun.getMonth()+1}/${lastRun.getDate()} (5일) · 마지막날 밤 사진 발송`,
+      });
       // 미니 스펠자 발송 기한
       const ship = new Date(b.ts); ship.setDate(ship.getDate()+10); ship.setHours(12,0,0,0);
       out.push({
