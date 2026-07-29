@@ -230,6 +230,7 @@ body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellips
 .past-toggle{display:block;width:100%;margin:14px 0 4px;background:rgba(255,255,255,.03);border:1px solid var(--border);border-radius:8px;padding:11px;color:var(--text2);font-family:'Noto Serif KR',serif;font-size:.78rem;cursor:pointer;transition:all .2s;letter-spacing:.02em;}
 .past-toggle:hover{border-color:var(--border2);color:var(--text);background:rgba(200,164,86,.06);}
 .past-wrap{margin-top:8px;opacity:.72;animation:fu .25s ease;}
+.past-day .task-day-head{color:var(--text3);}
 .toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%);background:rgba(80,200,120,.15);border:1px solid rgba(80,200,120,.35);border-radius:8px;padding:9px 22px;font-size:.76rem;color:#a0e0b0;display:none;z-index:999;white-space:nowrap;}
 </style>
 </head>
@@ -999,6 +1000,8 @@ function manualTasks(){
 
 let showDoneTasks = false;
 function toggleDoneTasks(){ showDoneTasks=!showDoneTasks; renderTasks(); }
+let showPastTasks = false;
+function togglePastTasks(){ showPastTasks=!showPastTasks; renderTasks(); }
 
 // 배송(스펠자·미니 스펠자) 전용 섹션
 function renderShipSection(all, done){
@@ -1166,22 +1169,48 @@ function renderTasks(){
   const shipHtml = renderShipSection(all, done);
   all = all.filter(t=>t.kind!=='ship');
 
-  // 오늘 0시 ~ 이후 14일치만 표시 (지난 건 완료 안 된 것만)
+  // 오늘 0시 ~ 이후 14일치 (미래·오늘). 지난 건은 아래 별도 섹션.
   const now = new Date();
   const todayStart = new Date(now.getFullYear(), now.getMonth(), now.getDate());
   const limit = addDays(todayStart, 14);
+  const pastStart = addDays(todayStart, -14);   // 지난 2주까지
+
+  // 지난 일정(어제 이전): 완료·미완료 모두 — showPastTasks일 때만 아래에 표시
+  const pastAll = all.filter(t=>{
+    if(t.kind==='ship') return false;
+    return t.when < todayStart && t.when >= pastStart;
+  }).sort((a,b)=>b.when - a.when);   // 최신순(어제가 위)
 
   all = all.filter(t=>{
     const isDone = !!done[t.id];
+    if(t.when < todayStart) return false;        // 지난 건은 여기서 제외(아래 섹션에서 처리)
     if(isDone && !showDoneTasks) return false;
     if(t.when >= limit) return false;
-    if(t.when < todayStart && isDone) return false;  // 지난 완료건 숨김
     return true;
   });
 
+  // 지난 일정 섹션 HTML
+  function buildPastHtml(){
+    const wd0 = ['일','월','화','수','목','금','토'];
+    const btn = `<button class="past-toggle" onclick="togglePastTasks()">${showPastTasks?'▾ 지난 일정 숨기기':`▸ 지난 일정 보기${pastAll.length?` (${pastAll.length}건)`:''}`}</button>`;
+    if(!showPastTasks || !pastAll.length) return btn;
+    const g = {};
+    pastAll.forEach(t=>{ const k=dkey(t.when); (g[k]=g[k]||[]).push(t); });
+    let h = '';
+    Object.keys(g).sort().reverse().forEach(k=>{
+      const [y,m,d]=k.split('-').map(Number); const dt=new Date(y,m-1,d);
+      h += `<div class="task-day past-day">
+        <div class="task-day-head"><span>${m}/${d}(${wd0[dt.getDay()]})</span><span class="cnt">${g[k].length}건</span></div>
+        ${g[k].map(t=>renderTaskItem(t, !!done[t.id])).join('')}
+      </div>`;
+    });
+    return btn + `<div class="past-wrap">${h}</div>`;
+  }
+
   if(!all.length){
-    el.innerHTML = shipHtml + `<div class="task-empty">표시할 할 일이 없습니다</div>
-      <button class="past-toggle" onclick="toggleDoneTasks()">${showDoneTasks?'▾ 완료 항목 숨기기':'▸ 완료 항목 보기'}</button>`;
+    el.innerHTML = shipHtml + `<div class="task-empty">예정된 할 일이 없습니다</div>
+      <button class="past-toggle" onclick="toggleDoneTasks()">${showDoneTasks?'▾ 완료 항목 숨기기':'▸ 완료 항목 보기'}</button>
+      ${buildPastHtml()}`;
     return;
   }
 
@@ -1203,24 +1232,8 @@ function renderTasks(){
     let label = `${m}/${d}(${wd[dt.getDay()]})`;
     if(k===todayKey) label = `오늘 · ${label}`;
     else if(k===tmwKey) label = `내일 · ${label}`;
-    else if(k < todayKey) label = `⚠️ 지난 일정 · ${label}`;
 
-    const items = groups[k].map(t=>{
-      const isDone = !!done[t.id];
-      return `<div class="task-item${isDone?' done':''}">
-        <button class="task-chk${isDone?' on':''}" onclick="toggleTaskDone('${t.id}')">${isDone?'✓':''}</button>
-        <div class="task-body">
-          <div class="tk-main">
-            <span class="task-time">${hhmm(t.when)}</span>
-            <span class="tk-menu">${t.menuLabel||''}</span>
-            <span class="tk-sep">|</span>
-            ${personHtml(t)}
-          </div>
-          <div class="task-meta">${t.meta||''} ${chEditBtn(t)}</div>
-        </div>
-        ${t.manualId?`<button class="task-del" onclick="delTask('${t.manualId}')">삭제</button>`:''}
-      </div>`;
-    }).join('');
+    const items = groups[k].map(t=>renderTaskItem(t, !!done[t.id])).join('');
 
     html += `<div class="task-day${k===todayKey?' today':''}">
       <div class="task-day-head"><span>${label}</span><span class="cnt">${groups[k].length}건</span></div>
@@ -1229,7 +1242,25 @@ function renderTasks(){
   });
 
   html += `<button class="past-toggle" onclick="toggleDoneTasks()">${showDoneTasks?'▾ 완료 항목 숨기기':'▸ 완료 항목 보기'}</button>`;
+  html += buildPastHtml();
   el.innerHTML = shipHtml + html;
+}
+
+// 할 일 한 줄 렌더 (오늘·지난 일정 공통)
+function renderTaskItem(t, isDone){
+  return `<div class="task-item${isDone?' done':''}">
+    <button class="task-chk${isDone?' on':''}" onclick="toggleTaskDone('${t.id}')">${isDone?'✓':''}</button>
+    <div class="task-body">
+      <div class="tk-main">
+        <span class="task-time">${hhmm(t.when)}</span>
+        <span class="tk-menu">${t.menuLabel||''}</span>
+        <span class="tk-sep">|</span>
+        ${personHtml(t)}
+      </div>
+      <div class="task-meta">${t.meta||''} ${chEditBtn(t)}</div>
+    </div>
+    ${t.manualId?`<button class="task-del" onclick="delTask('${t.manualId}')">삭제</button>`:''}
+  </div>`;
 }
 
 function toggleTaskDone(id){
