@@ -575,6 +575,27 @@ db.ref('hs_admin').on('value', (snap) => {
 
 function aData() { return globalData; }
 
+// ===== 안전한 개별 저장 =====
+// 전체 데이터를 덮어쓰지 않고, 예약 하나만 자기 경로에 기록한다.
+// (전체 set은 데이터가 크거나 연결이 불안정할 때 실패/유실 위험이 있음)
+function saveBooking(bookingKey, booking, blockedKeys, dateKey){
+  // 1) 예약 본체를 개별 경로에 저장
+  const p = db.ref('hs_admin/bookings/' + bookingKey).set(booking);
+  // 2) 슬롯 잠금(있으면)도 개별 저장
+  if(blockedKeys && blockedKeys.length && dateKey){
+    blockedKeys.forEach(t=>{
+      db.ref('hs_admin/locked/' + dateKey + '_' + t + '_blocked').set(true);
+    });
+  }
+  return p;   // Promise: 성공/실패 확인용
+}
+
+// 저장 실패 시 손님에게 알림 (재시도 유도)
+function bookingSaveError(err){
+  console.error('예약 저장 실패:', err);
+  alert('⚠️ 예약 저장 중 오류가 발생했어요.\n\n네트워크 상태를 확인하시고, 예약 완료 버튼을 한 번 더 눌러주세요.\n\n계속 안 되면 카카오톡 채널로 문의해 주세요.');
+}
+
 function getKST(addDays = 0) {
   const now = new Date();
   const kstString = now.toLocaleString("en-US", {timeZone: "Asia/Seoul"});
@@ -1254,7 +1275,7 @@ function buildS4(){
       pBirthLunar:S.pBirthLunar||null, pBirthRaw:S.pBirth?`${S.pBirth} (${S.pBirthCal})`:null,
       price:calcPrice(), ts:Date.now(), source:BOOKING_SOURCE
     };
-    db.ref('hs_admin').set(data);
+    saveBooking(bk, data.bookings[bk]).catch(bookingSaveError);
 
     if (typeof fbq === 'function') {
       fbq('track', 'Lead', { value: calcPrice(), currency: 'KRW', content_name: '스펠자' });
@@ -1295,7 +1316,7 @@ function buildS4(){
       pBirthLunar:S.pBirthLunar||null, pBirthRaw:S.pBirth?`${S.pBirth} (${S.pBirthCal})`:null,
       price:calcPrice(), ts:Date.now(), source:BOOKING_SOURCE
     };
-    db.ref('hs_admin').set(data);
+    saveBooking(bk, data.bookings[bk]).catch(bookingSaveError);
 
     if (typeof fbq === 'function') {
       fbq('track', 'Lead', { value: calcPrice(), currency: 'KRW', content_name: '나비주술' });
@@ -1382,7 +1403,7 @@ function buildS4(){
         dateStr:S.date, mixDur:S.mixDur, q:S.q,
         blockedKeys, ts:Date.now(), source:BOOKING_SOURCE, tone:S.tone||null, topic:S.topic||null, visit:S.visit||null
       };
-      db.ref('hs_admin').set(data);
+      saveBooking(bk, data.bookings[bk], blockedKeys, dk).catch(bookingSaveError);
     }
   } else {
     const bk=`other_${Date.now()}`;
@@ -1391,7 +1412,7 @@ function buildS4(){
       menu:MENU_NAMES[m]+(m==='lite'?` (${S.liteType})`:'')+(m==='reunion'?` (${S.pkgType})`:''), menuKey:m, liteType:S.liteType||null, pkgType:S.pkgType||null,
       price:calcPrice(), q:S.q, ts:Date.now(), source:BOOKING_SOURCE, tone:S.tone||null
     };
-    db.ref('hs_admin').set(data);
+    saveBooking(bk, data.bookings[bk]).catch(bookingSaveError);
   }
 
   if (typeof fbq === 'function') {
