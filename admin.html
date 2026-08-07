@@ -232,11 +232,33 @@ body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellips
 .past-wrap{margin-top:8px;opacity:.72;animation:fu .25s ease;}
 .past-day .task-day-head{color:var(--text3);}
 .toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%);background:rgba(80,200,120,.15);border:1px solid rgba(80,200,120,.35);border-radius:8px;padding:9px 22px;font-size:.76rem;color:#a0e0b0;display:none;z-index:999;white-space:nowrap;}
+#lockScreen{position:fixed;inset:0;z-index:2000;background:var(--bg,#08070f);display:flex;align-items:center;justify-content:center;padding:24px;}
+.lock-box{width:100%;max-width:340px;text-align:center;}
+.lock-title{font-family:'Cormorant Garamond',serif;font-size:1.8rem;color:var(--gold2,#e8c87a);letter-spacing:.05em;margin-bottom:8px;}
+.lock-sub{font-size:.82rem;color:var(--text3,#a09888);margin-bottom:26px;}
+#lockPw{width:100%;background:rgba(255,255,255,.04);border:1px solid var(--border,rgba(200,164,86,.18));border-radius:10px;padding:15px 16px;color:var(--text,#f0ead8);font-family:'Noto Serif KR',serif;font-size:1.1rem;text-align:center;letter-spacing:.3em;outline:none;}
+#lockPw:focus{border-color:var(--gold,#c8a456);}
+.lock-err{min-height:20px;font-size:.78rem;color:#f08a8a;margin:10px 0 4px;}
+.lock-btn{width:100%;background:linear-gradient(135deg,#7a5810,var(--gold,#c8a456),#7a5810);border:none;border-radius:10px;padding:15px;color:#08070f;font-family:'Noto Serif KR',serif;font-size:.95rem;font-weight:600;cursor:pointer;letter-spacing:.04em;}
+.lock-remember{display:flex;align-items:center;justify-content:center;gap:7px;margin-top:16px;font-size:.76rem;color:var(--text3,#a09888);cursor:pointer;}
+.lock-remember input{cursor:pointer;}
 </style>
 </head>
 <body>
 
-<div class="wrap" id="adminWrap">
+<div id="lockScreen">
+  <div class="lock-box">
+    <div class="lock-title">관리자 인증</div>
+    <div class="lock-sub">비밀번호를 입력해 주세요</div>
+    <input type="password" id="lockPw" inputmode="numeric" placeholder="비밀번호" autocomplete="off"
+      onkeydown="if(event.key==='Enter')tryUnlock()">
+    <div class="lock-err" id="lockErr"></div>
+    <button class="lock-btn" onclick="tryUnlock()">들어가기</button>
+    <label class="lock-remember"><input type="checkbox" id="lockRemember" checked> 이 기기에서 30일간 기억</label>
+  </div>
+</div>
+
+<div class="wrap" id="adminWrap" style="display:none;">
   <div class="admin-header" onclick="window.scrollTo(0,0)" style="cursor:pointer;" title="맨 위로">
     <span class="admin-title">관리자 페이지</span>
     <span class="admin-sub">Hecate · Tarot</span>
@@ -356,6 +378,48 @@ body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellips
 <div class="toast" id="toast"></div>
 
 <script>
+// ===== 관리자 비밀번호 잠금 =====
+// 참고: 클라이언트 측 보호(현관 잠금 수준). 열람 차단용이며 완전한 보안은 아님.
+const ADMIN_PW = '9068';                 // 비밀번호 (GitHub에서 직접 수정 가능)
+const LOCK_KEY = 'hecate_admin_unlock';
+const LOCK_DAYS = 30;
+
+function isUnlocked(){
+  try{
+    const raw = localStorage.getItem(LOCK_KEY);
+    if(!raw) return false;
+    const until = parseInt(raw, 10);
+    return until && Date.now() < until;
+  }catch(e){ return false; }
+}
+function tryUnlock(){
+  const pw = (document.getElementById('lockPw').value||'').trim();
+  if(pw === ADMIN_PW){
+    if(document.getElementById('lockRemember').checked){
+      try{ localStorage.setItem(LOCK_KEY, String(Date.now() + LOCK_DAYS*86400000)); }catch(e){}
+    }
+    unlockAdmin();
+  } else {
+    document.getElementById('lockErr').textContent = '비밀번호가 맞지 않습니다';
+    document.getElementById('lockPw').value = '';
+    document.getElementById('lockPw').focus();
+  }
+}
+function unlockAdmin(){
+  const ls = document.getElementById('lockScreen');
+  if(ls) ls.style.display = 'none';
+  const aw = document.getElementById('adminWrap');
+  if(aw) aw.style.display = '';
+}
+// 페이지 로드 시: 이미 인증돼 있으면 통과, 아니면 잠금 화면
+if(isUnlocked()){ unlockAdmin(); }
+else {
+  document.addEventListener('DOMContentLoaded', ()=>{
+    const inp = document.getElementById('lockPw');
+    if(inp) inp.focus();
+  });
+}
+
 // 🔥 Firebase 설정
 const firebaseConfig = {
   apiKey: "AIzaSyB4WrXMra_eVmBMTDcJlROBvMGAN4DzRGo",
