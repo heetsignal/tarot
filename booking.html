@@ -537,7 +537,6 @@ function renderReviews(imgs){
   band.style.display = 'block';
 }
 loadReviews();
-applyMonthlyState();
 // ===== 후기 슬라이드 끝 =====
 
 // 결제 단계(Step3) 진입 시 1회만 뜨는 안내 팝업
@@ -647,11 +646,7 @@ function selMenu(el){
     el.classList.add('selected');
     S.menu=el.dataset.menu;S.dur=null;S.q=0;S.mixDur=null;S.liteType=null;S.pkgType=null;S.topic=null;S.visit=null;S.spellTopic=null;S.phone='';S.pName='';S.birth='';S.birthCal='양력';S.birthLunar='';S.birthTime='';S.pBirth='';S.pBirthCal='양력';S.pBirthLunar='';S.wishPurpose=null;S.monthlyTopics=[];S.monthlyWorries={};S.zip='';S.roadAddr='';S.addrDetail='';S.addr='';S.wish='';S.date=null;S.dateObj=null;S.time=null;
     const b1=document.getElementById('btn1'); if(b1) b1.disabled=false;
-  }catch(e){ console.error('selMenu 오류:', e); alert('[진단] selMenu 오류: '+(e&&e.message?e.message:e)); S.menu = el.dataset.menu; const b1=document.getElementById('btn1'); if(b1) b1.disabled=false; }
-  // [임시 진단] 버튼 상태 확인
-  const _b1=document.getElementById('btn1');
-  if(!_b1){ alert('[진단] btn1 요소를 찾을 수 없습니다'); }
-  else if(_b1.disabled){ alert('[진단] btn1이 여전히 disabled 상태입니다'); }
+  }catch(e){ console.error('selMenu 오류:', e); S.menu = el.dataset.menu; const b1=document.getElementById('btn1'); if(b1) b1.disabled=false; }
 }
 
 function go(n){
@@ -1658,4 +1653,11 @@ function copyForm(tmplId, btnId){
 
 function resetAll(){
   Object.assign(S,{menu:null,dur:null,q:0,mixDur:null,liteType:null,pkgType:null,topic:null,visit:null,spellTopic:null,phone:'',pName:'',birth:'',birthCal:'양력',birthLunar:'',pBirth:'',pBirthCal:'양력',pBirthLunar:'',wishPurpose:null,zip:'',roadAddr:'',addrDetail:'',addr:'',wish:'',date:null,dateObj:null,time:null,name:'',pw:'',pay:null,tone:null});
-  document.querySelectorAll('.menu-card').fo
+  document.querySelectorAll('.menu-card').forEach(c=>c.classList.remove('selected'));
+  document.getElementById('btn1').disabled=true;
+  document.getElementById('cardPayArea').innerHTML='';
+  const sf=document.getElementById('spellFields'); if(sf) sf.innerHTML='';
+  go(1);
+}
+
+function openCheckModal()
