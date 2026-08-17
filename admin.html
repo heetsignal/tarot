@@ -754,6 +754,11 @@ function renderOtherItem(b){
       </div>
     </div>
     ${contactChips(b)}
+    ${b.menuKey==='monthly'?`<div class="bk-spell">
+      ${(b.monthlyTopics&&b.monthlyTopics.length)?`<div class="bk-spell-row"><span class="bk-spell-key">주술 분야</span> ${b.monthlyTopics.join(' · ')}</div>`:''}
+      ${b.birthLunar?`<div class="bk-spell-row"><span class="bk-spell-key">생년월일</span> ${b.birthLunar}${b.birthRaw?` (입력: ${b.birthRaw})`:''}${b.birthTime?` · ${b.birthTime}`:' · 시간 미입력'}</div>`:''}
+      ${(b.monthlyWorries&&Object.keys(b.monthlyWorries).length)?Object.entries(b.monthlyWorries).map(([k,v])=>`<div class="bk-spell-row"><span class="bk-spell-key">${k}</span> ${v}</div>`).join(''):''}
+    </div>`:''}
     ${(b.menuKey==='spell'||b.menuKey==='butterfly')?`<div class="bk-spell">
       ${b.spellTopic?`<div class="bk-spell-row"><span class="bk-spell-key">주제</span> ${b.spellTopic}</div>`:''}
       ${b.birth?`<div class="bk-spell-row"><span class="bk-spell-key">생년월일</span> ${b.birth}</div>`:''}
@@ -996,10 +1001,35 @@ function autoTasks(){
       });
     }
   });
+
+  // ===== 월별 운세 컨설팅: 접수한 달의 26일 리딩지 발송, 27일 주술 진행 =====
+  // (개별 예약마다가 아니라, 그 달 신청자 전체를 묶어 월 1건씩)
+  const monthlyByMonth = {};   // 'YYYY-M' → 신청자 수
+  Object.values(bookings).forEach(b=>{
+    if(b && b.menuKey==='monthly' && b.ts){
+      const d = new Date(b.ts);
+      const mk = d.getFullYear()+'-'+(d.getMonth()+1);
+      monthlyByMonth[mk] = (monthlyByMonth[mk]||0) + 1;
+    }
+  });
+  Object.entries(monthlyByMonth).forEach(([mk, cnt])=>{
+    const [yy, mm] = mk.split('-').map(Number);
+    const send = new Date(yy, mm-1, 26, 10, 0, 0);   // 26일 10:00 리딩지 발송
+    const cast = new Date(yy, mm-1, 27, 10, 0, 0);   // 27일 10:00 주술 진행
+    out.push({
+      id:`monthly_send_${mk}`, when:send, chKey:'monthly_'+mk, chName:'',
+      menuLabel:'월별 운세 리딩지 발송', person:`${mm}월 신청자`, nick:'',
+      meta:`${cnt}명 · 리딩지 일괄 발송일`,
+    });
+    out.push({
+      id:`monthly_cast_${mk}`, when:cast, chKey:'monthly_'+mk, chName:'',
+      menuLabel:'월별 운세 주술 진행', person:`${mm}월 신청자`, nick:'',
+      meta:`${cnt}명 · 결과 맞춤 주술 진행일`,
+    });
+  });
+
   return out;
 }
-
-// 수동 등록 일정 펼치기
 // 이름에서 채널 구분: 괄호 있으면 오픈채팅(닉네임), 없으면 비즈니스 채널
 function parseChannel(name){
   const m = String(name||'').match(/^(.*?)\s*\((.+)\)\s*$/);
