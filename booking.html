@@ -355,7 +355,7 @@ input[type="date"].ifield:not(:valid){ color:var(--text3); }
         <div class="menu-info">매력과 오라를 깨워 이성의 시선과 호감을 끌어오는 주술<br>5일간 진행 · 미니 스펠자 제공 (배송 최대 2주)</div>
       </div>
     </div>
-    <button class="btn" id="btn1" onclick="go(2)" disabled style="margin-bottom:12px;display:none;">다음 단계</button>
+    <button class="btn" id="btn1" onclick="go(2)" disabled style="margin-bottom:12px;">다음 단계</button>
     <button class="btn-ghost" onclick="openCheckModal()">내 예약 확인하기</button>
   </div>
 
@@ -647,8 +647,7 @@ function selMenu(el){
     el.classList.add('selected');
     S.menu=el.dataset.menu;S.dur=null;S.q=0;S.mixDur=null;S.liteType=null;S.pkgType=null;S.topic=null;S.visit=null;S.spellTopic=null;S.phone='';S.pName='';S.birth='';S.birthCal='양력';S.birthLunar='';S.birthTime='';S.pBirth='';S.pBirthCal='양력';S.pBirthLunar='';S.wishPurpose=null;S.monthlyTopics=[];S.monthlyWorries={};S.zip='';S.roadAddr='';S.addrDetail='';S.addr='';S.wish='';S.date=null;S.dateObj=null;S.time=null;
     const b1=document.getElementById('btn1'); if(b1) b1.disabled=false;
-  }catch(e){ console.error('selMenu 오류:', e); S.menu = el.dataset.menu; }
-  go(2);   // 메뉴 선택 즉시 2단계로 이동
+  }catch(e){ console.error('selMenu 오류:', e); S.menu = el.dataset.menu; const b1=document.getElementById('btn1'); if(b1) b1.disabled=false; }
 }
 
 function go(n){
@@ -1662,5 +1661,4 @@ function resetAll(){
   go(1);
 }
 
-function openCheckModal(){
- 
+func
