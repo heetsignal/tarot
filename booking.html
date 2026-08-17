@@ -565,19 +565,9 @@ let globalData = {};
 
 const S={menu:null,dur:null,q:0,mixDur:null,liteType:null,pkgType:null,topic:null,visit:null,spellTopic:null,phone:'',pName:'',birth:'',birthCal:'양력',birthLunar:'',birthTime:'',pBirth:'',pBirthCal:'양력',pBirthLunar:'',wishPurpose:null,monthlyTopics:[],monthlyWorries:{},zip:'',roadAddr:'',addrDetail:'',addr:'',wish:'',date:null,dateObj:null,time:null,name:'',pw:'',pay:null,tone:null};
 
-// ===== 월별 운세: 접수기간 판별 (매월 15~25일, KST) =====
-function isMonthlyOpen(){
-  const kst = new Date(new Date().toLocaleString("en-US",{timeZone:"Asia/Seoul"}));
-  const d = kst.getDate();
-  return d >= 15 && d <= 25;
-}
-// 접수기간 아니면 메뉴 카드 어둡게
-function applyMonthlyState(){
-  const card = document.querySelector('.menu-card[data-menu="monthly"]');
-  if(!card) return;
-  if(isMonthlyOpen()){ card.classList.remove('menu-disabled'); }
-  else { card.classList.add('menu-disabled'); }
-}
+// 월별 운세: 접수기간 제한 없이 항상 활성화 (15~25일 제한 기능 제거)
+function isMonthlyOpen(){ return true; }
+function applyMonthlyState(){ /* 항상 활성화 — 별도 처리 없음 */ }
 
 // ===== 유입 경로(UTM) 읽기 =====
 function getUtmSource(){
@@ -636,11 +626,6 @@ function toFmtKey(d) {
 }
 
 function selMenu(el){
-  // 월별 운세: 접수기간(15~25일)이 아니면 선택 불가
-  if(el.dataset.menu==='monthly' && !isMonthlyOpen()){
-    alert('월별 운세 컨설팅은 매월 15일 ~ 25일에만 접수받습니다.\n\n접수기간에 다시 신청해 주세요.');
-    return;
-  }
   try{
     document.querySelectorAll('.menu-card').forEach(c=>c.classList.remove('selected'));
     el.classList.add('selected');
@@ -1660,4 +1645,18 @@ function resetAll(){
   go(1);
 }
 
-function openCheckModal()
+function openCheckModal(){
+  document.getElementById('chkName').value='';
+  document.getElementById('chkPw').value='';
+  document.getElementById('chkResult').classList.remove('show');
+  document.getElementById('chkModal').classList.add('show');
+}
+
+function closeCheckModal(){
+  document.getElementById('chkModal').classList.remove('show');
+}
+
+function doCheck(){
+  const n = document.getElementById('chkName').value.trim();
+  const p = document.getElementById('chkPw').value.trim();
+  if(!n || !p) { alert('이름과 비밀번호를 입력해 주세요.'); retur
