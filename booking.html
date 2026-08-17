@@ -100,6 +100,8 @@ body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellips
 .monthly-period{color:#c9a8e8;font-size:.78rem;}
 .menu-card.menu-disabled{opacity:.4;filter:grayscale(.4);}
 .menu-card.menu-disabled .menu-price,.menu-card.menu-disabled .mbadge{opacity:.6;}
+.monthly-worry-sub{font-size:.75rem;color:var(--text3);line-height:1.7;margin-bottom:14px;}
+.spell-mark{display:inline-block;font-size:.65rem;background:rgba(180,140,220,.16);color:#c9a8e8;border:1px solid rgba(180,140,220,.3);border-radius:4px;padding:2px 7px;margin-left:6px;vertical-align:middle;}
 .monthly-worry-head{font-size:.8rem;color:var(--gold2,#e8c87a);margin:18px 0 10px;padding-top:14px;border-top:1px solid var(--border,rgba(200,164,86,.18));}
 .b-24{background:rgba(100,150,210,.1);color:#90b8e0;border:1px solid rgba(100,150,210,.2);}
 .b-48{background:rgba(150,100,200,.1);color:#b890e0;border:1px solid rgba(150,100,200,.2);}
@@ -1065,23 +1067,18 @@ function toLunarText(dateStr, cal){
 // 생년월일 입력 한 벌 (달력 선택 + 자동 변환 표시)
 // ===== 월별 운세 컨설팅: 정보 입력 필드 =====
 function buildMonthlyFields(){
-  const topicLabels = {
-    '일(사업/학업)':'일(사업/학업)',
-    '금전':'금전',
-    '연애':'연애',
-    '인간관계':'인간관계'
+  const ALL_TOPICS = ['일(사업/학업)','금전','연애','인간관계'];
+  const PLACEHOLDERS = {
+    '일(사업/학업)':'예) 다음 달 사업 흐름이 궁금해요. 현재 매출이 떨어져 고민이에요.',
+    '금전':'예) 다음 달 재물 흐름이 궁금해요. 큰 지출을 앞두고 있어요.',
+    '연애':'예) 현재 남자친구가 있는데 9월 흐름이 궁금해요.',
+    '인간관계':'예) 직장 내 관계가 힘들어요. 앞으로의 흐름이 궁금해요.'
   };
-  const worryBlocks = S.monthlyTopics.map(t=>{
-    const key = 'w_'+encodeURIComponent(t);
-    const ph = {
-      '일(사업/학업)':'예) 다음 달 사업 흐름이 궁금해요. 현재 매출이 떨어져 고민이에요.',
-      '금전':'예) 다음 달 재물 흐름이 궁금해요. 큰 지출을 앞두고 있어요.',
-      '연애':'예) 현재 남자친구가 있는데 9월 흐름이 궁금해요.',
-      '인간관계':'예) 직장 내 관계가 힘들어요. 앞으로의 흐름이 궁금해요.'
-    }[t] || '현재 상태와 고민을 적어주세요';
+  const worryBlocks = ALL_TOPICS.map(t=>{
+    const isSpellTopic = S.monthlyTopics.includes(t);
     return `<div class="igroup">
-      <label class="ilabel">${topicLabels[t]} — 현재 상태 · 고민</label>
-      <textarea class="ifield" data-worry="${t}" placeholder="${ph}" oninput="onMonthlyWorry(this)">${S.monthlyWorries[t]||''}</textarea>
+      <label class="ilabel">${t}${isSpellTopic?' <span class="spell-mark">주술 분야</span>':''}</label>
+      <textarea class="ifield" data-worry="${t}" placeholder="${PLACEHOLDERS[t]}" oninput="onMonthlyWorry(this)">${S.monthlyWorries[t]||''}</textarea>
     </div>`;
   }).join('');
 
@@ -1092,7 +1089,8 @@ function buildMonthlyFields(){
       <label class="ilabel">태어난 시간 <span class="opt-mark">(모르면 비워두세요)</span></label>
       <input class="ifield" type="time" id="birthTime" value="${S.birthTime||''}" oninput="onBirthTime()">
     </div>
-    <div class="monthly-worry-head">주술 분야별 현재 상태 · 고민</div>
+    <div class="monthly-worry-head">분야별 현재 상태 · 고민</div>
+    <div class="monthly-worry-sub">리딩지는 4개 분야 모두 리딩되므로, 각 분야의 상황을 적어주시면 더 정확한 리딩이 가능합니다.<br>해당 사항이 없는 분야는 비워두셔도 됩니다.</div>
     ${worryBlocks}
   </div>`;
 }
@@ -1364,9 +1362,9 @@ function chk3(){
     if(S.wishPurpose==='썸/짝사랑') ok = ok && S.pName && (!S.pBirth || !!S.pBirthLunar);
   }
   if(S.menu==='monthly'){
-    // 내담자 생년월일 + 선택한 2개 분야 고민 모두 작성 (태어난 시간은 선택)
-    const worriesFilled = S.monthlyTopics.length===2 && S.monthlyTopics.every(t=>(S.monthlyWorries[t]||'').trim());
-    ok = ok && S.birthLunar && worriesFilled;
+    // 생년월일 필수 + 고민은 최소 1개 이상 작성 (태어난 시간은 선택)
+    const anyWorry = Object.values(S.monthlyWorries||{}).some(v=>(v||'').trim());
+    ok = ok && S.birthLunar && S.monthlyTopics.length===2 && anyWorry;
   }
   document.getElementById('btn3').disabled=!ok;
 }
@@ -1650,14 +1648,4 @@ function copyForm(tmplId, btnId){
 function resetAll(){
   Object.assign(S,{menu:null,dur:null,q:0,mixDur:null,liteType:null,pkgType:null,topic:null,visit:null,spellTopic:null,phone:'',pName:'',birth:'',birthCal:'양력',birthLunar:'',pBirth:'',pBirthCal:'양력',pBirthLunar:'',wishPurpose:null,zip:'',roadAddr:'',addrDetail:'',addr:'',wish:'',date:null,dateObj:null,time:null,name:'',pw:'',pay:null,tone:null});
   document.querySelectorAll('.menu-card').forEach(c=>c.classList.remove('selected'));
-  document.getElementById('btn1').disabled=true;
-  document.getElementById('cardPayArea').innerHTML='';
-  const sf=document.getElementById('spellFields'); if(sf) sf.innerHTML='';
-  go(1);
-}
-
-function openCheckModal(){
-  document.getElementById('chkName').value='';
-  document.getElementById('chkPw').value='';
-  document.getElementById('chkResult').classList.remove('show');
-  document.getElementById('chkModal').c
+  document.getElementById('btn1').
