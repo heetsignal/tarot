@@ -1002,29 +1002,24 @@ function autoTasks(){
     }
   });
 
-  // ===== 월별 운세 컨설팅: 접수한 달의 26일 리딩지 발송, 27일 주술 진행 =====
-  // (개별 예약마다가 아니라, 그 달 신청자 전체를 묶어 월 1건씩)
-  const monthlyByMonth = {};   // 'YYYY-M' → 신청자 수
-  Object.values(bookings).forEach(b=>{
-    if(b && b.menuKey==='monthly' && b.ts){
-      const d = new Date(b.ts);
-      const mk = d.getFullYear()+'-'+(d.getMonth()+1);
-      monthlyByMonth[mk] = (monthlyByMonth[mk]||0) + 1;
-    }
-  });
-  Object.entries(monthlyByMonth).forEach(([mk, cnt])=>{
-    const [yy, mm] = mk.split('-').map(Number);
+  // ===== 월별 운세 컨설팅: 신청자별로 26일 리딩지 발송, 27일 주술 진행 =====
+  Object.entries(bookings).forEach(([k,b])=>{
+    if(!b || b.menuKey!=='monthly' || !b.ts) return;
+    const d = new Date(b.ts);
+    const yy = d.getFullYear(), mm = d.getMonth()+1;
     const send = new Date(yy, mm-1, 26, 10, 0, 0);   // 26일 10:00 리딩지 발송
     const cast = new Date(yy, mm-1, 27, 10, 0, 0);   // 27일 10:00 주술 진행
+    const ch = parseChannel(b.name);
+    const topics = (b.monthlyTopics && b.monthlyTopics.length) ? b.monthlyTopics.join(' · ') : '분야 미선택';
     out.push({
-      id:`monthly_send_${mk}`, when:send, chKey:'monthly_'+mk, chName:'',
-      menuLabel:'월별 운세 리딩지 발송', person:`${mm}월 신청자`, nick:'',
-      meta:`${cnt}명 · 리딩지 일괄 발송일`,
+      id:`monthly_send_${k}`, when:send, chKey:'bk_'+k, chName:b.name||'',
+      menuLabel:'월별 운세 리딩지 발송', person:ch.real||'-', nick:ch.nick||'',
+      meta:`${mm}월분 · 주술 분야: ${topics}`,
     });
     out.push({
-      id:`monthly_cast_${mk}`, when:cast, chKey:'monthly_'+mk, chName:'',
-      menuLabel:'월별 운세 주술 진행', person:`${mm}월 신청자`, nick:'',
-      meta:`${cnt}명 · 결과 맞춤 주술 진행일`,
+      id:`monthly_cast_${k}`, when:cast, chKey:'bk_'+k, chName:b.name||'',
+      menuLabel:'월별 운세 주술 진행', person:ch.real||'-', nick:ch.nick||'',
+      meta:`${mm}월분 · 주술 분야: ${topics}`,
     });
   });
 
