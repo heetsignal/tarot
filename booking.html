@@ -95,14 +95,6 @@ body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellips
 .menu-info{font-size:.8rem;color:#a8a090;line-height:1.6;margin-top:6px;}
 .mbadge{display:inline-block;font-size:.6rem;letter-spacing:.08em;padding:3px 8px;border-radius:4px;margin-left:8px;vertical-align:middle;}
 .b-rt{background:rgba(200,164,86,.1);color:var(--gold);border:1px solid rgba(200,164,86,.22);}
-.b-monthly{background:rgba(180,140,220,.14);color:#c9a8e8;border:1px solid rgba(180,140,220,.3);}
-.menu-monthly{border-color:rgba(180,140,220,.3);}
-.monthly-period{color:#c9a8e8;font-size:.78rem;}
-.menu-card.menu-disabled{opacity:.4;filter:grayscale(.4);}
-.menu-card.menu-disabled .menu-price,.menu-card.menu-disabled .mbadge{opacity:.6;}
-.monthly-worry-sub{font-size:.75rem;color:var(--text3);line-height:1.7;margin-bottom:14px;}
-.spell-mark{display:inline-block;font-size:.65rem;background:rgba(180,140,220,.16);color:#c9a8e8;border:1px solid rgba(180,140,220,.3);border-radius:4px;padding:2px 7px;margin-left:6px;vertical-align:middle;}
-.monthly-worry-head{font-size:.8rem;color:var(--gold2,#e8c87a);margin:18px 0 10px;padding-top:14px;border-top:1px solid var(--border,rgba(200,164,86,.18));}
 .b-24{background:rgba(100,150,210,.1);color:#90b8e0;border:1px solid rgba(100,150,210,.2);}
 .b-48{background:rgba(150,100,200,.1);color:#b890e0;border:1px solid rgba(150,100,200,.2);}
 .b-wk{background:rgba(200,100,150,.1);color:#e090b8;border:1px solid rgba(200,100,150,.2);}
@@ -320,10 +312,6 @@ input[type="date"].ifield:not(:valid){ color:var(--text3); }
     <h2 class="stitle">상담 메뉴 선택</h2>
     <p class="sdesc">원하시는 상담 유형을 선택해 주세요</p>
     <div class="menu-grid">
-      <div class="menu-card menu-monthly" data-menu="monthly" onclick="selMenu(this)">
-        <div class="menu-top"><span class="menu-name">월별 운세 컨설팅 <span class="mbadge b-monthly">MONTHLY</span></span><span class="menu-price">100,000원</span></div>
-        <div class="menu-info">4개 분야(일·금전·연애·인간관계) 전체 운세 리딩지 + 결과 맞춤 주술<br><span class="monthly-period">접수기간 : 매월 15일 ~ 25일</span></div>
-      </div>
       <div class="menu-card" data-menu="realtime" onclick="selMenu(this)">
         <div class="menu-top"><span class="menu-name">실시간 채팅 리딩 <span class="mbadge b-rt">LIVE</span></span><span class="menu-price">10,000원~</span></div>
         <div class="menu-info">10분 / 20분 / 30분 선택 · 채팅으로 진행됩니다</div>
@@ -560,24 +548,12 @@ const firebaseConfig = {
   messagingSenderId: "164910959672",
   appId: "1:164910959672:web:4cf2ce7d0cdf80a6a1aacd"
 };
-// Firebase 초기화 (실패해도 페이지 나머지는 정상 동작하도록 방어)
-let db = null;
-try{
-  if(typeof firebase !== 'undefined'){
-    firebase.initializeApp(firebaseConfig);
-    db = firebase.database();
-  } else {
-    console.error('Firebase 라이브러리를 불러오지 못했습니다');
-  }
-}catch(e){ console.error('Firebase 초기화 실패:', e); }
+firebase.initializeApp(firebaseConfig);
+const db = firebase.database();
 
 let globalData = {};
 
-const S={menu:null,dur:null,q:0,mixDur:null,liteType:null,pkgType:null,topic:null,visit:null,spellTopic:null,phone:'',pName:'',birth:'',birthCal:'양력',birthLunar:'',birthTime:'',pBirth:'',pBirthCal:'양력',pBirthLunar:'',wishPurpose:null,monthlyTopics:[],monthlyWorries:{},zip:'',roadAddr:'',addrDetail:'',addr:'',wish:'',date:null,dateObj:null,time:null,name:'',pw:'',pay:null,tone:null};
-
-// 월별 운세: 접수기간 제한 없이 항상 활성화 (15~25일 제한 기능 제거)
-function isMonthlyOpen(){ return true; }
-function applyMonthlyState(){ /* 항상 활성화 — 별도 처리 없음 */ }
+const S={menu:null,dur:null,q:0,mixDur:null,liteType:null,pkgType:null,topic:null,visit:null,spellTopic:null,phone:'',pName:'',birth:'',birthCal:'양력',birthLunar:'',pBirth:'',pBirthCal:'양력',pBirthLunar:'',wishPurpose:null,zip:'',roadAddr:'',addrDetail:'',addr:'',wish:'',date:null,dateObj:null,time:null,name:'',pw:'',pay:null,tone:null};
 
 // ===== 유입 경로(UTM) 읽기 =====
 function getUtmSource(){
@@ -588,16 +564,14 @@ function getUtmSource(){
 }
 const BOOKING_SOURCE = getUtmSource();
 // ===== 유입 경로 끝 =====
-const MENU_NAMES={monthly:'월별 운세 컨설팅',realtime:'실시간 리딩',bibang:'비방',question:'질문제 리딩',mixed:'혼합 리딩',lite:'Lite 패키지',reunion:'시그니처 전략적 패키지',weekly:'위클리 패키지',spell:'스펠자',butterfly:'나비주술'};
+const MENU_NAMES={realtime:'실시간 리딩',bibang:'비방',question:'질문제 리딩',mixed:'혼합 리딩',lite:'Lite 패키지',reunion:'시그니처 전략적 패키지',weekly:'위클리 패키지',spell:'스펠자',butterfly:'나비주술'};
 
-if(db){
-  db.ref('hs_admin').on('value', (snap) => {
-    globalData = snap.val() || {};
-    if(S.dateObj && document.getElementById('timeArea').style.display === 'block') {
-        loadSlots(S.dateObj, S.menu === 'mixed' ? 24 : 0);
-    }
-  });
-}
+db.ref('hs_admin').on('value', (snap) => {
+  globalData = snap.val() || {};
+  if(S.dateObj && document.getElementById('timeArea').style.display === 'block') {
+      loadSlots(S.dateObj, S.menu === 'mixed' ? 24 : 0);
+  }
+});
 
 function aData() { return globalData; }
 
@@ -605,7 +579,6 @@ function aData() { return globalData; }
 // 전체 데이터를 덮어쓰지 않고, 예약 하나만 자기 경로에 기록한다.
 // (전체 set은 데이터가 크거나 연결이 불안정할 때 실패/유실 위험이 있음)
 function saveBooking(bookingKey, booking, blockedKeys, dateKey){
-  if(!db){ return Promise.reject(new Error('데이터베이스에 연결할 수 없습니다')); }
   // 1) 예약 본체를 개별 경로에 저장
   const p = db.ref('hs_admin/bookings/' + bookingKey).set(booking);
   // 2) 슬롯 잠금(있으면)도 개별 저장
@@ -639,39 +612,37 @@ function toFmtKey(d) {
 }
 
 function selMenu(el){
-  try{
-    document.querySelectorAll('.menu-card').forEach(c=>c.classList.remove('selected'));
-    el.classList.add('selected');
-    S.menu=el.dataset.menu;S.dur=null;S.q=0;S.mixDur=null;S.liteType=null;S.pkgType=null;S.topic=null;S.visit=null;S.spellTopic=null;S.phone='';S.pName='';S.birth='';S.birthCal='양력';S.birthLunar='';S.birthTime='';S.pBirth='';S.pBirthCal='양력';S.pBirthLunar='';S.wishPurpose=null;S.monthlyTopics=[];S.monthlyWorries={};S.zip='';S.roadAddr='';S.addrDetail='';S.addr='';S.wish='';S.date=null;S.dateObj=null;S.time=null;
-    const b1=document.getElementById('btn1'); if(b1) b1.disabled=false;
-  }catch(e){ console.error('selMenu 오류:', e); S.menu = el.dataset.menu; const b1=document.getElementById('btn1'); if(b1) b1.disabled=false; }
+  document.querySelectorAll('.menu-card').forEach(c=>c.classList.remove('selected'));
+  el.classList.add('selected');
+  S.menu=el.dataset.menu;S.dur=null;S.q=0;S.mixDur=null;S.liteType=null;S.pkgType=null;S.topic=null;S.visit=null;S.spellTopic=null;S.phone='';S.pName='';S.birth='';S.birthCal='양력';S.birthLunar='';S.pBirth='';S.pBirthCal='양력';S.pBirthLunar='';S.wishPurpose=null;S.zip='';S.roadAddr='';S.addrDetail='';S.addr='';S.wish='';S.date=null;S.dateObj=null;S.time=null;
+  document.getElementById('btn1').disabled=false;
 }
 
 function go(n){
-  // 화면 전환은 무조건 먼저 (뒤에서 에러나도 단계는 넘어가게)
   document.querySelectorAll('.section').forEach(s=>s.classList.remove('active'));
-  const sec=document.getElementById('s'+n);
-  if(sec) sec.classList.add('active');
+  document.getElementById('s'+n).classList.add('active');
+  document.getElementById('reviewBand').style.display = (n===1 && document.getElementById('reviewTrack').children.length) ? 'block' : 'none';
+  updSteps(n);
+  if(n===2)buildS2();
+  if(n===3){ buildS3(); maybeShowNotice(); }
+  if(n===4)buildS4();
   window.scrollTo(0,0);
 
-  try{
-    const rb=document.getElementById('reviewBand');
-    if(rb) rb.style.display = (n===1 && document.getElementById('reviewTrack').children.length) ? 'block' : 'none';
-    updSteps(n);
-    if(n===2)buildS2();
-    if(n===3){ buildS3(); maybeShowNotice(); }
-    if(n===4)buildS4();
-  }catch(e){ console.error('go('+n+') 처리 중 오류:', e); }
-
-  try{
-    if (typeof fbq === 'function') {
-      if (n === 2) {
-        fbq('track', 'ViewContent', { content_name: MENU_NAMES[S.menu] || '', content_category: 'step2_옵션진입' });
-      } else if (n === 3) {
-        fbq('track', 'AddToCart', { value: calcPrice(), currency: 'KRW', content_name: MENU_NAMES[S.menu] || '', content_category: 'step3_결제진입' });
-      }
+  if (typeof fbq === 'function') {
+    if (n === 2) {
+      fbq('track', 'ViewContent', {
+        content_name: MENU_NAMES[S.menu] || '',
+        content_category: 'step2_옵션진입'
+      });
+    } else if (n === 3) {
+      fbq('track', 'AddToCart', {
+        value: calcPrice(),
+        currency: 'KRW',
+        content_name: MENU_NAMES[S.menu] || '',
+        content_category: 'step3_결제진입'
+      });
     }
-  }catch(e){ /* 픽셀 오류는 무시 */ }
+  }
 }
 
 function updSteps(n){
@@ -681,9 +652,8 @@ function updSteps(n){
 
 function buildS2(){
   const m=S.menu;
-  const titles={monthly:'주술 분야 선택',realtime:'시간 선택',bibang:'예약 일정 선택',question:'질문 수 선택',mixed:'옵션 선택',lite:'Lite 종류 선택',reunion:'종류 선택',weekly:'예약 확인',spell:'주제 선택',butterfly:'신청 확인'};
+  const titles={realtime:'시간 선택',bibang:'예약 일정 선택',question:'질문 수 선택',mixed:'옵션 선택',lite:'Lite 종류 선택',reunion:'종류 선택',weekly:'예약 확인',spell:'주제 선택',butterfly:'신청 확인'};
   const descs={
-    monthly:'주술을 원하는 분야 2개를 선택해 주세요',
     realtime:'상담 시간과 예약 일정을 선택해 주세요',
     bibang:'예약 날짜와 시간을 선택해 주세요',
     question:'원하시는 질문 개수를 선택해 주세요 (질문당 5,000원)',
@@ -700,25 +670,6 @@ function buildS2(){
   const ta=document.getElementById('timeArea');
   oa.innerHTML='';ta.style.display='none';
   document.getElementById('btn2').disabled=true;
-
-  if(m==='monthly'){
-    oa.innerHTML=`
-    <div class="spell-notice">📌 <b>월별 운세 컨설팅</b><br>
-      리딩지는 <b>일 · 금전 · 연애 · 인간관계</b><br>4개 분야 모두 리딩해 드립니다.<br><br>
-      아래에서 선택하시는 2개 분야는<br><b>주술을 넣을 분야</b>입니다.<br>
-      두 분야 중 더 약한 <b>한 분야에만</b><br>주술이 진행됩니다.<br><br>
-      전체적으로 운기가 좋아 보강이 필요 없는 분은<br>혹시 모를 액을 막고 보호하는 방향으로 진행됩니다.<br><br>
-      <span class="warn">신청 1시간 뒤 리딩이 시작되어<br>이후에는 환불이 불가합니다.</span></div>
-    <div class="ogroup"><div class="olabel">주술 분야 선택 <span style="color:var(--text3);font-size:.75rem;">(2개)</span></div>
-      <div class="orow" id="monthlyrow">
-        ${['일(사업/학업)','금전','연애','인간관계'].map(t=>`<button class="obtn" onclick="selMonthly(this,'${t}')">${t}</button>`).join('')}
-      </div>
-      <div id="monthlyCount" style="font-size:.78rem;color:var(--text3);margin-top:10px;"></div>
-    </div>`;
-    updateMonthlyCount();
-    buildPrice();
-    return;
-  }
 
   if(m==='realtime'){
     oa.innerHTML=`
@@ -821,31 +772,6 @@ function selSpell(el,t){
   document.querySelectorAll('#spellrow .obtn').forEach(b=>b.classList.remove('selected'));
   el.classList.add('selected'); S.spellTopic=t;
   buildPrice(); chk2();
-}
-// 월별 운세: 주술 분야 2개 선택 (토글, 최대 2개)
-function selMonthly(el,t){
-  const i = S.monthlyTopics.indexOf(t);
-  if(i>=0){
-    S.monthlyTopics.splice(i,1);
-    el.classList.remove('selected');
-  } else {
-    if(S.monthlyTopics.length>=2){
-      alert('주술 분야는 2개까지 선택하실 수 있어요.\n\n다른 분야를 고르시려면 선택한 것을 먼저 눌러 해제해 주세요.');
-      return;
-    }
-    S.monthlyTopics.push(t);
-    el.classList.add('selected');
-  }
-  updateMonthlyCount();
-  chk2();
-}
-function updateMonthlyCount(){
-  const el=document.getElementById('monthlyCount');
-  if(!el) return;
-  const n=S.monthlyTopics.length;
-  el.innerHTML = n===2
-    ? `✔ <b style="color:var(--gold2);">${S.monthlyTopics.join(' · ')}</b> 선택됨`
-    : `${n}/2 선택됨 — 2개를 선택해 주세요`;
 }
 function renderDurations(){
   const da=document.getElementById('durArea');
@@ -989,7 +915,6 @@ function loadSlots(dt,minHoursAhead){
 
 function calcPrice(){
   const m=S.menu;
-  if(m==='monthly')return 100000;
   if(m==='realtime')return(S.dur||0)*1000;
   if(m==='bibang')return 20000;
   if(m==='question')return S.q*5000;
@@ -1004,7 +929,6 @@ function calcPrice(){
 
 function buildPrice(){
   const m=S.menu;let rows='';
-  if(m==='monthly'&&S.monthlyTopics.length===2)rows+=`<div class="prow"><span>월별 운세 컨설팅 (주술: ${S.monthlyTopics.join(' · ')})</span><span>100,000원</span></div>`;
   if(m==='realtime'&&S.dur)rows+=`<div class="prow"><span>실시간 리딩 (${S.dur}분)</span><span>${(S.dur*1000).toLocaleString()}원</span></div>`;
   if(m==='question'&&S.q)rows+=`<div class="prow"><span>질문제 리딩 (${S.q}개)</span><span>${(S.q*5000).toLocaleString()}원</span></div>`;
   if(m==='lite'&&S.liteType)rows+=`<div class="prow"><span>Lite 패키지 (${S.liteType})</span><span>15,000원</span></div>`;
@@ -1020,8 +944,7 @@ function buildPrice(){
 
 function chk2(){
   const m=S.menu;let ok=false;
-  if(m==='monthly')ok=(S.monthlyTopics.length===2);
-  else if(m==='realtime')ok=!!(S.topic&&S.visit&&S.dur&&S.date&&S.time);
+  if(m==='realtime')ok=!!(S.topic&&S.visit&&S.dur&&S.date&&S.time);
   else if(m==='bibang')ok=!!(S.dur&&S.date&&S.time);
   else if(m==='question')ok=S.q>0;
   else if(m==='mixed'){ok=!!(S.mixDur&&S.q&&S.date&&S.time);}
@@ -1065,46 +988,6 @@ function toLunarText(dateStr, cal){
 }
 
 // 생년월일 입력 한 벌 (달력 선택 + 자동 변환 표시)
-// ===== 월별 운세 컨설팅: 정보 입력 필드 =====
-function buildMonthlyFields(){
-  const ALL_TOPICS = ['일(사업/학업)','금전','연애','인간관계'];
-  const PLACEHOLDERS = {
-    '일(사업/학업)':'예) 다음 달 사업 흐름이 궁금해요. 현재 매출이 떨어져 고민이에요.',
-    '금전':'예) 다음 달 재물 흐름이 궁금해요. 큰 지출을 앞두고 있어요.',
-    '연애':'예) 현재 남자친구가 있는데 9월 흐름이 궁금해요.',
-    '인간관계':'예) 직장 내 관계가 힘들어요. 앞으로의 흐름이 궁금해요.'
-  };
-  const worryBlocks = ALL_TOPICS.map(t=>{
-    const isSpellTopic = S.monthlyTopics.includes(t);
-    return `<div class="igroup">
-      <label class="ilabel">${t}${isSpellTopic?' <span class="spell-mark">주술 분야</span>':''}</label>
-      <textarea class="ifield" data-worry="${t}" placeholder="${PLACEHOLDERS[t]}" oninput="onMonthlyWorry(this)">${S.monthlyWorries[t]||''}</textarea>
-    </div>`;
-  }).join('');
-
-  return `<div class="s3-block">
-    <span class="s3-block-title">신청 정보 (월별 운세 컨설팅)</span>
-    ${birthField('me','생년월일')}
-    <div class="igroup">
-      <label class="ilabel">태어난 시간 <span class="opt-mark">(모르면 비워두세요)</span></label>
-      <input class="ifield" type="time" id="birthTime" value="${S.birthTime||''}" oninput="onBirthTime()">
-    </div>
-    <div class="monthly-worry-head">분야별 현재 상태 · 고민</div>
-    <div class="monthly-worry-sub">리딩지는 4개 분야 모두 리딩되므로, 각 분야의 상황을 적어주시면 더 정확한 리딩이 가능합니다.<br>해당 사항이 없는 분야는 비워두셔도 됩니다.</div>
-    ${worryBlocks}
-  </div>`;
-}
-
-function onBirthTime(){
-  const el=document.getElementById('birthTime');
-  S.birthTime = el ? el.value : '';
-}
-function onMonthlyWorry(el){
-  const t = el.getAttribute('data-worry');
-  S.monthlyWorries[t] = el.value.trim();
-  chk3();
-}
-
 function birthField(key, label){
   const isP = (key==='p');
   const val = isP ? S.pBirth : S.birth;
@@ -1153,14 +1036,6 @@ function onBirth(key){
 function buildSpellFields(){
   const sf=document.getElementById('spellFields');
   if(!sf) return;
-
-  // 월별 운세 컨설팅: 생년월일+시간 + 선택 분야별 고민
-  if(S.menu==='monthly'){
-    sf.innerHTML = buildMonthlyFields();
-    if(S.birth) onBirth('me');
-    return;
-  }
-
   const isDelivery = (S.menu==='spell' || S.menu==='butterfly');
   if(!isDelivery){
     sf.innerHTML='';
@@ -1361,55 +1236,11 @@ function chk3(){
     if(S.wishPurpose==='재회') ok = ok && S.pName && S.pBirthLunar;
     if(S.wishPurpose==='썸/짝사랑') ok = ok && S.pName && (!S.pBirth || !!S.pBirthLunar);
   }
-  if(S.menu==='monthly'){
-    // 생년월일 필수 + 고민은 최소 1개 이상 작성 (태어난 시간은 선택)
-    const anyWorry = Object.values(S.monthlyWorries||{}).some(v=>(v||'').trim());
-    ok = ok && S.birthLunar && S.monthlyTopics.length===2 && anyWorry;
-  }
   document.getElementById('btn3').disabled=!ok;
 }
 
 function buildS4(){
   const m=S.menu;
-
-  // ===== 월별 운세 컨설팅: 카톡 양식은 이름·메뉴·주술분야만 =====
-  if(m==='monthly'){
-    const form=`📋 【월별 운세 컨설팅 신청】\n이름: ${S.name}\n메뉴: 월별 운세 컨설팅\n주술 분야: ${S.monthlyTopics.join(', ')}`;
-    const ft=document.getElementById('formTmpl');
-    ft.innerHTML=`${form}`;
-    ft.dataset.copy=form;
-
-    const cpa=document.getElementById('cardPayArea');
-    if(S.pay==='account'){
-      cpa.innerHTML=`
-        <div class="account-box show" style="margin-bottom:10px;">
-          <div class="arow"><span class="akey">은행</span><span class="aval">카카오뱅크</span></div>
-          <div class="arow"><span class="akey">계좌번호</span><span class="aval" style="color:#e8c87a;user-select:all;">3333-37-0910218</span></div>
-          <div class="arow"><span class="akey">예금주</span><span class="aval">한서희</span></div>
-          <div class="arow"><span class="akey">입금액</span><span class="aval">${calcPrice().toLocaleString()}원</span></div>
-        </div>
-        <button class="copy-btn" id="acctCopyBtn" onclick="copyAccount('acctCopyBtn')">📋 계좌번호 복사하기</button>`;
-    } else if(S.pay==='card'){
-      cpa.innerHTML=`<div style="font-size:.78rem;color:#e0b87a;text-align:center;margin-bottom:8px;line-height:1.5;">※ 카드결제 시 스마트스토어 수수료 5%가 추가됩니다</div><a class="card-pay-btn" href="https://mkt.shopping.naver.com/link/69f9aa055358056105d6b7b0" target="_blank">💳 카드결제하기 (네이버 스마트스토어) →</a>`;
-    } else { cpa.innerHTML=''; }
-
-    const data=aData();
-    if(!data.bookings)data.bookings={};
-    const bk=`other_${Date.now()}`;
-    data.bookings[bk]={
-      name:S.name, pw:S.pw, pay:S.pay,
-      menu:'월별 운세 컨설팅', menuKey:'monthly',
-      monthlyTopics:S.monthlyTopics.slice(), monthlyWorries:Object.assign({},S.monthlyWorries),
-      birthLunar:S.birthLunar||null, birthRaw:S.birth?`${S.birth} (${S.birthCal})`:null, birthTime:S.birthTime||null,
-      price:calcPrice(), ts:Date.now(), source:BOOKING_SOURCE
-    };
-    saveBooking(bk, data.bookings[bk]).catch(bookingSaveError);
-
-    if (typeof fbq === 'function') {
-      fbq('track', 'Lead', { value: calcPrice(), currency: 'KRW', content_name: '월별 운세 컨설팅' });
-    }
-    return;
-  }
 
   // ===== 스펠자: 카톡 양식은 이름·메뉴·주제만 =====
   if(m==='spell'){
@@ -1648,4 +1479,122 @@ function copyForm(tmplId, btnId){
 function resetAll(){
   Object.assign(S,{menu:null,dur:null,q:0,mixDur:null,liteType:null,pkgType:null,topic:null,visit:null,spellTopic:null,phone:'',pName:'',birth:'',birthCal:'양력',birthLunar:'',pBirth:'',pBirthCal:'양력',pBirthLunar:'',wishPurpose:null,zip:'',roadAddr:'',addrDetail:'',addr:'',wish:'',date:null,dateObj:null,time:null,name:'',pw:'',pay:null,tone:null});
   document.querySelectorAll('.menu-card').forEach(c=>c.classList.remove('selected'));
-  document.getElementById('btn1').
+  document.getElementById('btn1').disabled=true;
+  document.getElementById('cardPayArea').innerHTML='';
+  const sf=document.getElementById('spellFields'); if(sf) sf.innerHTML='';
+  go(1);
+}
+
+function openCheckModal(){
+  document.getElementById('chkName').value='';
+  document.getElementById('chkPw').value='';
+  document.getElementById('chkResult').classList.remove('show');
+  document.getElementById('chkModal').classList.add('show');
+}
+
+function closeCheckModal(){
+  document.getElementById('chkModal').classList.remove('show');
+}
+
+function doCheck(){
+  const n = document.getElementById('chkName').value.trim();
+  const p = document.getElementById('chkPw').value.trim();
+  if(!n || !p) { alert('이름과 비밀번호를 입력해 주세요.'); return; }
+
+  const data = aData();
+  const bookings = data.bookings || {};
+  const bks = Object.values(bookings).sort((a,b)=>(b.ts||0) - (a.ts||0));
+  const found = bks.find(b => b.name === n && b.pw === p);
+
+  if(!found) {
+    alert('입력하신 정보와 일치하는 예약 내역이 없습니다.');
+    return;
+  }
+
+  // 스펠자 조회
+  if(found.menuKey==='spell'){
+    const sform=`📋 【스펠자 신청】\n이름: ${found.name}\n메뉴: 스펠자\n주제: ${found.spellTopic||''}`;
+    let h = `<div class="slabel">조회 결과</div>
+             <div style="font-size:.82rem; color:var(--text2); line-height:1.7; margin-bottom:16px;">· 메뉴: 스펠자<br>· 주제: ${found.spellTopic||''}<br>· 결제 금액: ${(found.price||0).toLocaleString()}원<br>· 결제 방법: ${found.pay==='account'?'계좌이체':'카드결제'}</div>`;
+    if(found.pay==='account'){
+      h += `<div class="account-box show" style="margin-bottom:16px;">
+               <div class="arow"><span class="akey">은행</span><span class="aval">카카오뱅크</span></div>
+               <div class="arow"><span class="akey">계좌번호</span><span class="aval" style="color:#e8c87a;user-select:all;">3333-37-0910218</span></div>
+               <div class="arow"><span class="akey">예금주</span><span class="aval">한서희</span></div>
+               <div class="arow"><span class="akey">입금액</span><span class="aval">${(found.price||0).toLocaleString()}원</span></div>
+             </div>`;
+    }
+    h += `<div class="form-tmpl" id="chkFormTmpl" style="margin-bottom:12px;" data-copy="${sform.replace(/"/g,'&quot;')}"><span class="ftitle">✦ 제출 양식</span>${sform}</div>`;
+    h += `<button class="copy-btn" id="chkCopyBtn" style="margin-bottom:0;" onclick="copyForm('chkFormTmpl','chkCopyBtn')">📋 신청 내용 복사하기</button>`;
+    document.getElementById('chkResult').innerHTML = h;
+    document.getElementById('chkResult').classList.add('show');
+    return;
+  }
+
+  // 나비주술 조회
+  if(found.menuKey==='butterfly'){
+    const bform=`📋 【나비주술 신청】\n이름: ${found.name}\n메뉴: 나비주술`;
+    let h = `<div class="slabel">조회 결과</div>
+             <div style="font-size:.82rem; color:var(--text2); line-height:1.7; margin-bottom:16px;">· 메뉴: 나비주술<br>· 결제 금액: ${(found.price||0).toLocaleString()}원<br>· 결제 방법: ${found.pay==='account'?'계좌이체':'카드결제'}</div>`;
+    if(found.pay==='account'){
+      h += `<div class="account-box show" style="margin-bottom:16px;">
+               <div class="arow"><span class="akey">은행</span><span class="aval">카카오뱅크</span></div>
+               <div class="arow"><span class="akey">계좌번호</span><span class="aval" style="color:#e8c87a;user-select:all;">3333-37-0910218</span></div>
+               <div class="arow"><span class="akey">예금주</span><span class="aval">한서희</span></div>
+               <div class="arow"><span class="akey">입금액</span><span class="aval">${(found.price||0).toLocaleString()}원</span></div>
+             </div>`;
+    }
+    h += `<div class="form-tmpl" id="chkFormTmpl" style="margin-bottom:12px;" data-copy="${bform.replace(/"/g,'&quot;')}"><span class="ftitle">✦ 제출 양식</span>${bform}</div>`;
+    h += `<button class="copy-btn" id="chkCopyBtn" style="margin-bottom:0;" onclick="copyForm('chkFormTmpl','chkCopyBtn')">📋 신청 내용 복사하기</button>`;
+    document.getElementById('chkResult').innerHTML = h;
+    document.getElementById('chkResult').classList.add('show');
+    return;
+  }
+
+  let info = `· 메뉴: ${found.menu}\n`;
+  if(found.menuKey==='realtime') info+=`${found.topic?`· 상담 주제: ${found.topic} (${found.visit||''})\n`:''}· 예약 시간: ${found.dateStr||''} ${found.time||''} (${found.dur||0}분)\n`;
+  if(found.menuKey==='bibang') info+=`· 예약 시간: ${found.dateStr||''} ${found.time||''} (${found.dur||0}분)\n`;
+  if(found.menuKey==='question') info+=`· 질문 수: ${found.q||0}개\n`;
+  if(found.menuKey==='mixed'){
+    if(found.mixDur) info+=`· 실시간: ${found.dateStr||''} ${found.time||''} (${found.mixDur}분)\n`;
+    if(found.q) info+=`· 질문 수: ${found.q}개\n`;
+  }
+  info+=`· 결제 금액: ${(found.price||0).toLocaleString()}원\n`;
+  info+=`· 결제 방법: ${found.pay==='account'?'계좌이체':'카드결제'}`;
+
+  let html = `<div class="slabel">조회 결과</div>
+              <div style="font-size:.82rem; color:var(--text2); line-height:1.7; margin-bottom:16px;">${info.replace(/\n/g, '<br>')}</div>`;
+
+  if(found.pay === 'account') {
+    html += `<div class="account-box show" style="margin-bottom:16px;">
+               <div class="arow"><span class="akey">은행</span><span class="aval">카카오뱅크</span></div>
+               <div class="arow"><span class="akey">계좌번호</span><span class="aval" style="color:#e8c87a;user-select:all;">3333-37-0910218</span></div>
+               <div class="arow"><span class="akey">예금주</span><span class="aval">한서희</span></div>
+               <div class="arow"><span class="akey">입금액</span><span class="aval">${(found.price||0).toLocaleString()}원</span></div>
+             </div>`;
+  }
+
+  const chkIsPkg = (found.menuKey==='lite'||found.menuKey==='reunion'||found.menuKey==='weekly');
+  const chkIsReunionLite = (found.menuKey==='lite' && found.liteType==='재회');
+  const chkRtNoPartner = (found.menuKey==='realtime' && found.topic && found.topic!=='연애' && found.topic!=='기타');
+  let chkBody;
+  if(chkRtNoPartner){
+    chkBody = `내담자 성함 및 나이 :  \n상세 사연 : \n핵심 질문 : `;
+  } else if(chkIsReunionLite){
+    chkBody = `내담자 성함 및 나이 :  \n상대방 성함 및 나이 : \n상세 사연 : \n추가 자유질문 : `;
+  } else if(chkIsPkg){
+    chkBody = `내담자 성함 및 나이 :  \n상대방 성함 및 나이 : \n상세 사연 : `;
+  } else {
+    chkBody = `내담자 성함 및 나이 :  \n상대방 성함 및 나이 : \n상세 사연 : \n핵심 질문 : `;
+  }
+  const formStr = `📋 【예약 정보】\n이름: ${found.name}\n${info}\n\n📋 【상담 양식】\n${chkBody}`;
+  html += `<div class="submit-warn" style="margin-bottom:14px;">📌 <strong>예약정보 + 상담양식 모두</strong> 복사해서 보내주세요.<br>상담양식만 보내면 예약 확인이 어려워요.</div>`;
+  html += `<div class="form-tmpl" id="chkFormTmpl" style="margin-bottom:12px;" data-copy="${formStr.replace(/"/g,'&quot;')}"><span class="ftitle">✦ 제출 양식</span>${formStr}</div>`;
+  html += `<button class="copy-btn" id="chkCopyBtn" style="margin-bottom:0;" onclick="copyForm('chkFormTmpl','chkCopyBtn')">📋 예약정보 + 상담양식 전체 복사하기</button>`;
+
+  document.getElementById('chkResult').innerHTML = html;
+  document.getElementById('chkResult').classList.add('show');
+}
+</script>
+</body>
+</html>
