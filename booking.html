@@ -100,9 +100,9 @@ body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellips
 .monthly-period{color:#c9a8e8;font-size:.78rem;}
 .menu-card.menu-disabled{opacity:.4;filter:grayscale(.4);}
 .menu-card.menu-disabled .menu-price,.menu-card.menu-disabled .mbadge{opacity:.6;}
+.monthly-worry-head{font-size:.8rem;color:var(--gold2);margin:18px 0 10px;padding-top:14px;border-top:1px solid var(--border);}
 .monthly-worry-sub{font-size:.75rem;color:var(--text3);line-height:1.7;margin-bottom:14px;}
 .spell-mark{display:inline-block;font-size:.65rem;background:rgba(180,140,220,.16);color:#c9a8e8;border:1px solid rgba(180,140,220,.3);border-radius:4px;padding:2px 7px;margin-left:6px;vertical-align:middle;}
-.monthly-worry-head{font-size:.8rem;color:var(--gold2,#e8c87a);margin:18px 0 10px;padding-top:14px;border-top:1px solid var(--border,rgba(200,164,86,.18));}
 .b-24{background:rgba(100,150,210,.1);color:#90b8e0;border:1px solid rgba(100,150,210,.2);}
 .b-48{background:rgba(150,100,200,.1);color:#b890e0;border:1px solid rgba(150,100,200,.2);}
 .b-wk{background:rgba(200,100,150,.1);color:#e090b8;border:1px solid rgba(200,100,150,.2);}
@@ -446,8 +446,7 @@ input[type="date"].ifield:not(:valid){ color:var(--text3); }
       <div class="form-tmpl" id="formTmpl"></div>
       <button class="copy-btn" id="copyBtn" onclick="copyForm('formTmpl','copyBtn')">📋 예약정보 + 상담양식 전체 복사하기</button>
       
-      <a class="kakao-btn" href="https://pf.kakao.com/_RuddX" target="_blank">💬 카카오톡 공개프로필로 보내기 →</a>
-      <a class="kakao-btn-dark" href="https://open.kakao.com/o/sQZiU3Hi" target="_blank">🔒 카카오톡 오픈채팅으로 보내기 →</a>
+      <a class="kakao-btn" href="https://open.kakao.com/o/sQZiU3Hi" target="_blank">💬 카카오톡 오픈채팅으로 보내기 →</a>
 
       <button class="btn-ghost" onclick="resetAll()">처음으로 돌아가기</button>
     </div>
@@ -573,11 +572,26 @@ try{
 
 let globalData = {};
 
-const S={menu:null,dur:null,q:0,mixDur:null,liteType:null,pkgType:null,topic:null,visit:null,spellTopic:null,phone:'',pName:'',birth:'',birthCal:'양력',birthLunar:'',birthTime:'',pBirth:'',pBirthCal:'양력',pBirthLunar:'',wishPurpose:null,monthlyTopics:[],monthlyWorries:{},zip:'',roadAddr:'',addrDetail:'',addr:'',wish:'',date:null,dateObj:null,time:null,name:'',pw:'',pay:null,tone:null};
+const S={menu:null,dur:null,q:0,mixDur:null,liteType:null,pkgType:null,topic:null,visit:null,spellTopic:null,phone:'',pName:'',birth:'',birthCal:'양력',birthLunar:'',pBirth:'',pBirthCal:'양력',pBirthLunar:'',wishPurpose:null,zip:'',roadAddr:'',addrDetail:'',addr:'',wish:'',date:null,dateObj:null,time:null,name:'',pw:'',pay:null,tone:null};
 
-// 월별 운세: 접수기간 제한 없이 항상 활성화 (15~25일 제한 기능 제거)
-function isMonthlyOpen(){ return true; }
-function applyMonthlyState(){ /* 항상 활성화 — 별도 처리 없음 */ }
+
+// ===== 월별 운세: 접수기간 (매월 15~25일, 한국시간) =====
+// 주의: 여기서는 '정의'만 한다. 실행은 파일 맨 아래 초기화에서만!
+function isMonthlyOpen(){
+  try{
+    const kst = new Date(new Date().toLocaleString("en-US",{timeZone:"Asia/Seoul"}));
+    const d = kst.getDate();
+    return d >= 15 && d <= 25;
+  }catch(e){ return true; }   // 판별 실패 시엔 열어둠 (예약을 막지 않기 위해)
+}
+function applyMonthlyState(){
+  try{
+    const card = document.querySelector('.menu-card[data-menu="monthly"]');
+    if(!card) return;
+    if(isMonthlyOpen()) card.classList.remove('menu-disabled');
+    else card.classList.add('menu-disabled');
+  }catch(e){ console.error('월별 상태 적용 오류:', e); }
+}
 
 // ===== 유입 경로(UTM) 읽기 =====
 function getUtmSource(){
@@ -588,7 +602,7 @@ function getUtmSource(){
 }
 const BOOKING_SOURCE = getUtmSource();
 // ===== 유입 경로 끝 =====
-const MENU_NAMES={monthly:'월별 운세 컨설팅',realtime:'실시간 리딩',bibang:'비방',question:'질문제 리딩',mixed:'혼합 리딩',lite:'Lite 패키지',reunion:'시그니처 전략적 패키지',weekly:'위클리 패키지',spell:'스펠자',butterfly:'나비주술'};
+const MENU_NAMES={realtime:'실시간 리딩',bibang:'비방',question:'질문제 리딩',mixed:'혼합 리딩',lite:'Lite 패키지',reunion:'시그니처 전략적 패키지',weekly:'위클리 패키지',spell:'스펠자',butterfly:'나비주술'};
 
 if(db){
   db.ref('hs_admin').on('value', (snap) => {
@@ -639,6 +653,11 @@ function toFmtKey(d) {
 }
 
 function selMenu(el){
+  // 월별 운세: 접수기간(15~25일)이 아니면 선택 불가
+  if(el.dataset.menu==='monthly' && !isMonthlyOpen()){
+    alert('월별 운세 컨설팅은 매월 15일 ~ 25일에만 접수받습니다.\n\n접수기간에 다시 신청해 주세요.');
+    return;
+  }
   try{
     document.querySelectorAll('.menu-card').forEach(c=>c.classList.remove('selected'));
     el.classList.add('selected');
@@ -1081,7 +1100,6 @@ function buildMonthlyFields(){
       <textarea class="ifield" data-worry="${t}" placeholder="${PLACEHOLDERS[t]}" oninput="onMonthlyWorry(this)">${S.monthlyWorries[t]||''}</textarea>
     </div>`;
   }).join('');
-
   return `<div class="s3-block">
     <span class="s3-block-title">신청 정보 (월별 운세 컨설팅)</span>
     ${birthField('me','생년월일')}
@@ -1094,7 +1112,6 @@ function buildMonthlyFields(){
     ${worryBlocks}
   </div>`;
 }
-
 function onBirthTime(){
   const el=document.getElementById('birthTime');
   S.birthTime = el ? el.value : '';
@@ -1154,7 +1171,7 @@ function buildSpellFields(){
   const sf=document.getElementById('spellFields');
   if(!sf) return;
 
-  // 월별 운세 컨설팅: 생년월일+시간 + 선택 분야별 고민
+  // 월별 운세 컨설팅
   if(S.menu==='monthly'){
     sf.innerHTML = buildMonthlyFields();
     if(S.birth) onBirth('me');
@@ -1362,7 +1379,7 @@ function chk3(){
     if(S.wishPurpose==='썸/짝사랑') ok = ok && S.pName && (!S.pBirth || !!S.pBirthLunar);
   }
   if(S.menu==='monthly'){
-    // 생년월일 필수 + 고민은 최소 1개 이상 작성 (태어난 시간은 선택)
+    // 생년월일 필수 + 고민 최소 1개 (태어난 시간은 선택)
     const anyWorry = Object.values(S.monthlyWorries||{}).some(v=>(v||'').trim());
     ok = ok && S.birthLunar && S.monthlyTopics.length===2 && anyWorry;
   }
@@ -1764,6 +1781,13 @@ function doCheck(){
   document.getElementById('chkResult').innerHTML = html;
   document.getElementById('chkResult').classList.add('show');
 }
+
+// ===== 초기화 =====
+// 모든 변수·함수 선언이 끝난 '맨 마지막'에서만 실행한다.
+// (선언보다 앞에서 실행하면 스크립트 전체가 죽으므로 위치 변경 금지)
+(function initBooking(){
+  try{ applyMonthlyState(); }catch(e){ console.error('초기화 오류:', e); }
+})();
 </script>
 </body>
 </html>
