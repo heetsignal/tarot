@@ -572,7 +572,7 @@ try{
 
 let globalData = {};
 
-const S={menu:null,dur:null,q:0,mixDur:null,liteType:null,pkgType:null,topic:null,visit:null,spellTopic:null,phone:'',pName:'',birth:'',birthCal:'양력',birthLunar:'',pBirth:'',pBirthCal:'양력',pBirthLunar:'',wishPurpose:null,zip:'',roadAddr:'',addrDetail:'',addr:'',wish:'',date:null,dateObj:null,time:null,name:'',pw:'',pay:null,tone:null};
+const S={menu:null,dur:null,q:0,mixDur:null,liteType:null,pkgType:null,topic:null,visit:null,spellTopic:null,phone:'',pName:'',birth:'',birthCal:'양력',birthLunar:'',birthTime:'',pBirth:'',pBirthCal:'양력',pBirthLunar:'',wishPurpose:null,monthlyTopics:[],monthlyWorries:{},zip:'',roadAddr:'',addrDetail:'',addr:'',wish:'',date:null,dateObj:null,time:null,name:'',pw:'',pay:null,tone:null};
 
 
 // ===== 월별 운세: 접수기간 (매월 15~25일, 한국시간) =====
@@ -602,7 +602,7 @@ function getUtmSource(){
 }
 const BOOKING_SOURCE = getUtmSource();
 // ===== 유입 경로 끝 =====
-const MENU_NAMES={realtime:'실시간 리딩',bibang:'비방',question:'질문제 리딩',mixed:'혼합 리딩',lite:'Lite 패키지',reunion:'시그니처 전략적 패키지',weekly:'위클리 패키지',spell:'스펠자',butterfly:'나비주술'};
+const MENU_NAMES={monthly:'월별 운세 컨설팅',realtime:'실시간 리딩',bibang:'비방',question:'질문제 리딩',mixed:'혼합 리딩',lite:'Lite 패키지',reunion:'시그니처 전략적 패키지',weekly:'위클리 패키지',spell:'스펠자',butterfly:'나비주술'};
 
 if(db){
   db.ref('hs_admin').on('value', (snap) => {
@@ -1663,7 +1663,7 @@ function copyForm(tmplId, btnId){
 }
 
 function resetAll(){
-  Object.assign(S,{menu:null,dur:null,q:0,mixDur:null,liteType:null,pkgType:null,topic:null,visit:null,spellTopic:null,phone:'',pName:'',birth:'',birthCal:'양력',birthLunar:'',pBirth:'',pBirthCal:'양력',pBirthLunar:'',wishPurpose:null,zip:'',roadAddr:'',addrDetail:'',addr:'',wish:'',date:null,dateObj:null,time:null,name:'',pw:'',pay:null,tone:null});
+  Object.assign(S,{menu:null,dur:null,q:0,mixDur:null,liteType:null,pkgType:null,topic:null,visit:null,spellTopic:null,phone:'',pName:'',birth:'',birthCal:'양력',birthLunar:'',pBirth:'',pBirthCal:'양력',pBirthLunar:'',wishPurpose:null,monthlyTopics:[],monthlyWorries:{},birthTime:'',zip:'',roadAddr:'',addrDetail:'',addr:'',wish:'',date:null,dateObj:null,time:null,name:'',pw:'',pay:null,tone:null});
   document.querySelectorAll('.menu-card').forEach(c=>c.classList.remove('selected'));
   document.getElementById('btn1').disabled=true;
   document.getElementById('cardPayArea').innerHTML='';
