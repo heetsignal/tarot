@@ -558,8 +558,16 @@ const firebaseConfig = {
   messagingSenderId: "164910959672",
   appId: "1:164910959672:web:4cf2ce7d0cdf80a6a1aacd"
 };
-firebase.initializeApp(firebaseConfig);
-const db = firebase.database();
+// Firebase 초기화 (실패해도 페이지 나머지는 정상 동작하도록 방어)
+let db = null;
+try{
+  if(typeof firebase !== 'undefined'){
+    firebase.initializeApp(firebaseConfig);
+    db = firebase.database();
+  } else {
+    console.error('Firebase 라이브러리를 불러오지 못했습니다');
+  }
+}catch(e){ console.error('Firebase 초기화 실패:', e); }
 
 let globalData = {};
 
@@ -580,12 +588,14 @@ const BOOKING_SOURCE = getUtmSource();
 // ===== 유입 경로 끝 =====
 const MENU_NAMES={monthly:'월별 운세 컨설팅',realtime:'실시간 리딩',bibang:'비방',question:'질문제 리딩',mixed:'혼합 리딩',lite:'Lite 패키지',reunion:'시그니처 전략적 패키지',weekly:'위클리 패키지',spell:'스펠자',butterfly:'나비주술'};
 
-db.ref('hs_admin').on('value', (snap) => {
-  globalData = snap.val() || {};
-  if(S.dateObj && document.getElementById('timeArea').style.display === 'block') {
-      loadSlots(S.dateObj, S.menu === 'mixed' ? 24 : 0);
-  }
-});
+if(db){
+  db.ref('hs_admin').on('value', (snap) => {
+    globalData = snap.val() || {};
+    if(S.dateObj && document.getElementById('timeArea').style.display === 'block') {
+        loadSlots(S.dateObj, S.menu === 'mixed' ? 24 : 0);
+    }
+  });
+}
 
 function aData() { return globalData; }
 
@@ -593,6 +603,7 @@ function aData() { return globalData; }
 // 전체 데이터를 덮어쓰지 않고, 예약 하나만 자기 경로에 기록한다.
 // (전체 set은 데이터가 크거나 연결이 불안정할 때 실패/유실 위험이 있음)
 function saveBooking(bookingKey, booking, blockedKeys, dateKey){
+  if(!db){ return Promise.reject(new Error('데이터베이스에 연결할 수 없습니다')); }
   // 1) 예약 본체를 개별 경로에 저장
   const p = db.ref('hs_admin/bookings/' + bookingKey).set(booking);
   // 2) 슬롯 잠금(있으면)도 개별 저장
@@ -1649,14 +1660,4 @@ function openCheckModal(){
   document.getElementById('chkName').value='';
   document.getElementById('chkPw').value='';
   document.getElementById('chkResult').classList.remove('show');
-  document.getElementById('chkModal').classList.add('show');
-}
-
-function closeCheckModal(){
-  document.getElementById('chkModal').classList.remove('show');
-}
-
-function doCheck(){
-  const n = document.getElementById('chkName').value.trim();
-  const p = document.getElementById('chkPw').value.trim();
-  if(!n || !p) { alert('이름과 비밀번호를 입력해 주세요.'); retur
+  document.getElementById('chkModal').c
