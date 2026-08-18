@@ -754,7 +754,7 @@ function renderOtherItem(b){
       </div>
     </div>
     ${contactChips(b)}
-    ${b.menuKey==='monthly'?`<div class="bk-spell">
+    ${(b.menuKey==='monthly' || /월별\s*운세/.test(String(b.menu||'')))?`<div class="bk-spell">
       ${(b.monthlyTopics&&b.monthlyTopics.length)?`<div class="bk-spell-row"><span class="bk-spell-key">주술 분야</span> ${b.monthlyTopics.join(' · ')}</div>`:''}
       ${b.birthLunar?`<div class="bk-spell-row"><span class="bk-spell-key">생년월일</span> ${b.birthLunar}${b.birthRaw?` (입력: ${b.birthRaw})`:''}${b.birthTime?` · ${b.birthTime}`:' · 시간 미입력'}</div>`:''}
       ${(b.monthlyWorries&&Object.keys(b.monthlyWorries).length)?Object.entries(b.monthlyWorries).map(([k,v])=>`<div class="bk-spell-row"><span class="bk-spell-key">${k}</span> ${v}</div>`).join(''):''}
@@ -1004,8 +1004,17 @@ function autoTasks(){
 
   // ===== 월별 운세 컨설팅: 신청자별로 26일 리딩지 발송, 27일 주술 진행 =====
   Object.entries(bookings).forEach(([k,b])=>{
-    if(!b || b.menuKey!=='monthly' || !b.ts) return;
-    const d = new Date(b.ts);
+    if(!b) return;
+    // menuKey가 없거나 다른 값이어도 메뉴명으로 잡아냄
+    const isMonthly = (b.menuKey==='monthly') || /월별\s*운세/.test(String(b.menu||''));
+    if(!isMonthly) return;
+    // 접수 시각이 없으면 예약키(other_타임스탬프)에서 추출, 그래도 없으면 이번 달로
+    let ts = b.ts;
+    if(!ts){
+      const m = String(k).match(/(\d{13})/);
+      ts = m ? parseInt(m[1],10) : Date.now();
+    }
+    const d = new Date(ts);
     const yy = d.getFullYear(), mm = d.getMonth()+1;
     const send = new Date(yy, mm-1, 26, 10, 0, 0);   // 26일 10:00 리딩지 발송
     const cast = new Date(yy, mm-1, 27, 10, 0, 0);   // 27일 10:00 주술 진행
