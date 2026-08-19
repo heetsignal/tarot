@@ -441,6 +441,7 @@ input[type="date"].ifield:not(:valid){ color:var(--text3); }
       <span class="c-icon">✨</span>
       <div class="c-title">예약 접수 완료</div>
       <p class="c-desc">결제 후 아래 양식을 복사해 카카오톡으로 보내주시면<br>예약이 최종 확정됩니다 <strong>(1시간 이내)</strong></p>
+      <div id="saveStatus"></div>
       <div id="cardPayArea"></div>
       <div class="consent-note">⚠️ 상담 내용은 개인을 특정할 수 없도록 처리한 후 <br>후기로 사용될 수 있습니다. 원치 않으시면 말씀부탁드립니다.</div>
       <div class="form-tmpl" id="formTmpl"></div>
@@ -619,7 +620,18 @@ function aData() { return globalData; }
 // 전체 데이터를 덮어쓰지 않고, 예약 하나만 자기 경로에 기록한다.
 // (전체 set은 데이터가 크거나 연결이 불안정할 때 실패/유실 위험이 있음)
 function saveBooking(bookingKey, booking, blockedKeys, dateKey){
-  if(!db){ return Promise.reject(new Error('데이터베이스에 연결할 수 없습니다')); }
+  showSaveStatus('saving');
+  if(!db){
+    showSaveStatus('fail','데이터베이스 연결 없음');
+    return Promise.reject(new Error('데이터베이스에 연결할 수 없습니다'));
+  }
+  // 10초 안에 응답이 없으면 실패로 간주 (무한 대기 방지)
+  setTimeout(()=>{
+    const el=document.getElementById('saveStatus');
+    if(el && el.textContent.indexOf('저장하는 중')>=0){
+      showSaveStatus('fail','서버 응답 없음 (네트워크 확인)');
+    }
+  }, 10000);
   // 1) 예약 본체를 개별 경로에 저장
   const p = db.ref('hs_admin/bookings/' + bookingKey).set(booking);
   // 2) 슬롯 잠금(있으면)도 개별 저장
@@ -628,7 +640,30 @@ function saveBooking(bookingKey, booking, blockedKeys, dateKey){
       db.ref('hs_admin/locked/' + dateKey + '_' + t + '_blocked').set(true);
     });
   }
+  p.then(()=>showSaveStatus('ok')).catch(e=>showSaveStatus('fail', e&&e.message?e.message:String(e)));
   return p;   // Promise: 성공/실패 확인용
+}
+
+// Firebase 키로 쓸 수 없는 문자( . $ # [ ] / )를 안전한 문자로 변환
+// 예: '일(사업/학업)' → '일(사업·학업)'
+function safeKey(k){
+  return String(k).replace(/[.$#\[\]\/]/g, '·');
+}
+
+// 저장 결과를 완료 화면에 표시 (문제 진단 + 손님 안심용)
+function showSaveStatus(state, detail){
+  const el = document.getElementById('saveStatus');
+  if(!el) return;
+  if(state==='saving'){
+    el.style.cssText='margin-bottom:14px;padding:11px 14px;border-radius:8px;font-size:.8rem;background:rgba(200,164,86,.08);border:1px solid var(--border);color:var(--text3);';
+    el.textContent='예약 정보를 저장하는 중…';
+  } else if(state==='ok'){
+    el.style.cssText='margin-bottom:14px;padding:11px 14px;border-radius:8px;font-size:.8rem;background:rgba(120,180,140,.12);border:1px solid rgba(120,190,150,.45);color:#a8d8bc;';
+    el.textContent='✔ 예약 정보가 정상 저장되었습니다';
+  } else {
+    el.style.cssText='margin-bottom:14px;padding:11px 14px;border-radius:8px;font-size:.8rem;background:rgba(200,80,80,.12);border:1px solid rgba(220,120,120,.5);color:#f0c8c0;line-height:1.6;';
+    el.textContent='⚠️ 저장 실패: ' + (detail||'알 수 없는 오류') + ' — 카카오톡으로 문의해 주세요';
+  }
 }
 
 // 저장 실패 시 손님에게 알림 (재시도 유도)
@@ -1416,7 +1451,8 @@ function buildS4(){
     data.bookings[bk]={
       name:S.name, pw:S.pw, pay:S.pay,
       menu:'월별 운세 컨설팅', menuKey:'monthly',
-      monthlyTopics:S.monthlyTopics.slice(), monthlyWorries:Object.assign({},S.monthlyWorries),
+      monthlyTopics:S.monthlyTopics.slice(),
+      monthlyWorries:(function(){ const o={}; Object.keys(S.monthlyWorries||{}).forEach(k=>{ const v=(S.monthlyWorries[k]||'').trim(); if(v) o[safeKey(k)]=v; }); return o; })(),
       birthLunar:S.birthLunar||null, birthRaw:S.birth?`${S.birth} (${S.birthCal})`:null, birthTime:S.birthTime||null,
       price:calcPrice(), ts:Date.now(), source:BOOKING_SOURCE
     };
