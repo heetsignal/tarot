@@ -488,6 +488,7 @@ function srcChipClass(s){
 function contactChips(b){
   let h = '<div class="bk-contact">';
   h += `<span class="bk-chip ${payClass(b.pay)}"><span class="chip-key">결제</span> ${payLabel(b.pay)}</span>`;
+  if(b.cashPhone) h += `<span class="bk-chip"><span class="chip-key">현금영수증</span> ${b.cashPhone}</span>`;
   h += `<span class="bk-chip ${srcChipClass(b.source)}"><span class="chip-key">유입</span> ${srcKoreanLabel(b.source)}</span>`;
   if(b.coupon){
     h += `<span class="bk-chip chip-coupon">🎁 쿠폰적용 (-5,000원)</span>`;
