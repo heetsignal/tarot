@@ -95,6 +95,8 @@ body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellips
 .menu-info{font-size:.8rem;color:#a8a090;line-height:1.6;margin-top:6px;}
 .mbadge{display:inline-block;font-size:.6rem;letter-spacing:.08em;padding:3px 8px;border-radius:4px;margin-left:8px;vertical-align:middle;}
 .b-rt{background:rgba(200,164,86,.1);color:var(--gold);border:1px solid rgba(200,164,86,.22);}
+.prayer-type{display:flex;flex-direction:column;align-items:flex-start;gap:3px;line-height:1.4;}
+.ptype-sub{font-size:.68rem;opacity:.72;letter-spacing:0;}
 .b-prayer{background:rgba(220,160,110,.14);color:#e8b888;border:1px solid rgba(220,160,110,.3);}
 .b-monthly{background:rgba(180,140,220,.14);color:#c9a8e8;border:1px solid rgba(180,140,220,.3);}
 .menu-monthly{border-color:rgba(180,140,220,.3);}
@@ -621,7 +623,7 @@ const BOOKING_SOURCE = getUtmSource();
 // 염화기도 가격표: [종류][일수]
 const PRAYER_PRICE = {
   '일반 소원기도': { 1:19000, 7:99000, 15:179000, 30:299000 },
-  '재회기도':     { 1:29000, 7:159000, 15:279000, 30:479000 }
+  '사랑기도':     { 1:29000, 7:159000, 15:279000, 30:479000 }
 };
 const PRAYER_DAYS = [1,7,15,30];
 
@@ -789,7 +791,8 @@ function buildS2(){
       <span class="warn">효력 발생은 상황에 따라 시기와 방식이<br>다르게 나타나며, 시기를 특정하기는 어렵습니다.<br>또한 어떠한 비방·주술·부적에도 100%는 없습니다.</span></div>
     <div class="ogroup"><div class="olabel">기도 종류</div>
       <div class="orow" id="prayertyperow">
-        ${['일반 소원기도','재회기도'].map(t=>`<button class="obtn${S.prayerType===t?' selected':''}" onclick="selPrayerType(this,'${t}')">${t}</button>`).join('')}
+        <button class="obtn prayer-type${S.prayerType==='일반 소원기도'?' selected':''}" onclick="selPrayerType(this,'일반 소원기도')">일반 소원기도</button>
+        <button class="obtn prayer-type${S.prayerType==='사랑기도'?' selected':''}" onclick="selPrayerType(this,'사랑기도')">사랑기도<span class="ptype-sub">상대가 있는 짝사랑 · 썸 · 재회 등</span></button>
       </div>
     </div>
     <div class="ogroup" id="prayerDaysGroup" style="display:${S.prayerType?'block':'none'};">
@@ -1294,7 +1297,7 @@ function buildSpellFields(){
 
   // 염화기도 (배송 없음)
   if(S.menu==='prayer'){
-    const isReunion = (S.prayerType==='재회기도');
+    const isReunion = (S.prayerType==='사랑기도');
     sf.innerHTML = `<div class="s3-block">
       <span class="s3-block-title">신청 정보 (염화기도)</span>
       ${birthField('me','생년월일')}
@@ -1535,9 +1538,9 @@ function chk3(){
     if(S.wishPurpose==='썸/짝사랑') ok = ok && S.pName && (!S.pBirth || !!S.pBirthLunar);
   }
   if(S.menu==='prayer'){
-    // 생년월일 + 소원 필수 / 재회기도는 상대방 이름·생년월일도 필수
+    // 생년월일 + 소원 필수 / 사랑기도는 상대방 이름·생년월일도 필수
     ok = ok && S.birthLunar && S.wish;
-    if(S.prayerType==='재회기도') ok = ok && S.pName && S.pBirthLunar;
+    if(S.prayerType==='사랑기도') ok = ok && S.pName && S.pBirthLunar;
   }
   if(S.menu==='monthly'){
     // 생년월일 필수 + 고민 최소 1개 (태어난 시간은 선택)
