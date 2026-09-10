@@ -95,6 +95,7 @@ body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellips
 .menu-info{font-size:.8rem;color:#a8a090;line-height:1.6;margin-top:6px;}
 .mbadge{display:inline-block;font-size:.6rem;letter-spacing:.08em;padding:3px 8px;border-radius:4px;margin-left:8px;vertical-align:middle;}
 .b-rt{background:rgba(200,164,86,.1);color:var(--gold);border:1px solid rgba(200,164,86,.22);}
+.b-prayer{background:rgba(220,160,110,.14);color:#e8b888;border:1px solid rgba(220,160,110,.3);}
 .b-monthly{background:rgba(180,140,220,.14);color:#c9a8e8;border:1px solid rgba(180,140,220,.3);}
 .menu-monthly{border-color:rgba(180,140,220,.3);}
 .monthly-period{color:#c9a8e8;font-size:.78rem;}
@@ -352,6 +353,10 @@ input[type="date"].ifield:not(:valid){ color:var(--text3); }
         <div class="menu-top"><span class="menu-name">위클리 패키지 <span class="mbadge b-wk">7DAYS</span></span><span class="menu-price">70,000원</span></div>
         <div class="menu-info">양식 제출 시점부터 연속 7일 무제한 상담<br>실시간 일정은 양식 제출 후 별도 협의</div>
       </div>
+      <div class="menu-card" data-menu="prayer" onclick="selMenu(this)">
+        <div class="menu-top"><span class="menu-name">염화기도 <span class="mbadge b-prayer">기도</span></span><span class="menu-price">19,000원~</span></div>
+        <div class="menu-info">간절한 소망 하나를 위해 초 위에 정성을 쌓아 올리는 기도<br>1일 · 7일 · 15일 · 30일 중 선택</div>
+      </div>
       <div class="menu-card" data-menu="spell" onclick="selMenu(this)">
         <div class="menu-top"><span class="menu-name">스펠자 <span class="mbadge b-dl">배송</span></span><span class="menu-price">100,000원</span></div>
         <div class="menu-info">헤카가 직접 제작하는 1:1 맞춤 스펠자 <br> 주문 후 최대 2주 소요</div>
@@ -583,7 +588,7 @@ try{
 
 let globalData = {};
 
-const S={menu:null,dur:null,q:0,mixDur:null,liteType:null,pkgType:null,topic:null,visit:null,spellTopic:null,phone:'',pName:'',birth:'',birthCal:'양력',birthLunar:'',birthTime:'',pBirth:'',pBirthCal:'양력',pBirthLunar:'',wishPurpose:null,monthlyTopics:[],monthlyWorries:{},zip:'',roadAddr:'',addrDetail:'',addr:'',wish:'',date:null,dateObj:null,time:null,name:'',pw:'',pay:null,tone:null,cashPhone:''};
+const S={menu:null,dur:null,q:0,mixDur:null,liteType:null,pkgType:null,topic:null,visit:null,spellTopic:null,phone:'',pName:'',birth:'',birthCal:'양력',birthLunar:'',birthTime:'',pBirth:'',pBirthCal:'양력',pBirthLunar:'',wishPurpose:null,prayerType:null,prayerDays:null,monthlyTopics:[],monthlyWorries:{},zip:'',roadAddr:'',addrDetail:'',addr:'',wish:'',date:null,dateObj:null,time:null,name:'',pw:'',pay:null,tone:null,cashPhone:''};
 
 
 // ===== 월별 운세: 접수기간 (매월 15~25일, 한국시간) =====
@@ -613,7 +618,14 @@ function getUtmSource(){
 }
 const BOOKING_SOURCE = getUtmSource();
 // ===== 유입 경로 끝 =====
-const MENU_NAMES={monthly:'월별 운세 컨설팅',realtime:'실시간 리딩',bibang:'비방',question:'질문제 리딩',mixed:'혼합 리딩',lite:'Lite 패키지',reunion:'시그니처 전략적 패키지',weekly:'위클리 패키지',spell:'스펠자',butterfly:'나비주술'};
+// 염화기도 가격표: [종류][일수]
+const PRAYER_PRICE = {
+  '일반 소원기도': { 1:19000, 7:99000, 15:179000, 30:299000 },
+  '재회기도':     { 1:29000, 7:159000, 15:279000, 30:479000 }
+};
+const PRAYER_DAYS = [1,7,15,30];
+
+const MENU_NAMES={monthly:'월별 운세 컨설팅',realtime:'실시간 리딩',bibang:'비방',question:'질문제 리딩',mixed:'혼합 리딩',lite:'Lite 패키지',reunion:'시그니처 전략적 패키지',weekly:'위클리 패키지',prayer:'염화기도',spell:'스펠자',butterfly:'나비주술'};
 
 if(db){
   db.ref('hs_admin').on('value', (snap) => {
@@ -706,7 +718,7 @@ function selMenu(el){
   try{
     document.querySelectorAll('.menu-card').forEach(c=>c.classList.remove('selected'));
     el.classList.add('selected');
-    S.menu=el.dataset.menu;S.dur=null;S.q=0;S.mixDur=null;S.liteType=null;S.pkgType=null;S.topic=null;S.visit=null;S.spellTopic=null;S.phone='';S.pName='';S.birth='';S.birthCal='양력';S.birthLunar='';S.birthTime='';S.pBirth='';S.pBirthCal='양력';S.pBirthLunar='';S.wishPurpose=null;S.monthlyTopics=[];S.monthlyWorries={};S.zip='';S.roadAddr='';S.addrDetail='';S.addr='';S.wish='';S.date=null;S.dateObj=null;S.time=null;
+    S.menu=el.dataset.menu;S.dur=null;S.q=0;S.mixDur=null;S.liteType=null;S.pkgType=null;S.topic=null;S.visit=null;S.spellTopic=null;S.phone='';S.pName='';S.birth='';S.birthCal='양력';S.birthLunar='';S.birthTime='';S.pBirth='';S.pBirthCal='양력';S.pBirthLunar='';S.wishPurpose=null;S.prayerType=null;S.prayerDays=null;S.monthlyTopics=[];S.monthlyWorries={};S.zip='';S.roadAddr='';S.addrDetail='';S.addr='';S.wish='';S.date=null;S.dateObj=null;S.time=null;
     const b1=document.getElementById('btn1'); if(b1) b1.disabled=false;
   }catch(e){ console.error('selMenu 오류:', e); S.menu = el.dataset.menu; const b1=document.getElementById('btn1'); if(b1) b1.disabled=false; }
 }
@@ -745,8 +757,9 @@ function updSteps(n){
 
 function buildS2(){
   const m=S.menu;
-  const titles={monthly:'주술 분야 선택',realtime:'시간 선택',bibang:'예약 일정 선택',question:'질문 수 선택',mixed:'옵션 선택',lite:'Lite 종류 선택',reunion:'종류 선택',weekly:'예약 확인',spell:'주제 선택',butterfly:'신청 확인'};
+  const titles={prayer:'기도 선택',monthly:'주술 분야 선택',realtime:'시간 선택',bibang:'예약 일정 선택',question:'질문 수 선택',mixed:'옵션 선택',lite:'Lite 종류 선택',reunion:'종류 선택',weekly:'예약 확인',spell:'주제 선택',butterfly:'신청 확인'};
   const descs={
+    prayer:'기도 종류와 진행 일수를 선택해 주세요',
     monthly:'주술을 원하는 분야 2개를 선택해 주세요',
     realtime:'상담 시간과 예약 일정을 선택해 주세요',
     bibang:'예약 날짜와 시간을 선택해 주세요',
@@ -764,6 +777,29 @@ function buildS2(){
   const ta=document.getElementById('timeArea');
   oa.innerHTML='';ta.style.display='none';
   document.getElementById('btn2').disabled=true;
+
+  if(m==='prayer'){
+    oa.innerHTML=`
+    <div class="spell-notice">📌 <b>'염화기도'</b><br>
+      간절한 소망 하나를 위해<br>초 위에 정성을 쌓아 올리는 기도.<br><br>
+      단순히 초를 밝히는 것에 그치지 않고<br>내담자님의 소망과 기도 내용에 맞추어<br>기도터를 찾아 직접 정성을 올립니다.<br><br>
+      소원의 종류에는 제한이 없습니다.<br>나비주술 · 리츄얼 비방과<br>동시 진행이 가능합니다.<br><br>
+      [ 진행 일수는 추천이나 권장이 어렵습니다.<br>염원하시는 소원과 간절함에 따라<br>직접 정해주시면 됩니다. ]<br><br>
+      신청하신 다음날부터 기도가 시작되며,<br>첫날과 마지막날에 사진과 함께<br>진행 상황을 안내드립니다.<br><br>
+      <span class="warn">효력 발생은 상황에 따라 시기와 방식이<br>다르게 나타나며, 시기를 특정하기는 어렵습니다.<br>또한 어떠한 비방·주술·부적에도 100%는 없습니다.</span></div>
+    <div class="ogroup"><div class="olabel">기도 종류</div>
+      <div class="orow" id="prayertyperow">
+        ${['일반 소원기도','재회기도'].map(t=>`<button class="obtn${S.prayerType===t?' selected':''}" onclick="selPrayerType(this,'${t}')">${t}</button>`).join('')}
+      </div>
+    </div>
+    <div class="ogroup" id="prayerDaysGroup" style="display:${S.prayerType?'block':'none'};">
+      <div class="olabel">진행 일수</div>
+      <div class="orow" id="prayerdaysrow"></div>
+    </div>`;
+    if(S.prayerType) renderPrayerDays();
+    buildPrice();
+    return;
+  }
 
   if(m==='monthly'){
     oa.innerHTML=`
@@ -886,6 +922,34 @@ function selSpell(el,t){
   el.classList.add('selected'); S.spellTopic=t;
   buildPrice(); chk2();
 }
+// 염화기도: 종류 선택 → 일수 버튼 다시 그리기(가격이 종류마다 다름)
+function selPrayerType(el,t){
+  document.querySelectorAll('#prayertyperow .obtn').forEach(b=>b.classList.remove('selected'));
+  el.classList.add('selected');
+  S.prayerType=t;
+  S.prayerDays=null;
+  const g=document.getElementById('prayerDaysGroup');
+  if(g) g.style.display='block';
+  renderPrayerDays();
+  buildPrice();
+  chk2();
+}
+function renderPrayerDays(){
+  const row=document.getElementById('prayerdaysrow');
+  if(!row || !S.prayerType) return;
+  const tbl=PRAYER_PRICE[S.prayerType]||{};
+  row.innerHTML = PRAYER_DAYS.map(d=>
+    `<button class="obtn${S.prayerDays===d?' selected':''}" onclick="selPrayerDays(this,${d})">${d}일 · ${(tbl[d]||0).toLocaleString()}원</button>`
+  ).join('');
+}
+function selPrayerDays(el,d){
+  document.querySelectorAll('#prayerdaysrow .obtn').forEach(b=>b.classList.remove('selected'));
+  el.classList.add('selected');
+  S.prayerDays=d;
+  buildPrice();
+  chk2();
+}
+
 // 월별 운세: 주술 분야 2개 선택 (토글, 최대 2개)
 function selMonthly(el,t){
   const i = S.monthlyTopics.indexOf(t);
@@ -1053,6 +1117,7 @@ function loadSlots(dt,minHoursAhead){
 
 function calcPrice(){
   const m=S.menu;
+  if(m==='prayer'){ const t=PRAYER_PRICE[S.prayerType]; return (t && S.prayerDays) ? (t[S.prayerDays]||0) : 0; }
   if(m==='monthly')return 100000;
   if(m==='realtime')return(S.dur||0)*1000;
   if(m==='bibang')return 20000;
@@ -1068,6 +1133,7 @@ function calcPrice(){
 
 function buildPrice(){
   const m=S.menu;let rows='';
+  if(m==='prayer'&&S.prayerType&&S.prayerDays)rows+=`<div class="prow"><span>염화기도 (${S.prayerType} · ${S.prayerDays}일)</span><span>${calcPrice().toLocaleString()}원</span></div>`;
   if(m==='monthly'&&S.monthlyTopics.length===2)rows+=`<div class="prow"><span>월별 운세 컨설팅 (주술: ${S.monthlyTopics.join(' · ')})</span><span>100,000원</span></div>`;
   if(m==='realtime'&&S.dur)rows+=`<div class="prow"><span>실시간 리딩 (${S.dur}분)</span><span>${(S.dur*1000).toLocaleString()}원</span></div>`;
   if(m==='question'&&S.q)rows+=`<div class="prow"><span>질문제 리딩 (${S.q}개)</span><span>${(S.q*5000).toLocaleString()}원</span></div>`;
@@ -1084,7 +1150,8 @@ function buildPrice(){
 
 function chk2(){
   const m=S.menu;let ok=false;
-  if(m==='monthly')ok=(S.monthlyTopics.length===2);
+  if(m==='prayer')ok=!!(S.prayerType&&S.prayerDays);
+  else if(m==='monthly')ok=(S.monthlyTopics.length===2);
   else if(m==='realtime')ok=!!(S.topic&&S.visit&&S.dur&&S.date&&S.time);
   else if(m==='bibang')ok=!!(S.dur&&S.date&&S.time);
   else if(m==='question')ok=S.q>0;
@@ -1225,6 +1292,26 @@ function buildSpellFields(){
     return;
   }
 
+  // 염화기도 (배송 없음)
+  if(S.menu==='prayer'){
+    const isReunion = (S.prayerType==='재회기도');
+    sf.innerHTML = `<div class="s3-block">
+      <span class="s3-block-title">신청 정보 (염화기도)</span>
+      ${birthField('me','생년월일')}
+      ${isReunion ? `<div class="igroup">
+        <label class="ilabel">상대방 이름</label>
+        <input class="ifield" id="spellPName" value="${S.pName||''}" placeholder="상대방 이름을 입력해 주세요" oninput="onPrayerInput()">
+      </div>` + birthField('p','상대방 생년월일') : ''}
+      <div class="igroup" style="margin-bottom:0;">
+        <label class="ilabel">소원</label>
+        <textarea class="ifield" id="spellWish" placeholder="이루고 싶은 소원을 적어주세요" oninput="onPrayerInput()">${S.wish||''}</textarea>
+      </div>
+    </div>`;
+    if(S.birth) onBirth('me');
+    if(isReunion && S.pBirth) onBirth('p');
+    return;
+  }
+
   const isDelivery = (S.menu==='spell' || S.menu==='butterfly');
   if(!isDelivery){
     sf.innerHTML='';
@@ -1342,6 +1429,15 @@ function openPostcode(){
   }).embed(box);
 }
 function closePostcode(){ document.getElementById('postcodeLayer').style.display='none'; }
+// 염화기도 입력 처리 (배송 없음)
+function onPrayerInput(){
+  const pn=document.getElementById('spellPName');
+  const w=document.getElementById('spellWish');
+  S.pName = pn ? pn.value.trim() : '';
+  S.wish  = w ? w.value.trim() : '';
+  chk3();
+}
+
 function onSpellInput(){
   S.phone=(document.getElementById('spellPhone')?.value||'').trim();
   S.pName=(document.getElementById('spellPName')?.value||'').trim();
@@ -1391,6 +1487,7 @@ function refreshS3Price(){
   if(m==='question')sum+=` · 질문 ${S.q}개`;
   if(m==='lite'&&S.liteType)sum+=` · ${S.liteType}`;
   if(m==='reunion'&&S.pkgType)sum+=` · ${S.pkgType}`;
+  if(m==='prayer'&&S.prayerType)sum+=` · ${S.prayerType} ${S.prayerDays}일`;
   if(m==='spell'&&S.spellTopic)sum+=` · ${S.spellTopic}`;
   sum+=` · ${calcPrice().toLocaleString()}원`;
   document.getElementById('s3summary').textContent=sum;
@@ -1437,6 +1534,11 @@ function chk3(){
     if(S.wishPurpose==='재회') ok = ok && S.pName && S.pBirthLunar;
     if(S.wishPurpose==='썸/짝사랑') ok = ok && S.pName && (!S.pBirth || !!S.pBirthLunar);
   }
+  if(S.menu==='prayer'){
+    // 생년월일 + 소원 필수 / 재회기도는 상대방 이름·생년월일도 필수
+    ok = ok && S.birthLunar && S.wish;
+    if(S.prayerType==='재회기도') ok = ok && S.pName && S.pBirthLunar;
+  }
   if(S.menu==='monthly'){
     // 생년월일 필수 + 고민 최소 1개 (태어난 시간은 선택)
     const anyWorry = Object.values(S.monthlyWorries||{}).some(v=>(v||'').trim());
@@ -1452,6 +1554,47 @@ function cashLine(){
 
 function buildS4(){
   const m=S.menu;
+
+  // ===== 염화기도 =====
+  if(m==='prayer'){
+    const form=`📋 【염화기도 신청】\n이름: ${S.name}\n메뉴: 염화기도\n종류: ${S.prayerType}\n기간: ${S.prayerDays}일${cashLine()}`;
+    const ft=document.getElementById('formTmpl');
+    ft.innerHTML=`${form}`;
+    ft.dataset.copy=form;
+
+    const cpa=document.getElementById('cardPayArea');
+    if(S.pay==='account'){
+      cpa.innerHTML=`
+        <div class="account-box show" style="margin-bottom:10px;">
+          <div class="arow"><span class="akey">은행</span><span class="aval">카카오뱅크</span></div>
+          <div class="arow"><span class="akey">계좌번호</span><span class="aval" style="color:#e8c87a;user-select:all;">3333-37-0910218</span></div>
+          <div class="arow"><span class="akey">예금주</span><span class="aval">한서희</span></div>
+          <div class="arow"><span class="akey">입금액</span><span class="aval">${calcPrice().toLocaleString()}원</span></div>
+        </div>
+        <button class="copy-btn" id="acctCopyBtn" onclick="copyAccount('acctCopyBtn')">📋 계좌번호 복사하기</button>`;
+    } else if(S.pay==='card'){
+      cpa.innerHTML=`<div style="font-size:.78rem;color:#e0b87a;text-align:center;margin-bottom:8px;line-height:1.5;">※ 카드결제 시 스마트스토어 수수료 5%가 추가됩니다</div><a class="card-pay-btn" href="https://mkt.shopping.naver.com/link/69f9aa055358056105d6b7b0" target="_blank">💳 카드결제하기 (네이버 스마트스토어) →</a>`;
+    } else { cpa.innerHTML=''; }
+
+    const data=aData();
+    if(!data.bookings)data.bookings={};
+    const bk=`other_${Date.now()}`;
+    data.bookings[bk]={
+      name:S.name, pw:S.pw, pay:S.pay,
+      menu:'염화기도', menuKey:'prayer',
+      prayerType:S.prayerType||null, prayerDays:S.prayerDays||null,
+      wish:S.wish||null, pName:S.pName||null,
+      birthLunar:S.birthLunar||null, birthRaw:S.birth?`${S.birth} (${S.birthCal})`:null,
+      pBirthLunar:S.pBirthLunar||null, pBirthRaw:S.pBirth?`${S.pBirth} (${S.pBirthCal})`:null,
+      cashPhone:S.cashPhone||null, price:calcPrice(), ts:Date.now(), source:BOOKING_SOURCE
+    };
+    saveBooking(bk, data.bookings[bk]).catch(bookingSaveError);
+
+    if (typeof fbq === 'function') {
+      fbq('track', 'Lead', { value: calcPrice(), currency: 'KRW', content_name: '염화기도' });
+    }
+    return;
+  }
 
   // ===== 월별 운세 컨설팅: 카톡 양식은 이름·메뉴·주술분야만 =====
   if(m==='monthly'){
@@ -1729,7 +1872,7 @@ function copyForm(tmplId, btnId){
 }
 
 function resetAll(){
-  Object.assign(S,{menu:null,dur:null,q:0,mixDur:null,liteType:null,pkgType:null,topic:null,visit:null,spellTopic:null,phone:'',pName:'',birth:'',birthCal:'양력',birthLunar:'',pBirth:'',pBirthCal:'양력',pBirthLunar:'',wishPurpose:null,monthlyTopics:[],monthlyWorries:{},birthTime:'',zip:'',roadAddr:'',addrDetail:'',addr:'',wish:'',date:null,dateObj:null,time:null,name:'',pw:'',pay:null,tone:null,cashPhone:''});
+  Object.assign(S,{menu:null,dur:null,q:0,mixDur:null,liteType:null,pkgType:null,topic:null,visit:null,spellTopic:null,phone:'',pName:'',birth:'',birthCal:'양력',birthLunar:'',pBirth:'',pBirthCal:'양력',pBirthLunar:'',wishPurpose:null,prayerType:null,prayerDays:null,monthlyTopics:[],monthlyWorries:{},birthTime:'',zip:'',roadAddr:'',addrDetail:'',addr:'',wish:'',date:null,dateObj:null,time:null,name:'',pw:'',pay:null,tone:null,cashPhone:''});
   document.querySelectorAll('.menu-card').forEach(c=>c.classList.remove('selected'));
   document.getElementById('btn1').disabled=true;
   document.getElementById('cardPayArea').innerHTML='';

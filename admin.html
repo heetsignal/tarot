@@ -755,6 +755,12 @@ function renderOtherItem(b){
       </div>
     </div>
     ${contactChips(b)}
+    ${(b.menuKey==='prayer')?`<div class="bk-spell">
+      ${b.prayerType?`<div class="bk-spell-row"><span class="bk-spell-key">종류</span> ${b.prayerType} · ${b.prayerDays||'?'}일</div>`:''}
+      ${b.birthLunar?`<div class="bk-spell-row"><span class="bk-spell-key">생년월일</span> ${b.birthLunar}${b.birthRaw?` (입력: ${b.birthRaw})`:''}</div>`:''}
+      ${b.pName?`<div class="bk-spell-row"><span class="bk-spell-key">상대방</span> ${b.pName}${b.pBirthLunar?` · ${b.pBirthLunar}`:''}</div>`:''}
+      ${b.wish?`<div class="bk-spell-row"><span class="bk-spell-key">소원</span> ${b.wish}</div>`:''}
+    </div>`:''}
     ${(b.menuKey==='monthly' || /월별\s*운세/.test(String(b.menu||'')))?`<div class="bk-spell">
       ${(b.monthlyTopics&&b.monthlyTopics.length)?`<div class="bk-spell-row"><span class="bk-spell-key">주술 분야</span> ${b.monthlyTopics.join(' · ')}</div>`:''}
       ${b.birthLunar?`<div class="bk-spell-row"><span class="bk-spell-key">생년월일</span> ${b.birthLunar}${b.birthRaw?` (입력: ${b.birthRaw})`:''}${b.birthTime?` · ${b.birthTime}`:' · 시간 미입력'}</div>`:''}
@@ -999,6 +1005,35 @@ function autoTasks(){
         purpose:b.wishPurpose||'', wish:b.wish||'', pName:b.pName||'', birthLunar:b.birthLunar||'', pBirthLunar:b.pBirthLunar||'',
         birthRaw:b.birthRaw||'', pBirthRaw:b.pBirthRaw||'',
         meta:`${b.addr||'주소 미입력'}`,
+      });
+    }
+  });
+
+  // ===== 염화기도: 신청 다음날 시작, 첫날·마지막날 사진 =====
+  Object.entries(bookings).forEach(([k,b])=>{
+    if(!b) return;
+    const isPrayer = (b.menuKey==='prayer') || /염화\s*기도/.test(String(b.menu||''));
+    if(!isPrayer || !b.ts) return;
+    const days = parseInt(b.prayerDays,10) || 1;
+    const base = new Date(b.ts);
+    const start = addDays(base, 1);            // 신청 다음날 시작
+    const last  = addDays(base, days);         // 마지막 진행일
+    const ch = parseChannel(b.name);
+    const label = `${b.prayerType||'염화기도'} ${days}일`;
+
+    const s1 = new Date(start); s1.setHours(22,0,0,0);
+    out.push({
+      id:`prayer_first_${k}`, when:s1, chKey:'bk_'+k, chName:b.name||'',
+      menuLabel:'염화기도 첫날 사진', person:ch.real||'-', nick:ch.nick||'',
+      meta:`${label} · 진행 ${start.getMonth()+1}/${start.getDate()}~${last.getMonth()+1}/${last.getDate()}`,
+    });
+    // 1일 기도는 첫날=마지막날이므로 1건만
+    if(days > 1){
+      const s2 = new Date(last); s2.setHours(22,0,0,0);
+      out.push({
+        id:`prayer_last_${k}`, when:s2, chKey:'bk_'+k, chName:b.name||'',
+        menuLabel:'염화기도 완료 사진', person:ch.real||'-', nick:ch.nick||'',
+        meta:`${label} · 마지막날 (${last.getMonth()+1}/${last.getDate()})`,
       });
     }
   });
