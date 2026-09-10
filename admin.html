@@ -188,6 +188,12 @@ body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellips
 .bk-tone-key{color:var(--gold);font-size:.64rem;margin-right:6px;}
 .bk-spell{background:rgba(120,180,140,.08);border:1px solid rgba(120,180,140,.28);border-radius:8px;padding:10px 12px;margin-bottom:8px;font-size:.78rem;color:#cfe4d6;line-height:1.7;}
 .bk-spell-row{display:flex;gap:8px;}
+.prayer-start{display:flex;align-items:center;gap:8px;margin-top:10px;padding-top:10px;border-top:1px solid var(--border);flex-wrap:wrap;}
+.ps-label{font-size:.75rem;color:var(--gold2);min-width:62px;}
+.prayer-start input[type="date"]{background:rgba(255,255,255,.05);border:1px solid var(--border);border-radius:7px;padding:7px 10px;color:var(--text);font-family:'Noto Serif KR',serif;font-size:.8rem;}
+.ps-btn{background:rgba(200,164,86,.16);border:1px solid var(--border2);border-radius:7px;padding:7px 14px;color:var(--gold2);font-family:'Noto Serif KR',serif;font-size:.78rem;cursor:pointer;}
+.ps-btn:hover{background:rgba(200,164,86,.28);}
+.ps-hint{font-size:.72rem;color:var(--text3);margin-top:7px;}
 .bk-spell-key{color:#88c8a0;font-size:.66rem;min-width:54px;flex-shrink:0;font-weight:600;}
 .bk-topic{font-size:.74rem;color:#a8c8ec;background:rgba(100,150,210,.1);border:1px solid rgba(100,150,210,.28);border-radius:7px;padding:6px 10px;margin-bottom:6px;display:inline-block;}
 .bk-topic-key{color:#7aa8e0;font-size:.62rem;margin-right:6px;}
@@ -760,6 +766,12 @@ function renderOtherItem(b){
       ${b.birthLunar?`<div class="bk-spell-row"><span class="bk-spell-key">생년월일</span> ${b.birthLunar}${b.birthRaw?` (입력: ${b.birthRaw})`:''}</div>`:''}
       ${b.pName?`<div class="bk-spell-row"><span class="bk-spell-key">상대방</span> ${b.pName}${b.pBirthLunar?` · ${b.pBirthLunar}`:''}</div>`:''}
       ${b.wish?`<div class="bk-spell-row"><span class="bk-spell-key">소원</span> ${b.wish}</div>`:''}
+      <div class="prayer-start">
+        <span class="ps-label">기도 시작일</span>
+        <input type="date" id="pst_${b.k}" value="${prayerStartValue(b.k,b)}" onchange="savePrayerStart('${b.k}')">
+        <button class="ps-btn" onclick="savePrayerStart('${b.k}')">저장</button>
+      </div>
+      <div class="ps-hint">${prayerScheduleText(b.k,b)}</div>
     </div>`:''}
     ${(b.menuKey==='monthly' || /월별\s*운세/.test(String(b.menu||'')))?`<div class="bk-spell">
       ${(b.monthlyTopics&&b.monthlyTopics.length)?`<div class="bk-spell-row"><span class="bk-spell-key">주술 분야</span> ${b.monthlyTopics.join(' · ')}</div>`:''}
@@ -1015,9 +1027,9 @@ function autoTasks(){
     const isPrayer = (b.menuKey==='prayer') || /염화\s*기도/.test(String(b.menu||''));
     if(!isPrayer || !b.ts) return;
     const days = parseInt(b.prayerDays,10) || 1;
-    const base = new Date(b.ts);
-    const start = addDays(base, 1);            // 신청 다음날 시작
-    const last  = addDays(base, days);         // 마지막 진행일
+    const start = prayerStartDate(k, b);       // 지정 시작일 우선, 없으면 신청 다음날
+    if(!start) return;
+    const last  = addDays(start, days-1);      // 마지막 진행일
     const ch = parseChannel(b.name);
     const label = `${b.prayerType||'염화기도'} ${days}일`;
 
@@ -1311,6 +1323,54 @@ function exportShipCsv(rows){
   document.body.appendChild(a); a.click(); document.body.removeChild(a);
   URL.revokeObjectURL(url);
   showToast(`${rows.length}건 내보내기 완료 (CSV)`);
+}
+
+// ===== 염화기도 시작일 =====
+// 지정하면 그 날짜부터, 없으면 신청 다음날부터 계산
+function prayerStartDate(k, b){
+  const data = ad();
+  const saved = data.prayerStart && data.prayerStart[k];
+  if(saved){
+    const p = String(saved).split('-').map(Number);
+    if(p.length===3) return new Date(p[0], p[1]-1, p[2]);
+  }
+  if(b && b.ts) return addDays(new Date(b.ts), 1);
+  return null;
+}
+function prayerStartValue(k, b){
+  const data = ad();
+  const saved = data.prayerStart && data.prayerStart[k];
+  if(saved) return saved;
+  if(b && b.ts){
+    const d = addDays(new Date(b.ts), 1);
+    return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');
+  }
+  return '';
+}
+function prayerScheduleText(k, b){
+  const st = prayerStartDate(k, b);
+  if(!st) return '';
+  const days = parseInt(b.prayerDays,10) || 1;
+  const last = addDays(st, days-1);
+  const data = ad();
+  const isCustom = !!(data.prayerStart && data.prayerStart[k]);
+  const fmt = d => (d.getMonth()+1)+'/'+d.getDate();
+  return (days>1)
+    ? `사진 발송: ${fmt(st)} (첫날) · ${fmt(last)} (마지막날)${isCustom?'':' — 신청 다음날 기준(미지정)'}`
+    : `사진 발송: ${fmt(st)} (1일 기도)${isCustom?'':' — 신청 다음날 기준(미지정)'}`;
+}
+function savePrayerStart(k){
+  const el = document.getElementById('pst_'+k);
+  if(!el) return;
+  const v = el.value;
+  const data = ad();
+  if(!data.prayerStart) data.prayerStart = {};
+  if(!v) delete data.prayerStart[k];
+  else data.prayerStart[k] = v;
+  sad(data);
+  showToast(v ? '기도 시작일이 저장되었습니다' : '기도 시작일이 초기화되었습니다');
+  renderBookings();
+  renderTasks();
 }
 
 function saveTracking(shipKey){
