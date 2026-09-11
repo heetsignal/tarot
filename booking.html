@@ -1305,6 +1305,16 @@ function buildSpellFields(){
         <label class="ilabel">상대방 이름</label>
         <input class="ifield" id="spellPName" value="${S.pName||''}" placeholder="상대방 이름을 입력해 주세요" oninput="onPrayerInput()">
       </div>` + birthField('p','상대방 생년월일') : ''}
+      <div class="igroup">
+        <label class="ilabel">실제 거주지 주소</label>
+        <div style="display:flex;gap:8px;margin-bottom:8px;">
+          <input class="ifield" id="spellZip" value="${S.zip||''}" placeholder="우편번호" readonly style="flex:1;background:rgba(255,255,255,.02);cursor:default;">
+          <button type="button" class="btn-ghost" style="width:auto;white-space:nowrap;margin-bottom:0;padding:0 18px;" onclick="openPostcode()">주소 검색</button>
+        </div>
+        <input class="ifield" id="spellRoad" value="${S.roadAddr||''}" placeholder="주소 검색 버튼을 눌러주세요" readonly style="background:rgba(255,255,255,.02);cursor:default;margin-bottom:8px;">
+        <input class="ifield" id="spellDetail" value="${S.addrDetail||''}" placeholder="상세주소 (동·호수 등)" oninput="onPrayerInput()">
+        <div class="cash-note">기도 진행에 사용되며, 배송은 없습니다</div>
+      </div>
       <div class="igroup" style="margin-bottom:0;">
         <label class="ilabel">소원</label>
         <textarea class="ifield" id="spellWish" placeholder="이루고 싶은 소원을 적어주세요" oninput="onPrayerInput()">${S.wish||''}</textarea>
@@ -1425,7 +1435,8 @@ function openPostcode(){
       layer.style.display='none';
       const det=document.getElementById('spellDetail');
       if(det) det.focus();
-      onSpellInput();
+      // 메뉴에 따라 알맞은 입력 처리 호출
+      if(S.menu==='prayer') onPrayerInput(); else onSpellInput();
     },
     width:'100%',
     height:'100%'
@@ -1436,8 +1447,11 @@ function closePostcode(){ document.getElementById('postcodeLayer').style.display
 function onPrayerInput(){
   const pn=document.getElementById('spellPName');
   const w=document.getElementById('spellWish');
+  const dt=document.getElementById('spellDetail');
   S.pName = pn ? pn.value.trim() : '';
   S.wish  = w ? w.value.trim() : '';
+  S.addrDetail = dt ? dt.value.trim() : '';
+  S.addr = S.roadAddr ? `(${S.zip}) ${S.roadAddr}${S.addrDetail?' '+S.addrDetail:''}` : '';
   chk3();
 }
 
@@ -1539,7 +1553,7 @@ function chk3(){
   }
   if(S.menu==='prayer'){
     // 생년월일 + 소원 필수 / 사랑기도는 상대방 이름·생년월일도 필수
-    ok = ok && S.birthLunar && S.wish;
+    ok = ok && S.birthLunar && S.wish && S.roadAddr && S.addrDetail;
     if(S.prayerType==='사랑기도') ok = ok && S.pName && S.pBirthLunar;
   }
   if(S.menu==='monthly'){
@@ -1587,6 +1601,7 @@ function buildS4(){
       menu:'염화기도', menuKey:'prayer',
       prayerType:S.prayerType||null, prayerDays:S.prayerDays||null,
       wish:S.wish||null, pName:S.pName||null,
+      addr:S.addr||null, zip:S.zip||null, roadAddr:S.roadAddr||null, addrDetail:S.addrDetail||null,
       birthLunar:S.birthLunar||null, birthRaw:S.birth?`${S.birth} (${S.birthCal})`:null,
       pBirthLunar:S.pBirthLunar||null, pBirthRaw:S.pBirth?`${S.pBirth} (${S.pBirthCal})`:null,
       cashPhone:S.cashPhone||null, price:calcPrice(), ts:Date.now(), source:BOOKING_SOURCE

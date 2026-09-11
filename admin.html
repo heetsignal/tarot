@@ -765,6 +765,7 @@ function renderOtherItem(b){
       ${b.prayerType?`<div class="bk-spell-row"><span class="bk-spell-key">종류</span> ${b.prayerType} · ${b.prayerDays||'?'}일</div>`:''}
       ${b.birthLunar?`<div class="bk-spell-row"><span class="bk-spell-key">생년월일</span> ${b.birthLunar}${b.birthRaw?` (입력: ${b.birthRaw})`:''}</div>`:''}
       ${b.pName?`<div class="bk-spell-row"><span class="bk-spell-key">상대방</span> ${b.pName}${b.pBirthLunar?` · ${b.pBirthLunar}`:''}</div>`:''}
+      ${b.addr?`<div class="bk-spell-row"><span class="bk-spell-key">거주지</span> ${b.addr}</div>`:''}
       ${b.wish?`<div class="bk-spell-row"><span class="bk-spell-key">소원</span> ${b.wish}</div>`:''}
       <div class="prayer-start">
         <span class="ps-label">기도 시작일</span>
