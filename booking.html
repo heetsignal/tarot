@@ -327,6 +327,18 @@ input[type="date"].ifield:not(:valid){ color:var(--text3); }
     <h2 class="stitle">상담 메뉴 선택</h2>
     <p class="sdesc">원하시는 상담 유형을 선택해 주세요</p>
     <div class="menu-grid">
+      <div class="menu-card" data-menu="prayer" onclick="selMenu(this)">
+        <div class="menu-top"><span class="menu-name">염화기도 <span class="mbadge b-prayer">기도</span></span><span class="menu-price">19,000원~</span></div>
+        <div class="menu-info">간절한 소망 하나를 위해 초 위에 정성을 쌓아 올리는 기도<br>1일 · 7일 · 15일 · 30일 중 선택</div>
+      </div>
+      <div class="menu-card" data-menu="spell" onclick="selMenu(this)">
+        <div class="menu-top"><span class="menu-name">스펠자 <span class="mbadge b-dl">배송</span></span><span class="menu-price">100,000원</span></div>
+        <div class="menu-info">헤카가 직접 제작하는 1:1 맞춤 스펠자 <br> 주문 후 최대 2주 소요</div>
+      </div>
+      <div class="menu-card" data-menu="butterfly" onclick="selMenu(this)">
+        <div class="menu-top"><span class="menu-name">나비주술 <span class="mbadge b-dl">5일+배송</span></span><span class="menu-price">150,000원</span></div>
+        <div class="menu-info">매력과 오라를 깨워 이성의 시선과 호감을 끌어오는 주술<br>5일간 진행 · 미니 스펠자 제공 (배송 최대 2주)</div>
+      </div>
       <div class="menu-card menu-monthly" data-menu="monthly" onclick="selMenu(this)">
         <div class="menu-top"><span class="menu-name">월별 운세 컨설팅 <span class="mbadge b-monthly">MONTHLY</span></span><span class="menu-price">100,000원</span></div>
         <div class="menu-info">4개 분야(일·금전·연애·인간관계) 전체 운세 리딩지 + 결과 맞춤 주술<br><span class="monthly-period">접수기간 : 매월 15일 ~ 25일</span></div>
@@ -350,22 +362,6 @@ input[type="date"].ifield:not(:valid){ color:var(--text3); }
       <div class="menu-card" data-menu="reunion" onclick="selMenu(this)">
         <div class="menu-top"><span class="menu-name">시그니처 전략적 패키지 <span class="mbadge b-48">48H</span></span><span class="menu-price">40,000원</span></div>
         <div class="menu-info">재회 · 썸 중 1종 선택<br>양식 제출 후 48시간 이내 리딩지 발송</div>
-      </div>
-      <div class="menu-card" data-menu="weekly" onclick="selMenu(this)">
-        <div class="menu-top"><span class="menu-name">위클리 패키지 <span class="mbadge b-wk">7DAYS</span></span><span class="menu-price">70,000원</span></div>
-        <div class="menu-info">양식 제출 시점부터 연속 7일 무제한 상담<br>실시간 일정은 양식 제출 후 별도 협의</div>
-      </div>
-      <div class="menu-card" data-menu="prayer" onclick="selMenu(this)">
-        <div class="menu-top"><span class="menu-name">염화기도 <span class="mbadge b-prayer">기도</span></span><span class="menu-price">19,000원~</span></div>
-        <div class="menu-info">간절한 소망 하나를 위해 초 위에 정성을 쌓아 올리는 기도<br>1일 · 7일 · 15일 · 30일 중 선택</div>
-      </div>
-      <div class="menu-card" data-menu="spell" onclick="selMenu(this)">
-        <div class="menu-top"><span class="menu-name">스펠자 <span class="mbadge b-dl">배송</span></span><span class="menu-price">100,000원</span></div>
-        <div class="menu-info">헤카가 직접 제작하는 1:1 맞춤 스펠자 <br> 주문 후 최대 2주 소요</div>
-      </div>
-      <div class="menu-card" data-menu="butterfly" onclick="selMenu(this)">
-        <div class="menu-top"><span class="menu-name">나비주술 <span class="mbadge b-dl">5일+배송</span></span><span class="menu-price">150,000원</span></div>
-        <div class="menu-info">매력과 오라를 깨워 이성의 시선과 호감을 끌어오는 주술<br>5일간 진행 · 미니 스펠자 제공 (배송 최대 2주)</div>
       </div>
     </div>
     <button class="btn" id="btn1" onclick="go(2)" disabled style="margin-bottom:12px;">다음 단계</button>
