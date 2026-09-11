@@ -264,6 +264,7 @@ input[type="date"].ifield:not(:valid){ color:var(--text3); }
 .cash-receipt{display:none;margin-top:14px;padding-top:14px;border-top:1px solid var(--border);}
 .cash-receipt .ilabel{margin-bottom:8px;}
 .cash-note{font-size:.72rem;color:var(--text3);margin-top:7px;}
+.field-head{font-size:.78rem;color:var(--gold2);margin:4px 0 12px;padding-bottom:7px;border-bottom:1px solid var(--border);}
 /* 전체 복사 버튼 */
 .copy-btn{width:100%;background:rgba(200,164,86,.14);border:1px solid var(--border2);border-radius:10px;padding:14px;color:var(--gold2);font-family:'Noto Serif KR',serif;font-size:.92rem;font-weight:600;cursor:pointer;letter-spacing:.03em;transition:all .2s;margin-bottom:20px;display:flex;align-items:center;justify-content:center;gap:8px;}
 .copy-btn:hover{background:rgba(200,164,86,.24);border-color:var(--gold2);}
@@ -1296,13 +1297,10 @@ function buildSpellFields(){
     const isReunion = (S.prayerType==='사랑기도');
     sf.innerHTML = `<div class="s3-block">
       <span class="s3-block-title">신청 정보 (염화기도)</span>
+      <div class="field-head">내담자 정보</div>
       ${birthField('me','생년월일')}
-      ${isReunion ? `<div class="igroup">
-        <label class="ilabel">상대방 이름</label>
-        <input class="ifield" id="spellPName" value="${S.pName||''}" placeholder="상대방 이름을 입력해 주세요" oninput="onPrayerInput()">
-      </div>` + birthField('p','상대방 생년월일') : ''}
       <div class="igroup">
-        <label class="ilabel">실제 거주지 주소</label>
+        <label class="ilabel">실제 거주지 주소 <span class="opt-mark">(내담자 본인)</span></label>
         <div style="display:flex;gap:8px;margin-bottom:8px;">
           <input class="ifield" id="spellZip" value="${S.zip||''}" placeholder="우편번호" readonly style="flex:1;background:rgba(255,255,255,.02);cursor:default;">
           <button type="button" class="btn-ghost" style="width:auto;white-space:nowrap;margin-bottom:0;padding:0 18px;" onclick="openPostcode()">주소 검색</button>
@@ -1311,6 +1309,11 @@ function buildSpellFields(){
         <input class="ifield" id="spellDetail" value="${S.addrDetail||''}" placeholder="상세주소 (동·호수 등)" oninput="onPrayerInput()">
         <div class="cash-note">기도 진행에 사용되며, 배송은 없습니다</div>
       </div>
+      ${isReunion ? `<div class="field-head">상대방 정보</div>
+      <div class="igroup">
+        <label class="ilabel">상대방 이름</label>
+        <input class="ifield" id="spellPName" value="${S.pName||''}" placeholder="상대방 이름을 입력해 주세요" oninput="onPrayerInput()">
+      </div>` + birthField('p','상대방 생년월일') + `<div class="cash-note" style="margin-top:-8px;margin-bottom:18px;">상대방 주소는 받지 않습니다</div>` : ''}
       <div class="igroup" style="margin-bottom:0;">
         <label class="ilabel">소원</label>
         <textarea class="ifield" id="spellWish" placeholder="이루고 싶은 소원을 적어주세요" oninput="onPrayerInput()">${S.wish||''}</textarea>
