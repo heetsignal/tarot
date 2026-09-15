@@ -337,8 +337,8 @@ input[type="date"].ifield:not(:valid){ color:var(--text3); }
         <div class="menu-info">헤카가 직접 제작하는 1:1 맞춤 스펠자 <br> 주문 후 최대 2주 소요</div>
       </div>
       <div class="menu-card" data-menu="butterfly" onclick="selMenu(this)">
-        <div class="menu-top"><span class="menu-name">나비주술 <span class="mbadge b-dl">5일+배송</span></span><span class="menu-price">150,000원</span></div>
-        <div class="menu-info">매력과 오라를 깨워 이성의 시선과 호감을 끌어오는 주술<br>5일간 진행 · 미니 스펠자 제공 (배송 최대 2주)</div>
+        <div class="menu-top"><span class="menu-name">나비주술 + 부적 <span class="mbadge b-dl">5일+배송</span></span><span class="menu-price">150,000원</span></div>
+        <div class="menu-info">매력과 오라를 깨워 이성의 시선과 호감을 끌어오는 주술<br>5일간 진행 · 개인별 맞춤 부적 제공 (배송 최대 2주)</div>
       </div>
       <div class="menu-card menu-monthly" data-menu="monthly" onclick="selMenu(this)">
         <div class="menu-top"><span class="menu-name">월별 운세 컨설팅 <span class="mbadge b-monthly">MONTHLY</span></span><span class="menu-price">100,000원</span></div>
@@ -624,7 +624,7 @@ const PRAYER_PRICE = {
 };
 const PRAYER_DAYS = [1,7,15,30];
 
-const MENU_NAMES={monthly:'월별 운세 컨설팅',realtime:'실시간 리딩',bibang:'비방',question:'질문제 리딩',mixed:'혼합 리딩',lite:'Lite 패키지',reunion:'시그니처 전략적 패키지',weekly:'위클리 패키지',prayer:'염화기도',spell:'스펠자',butterfly:'나비주술'};
+const MENU_NAMES={monthly:'월별 운세 컨설팅',realtime:'실시간 리딩',bibang:'비방',question:'질문제 리딩',mixed:'혼합 리딩',lite:'Lite 패키지',reunion:'시그니처 전략적 패키지',weekly:'위클리 패키지',prayer:'염화기도',spell:'스펠자',butterfly:'나비주술 + 부적'};
 
 if(db){
   db.ref('hs_admin').on('value', (snap) => {
@@ -847,7 +847,7 @@ function buildS2(){
     </div></div>`;
   } else if(m==='butterfly'){
     oa.innerHTML=`
-    <div class="spell-notice">📌 <b>'나비주술'</b><br>내담자님의 매력과 오라를 깨워<br>이성의 시선과 호감을 끌어오는 주술.<br><br>연애운, 인기운, 도화운,<br>첫인상, 소개팅, 썸 흐름 특화<br><br>한 사람을 묶는 주술이 아닌,<br>내담자님 주변의 애정 흐름을<br>자연스럽게 열어주는 리츄얼입니다.<br><br>[ 특정인물을 대상으로 한 주술이 아니기 때문에<br>썸·짝사랑·재회 등 상황에는<br>리츄얼 비방이 효험을 보실 수 있습니다. ]<br><br>신청하신 다음날부터 5일간 주술이 진행됩니다.<br>5일째 진행 완료 후 각 주술 흐름을 상세히 작성하여<br>함께 보내드리며 완료 안내드립니다.<br><br>미니 스펠자는 맞춤형 1:1 제작을 진행하여<br>정성스럽게 정화 및 기도 후 발송해드리며<br>배송까지 최대 2주 소요됩니다.<br>(미니 스펠자는 별도 미판매 제품)<br><br><span class="warn">효력 발생은 상황에 따라 시기와 방식이<br>다르게 나타나며, 시기를 특정하기는 어렵습니다.<br>또한 어떠한 비방·주술·부적에도 100%는 없습니다.</span></div>`;
+    <div class="spell-notice">📌 <b>'나비주술'</b><br>내담자님의 매력과 오라를 깨워<br>이성의 시선과 호감을 끌어오는 주술.<br><br>연애운, 인기운, 도화운,<br>첫인상, 소개팅, 썸 흐름 특화<br><br>한 사람을 묶는 주술이 아닌,<br>내담자님 주변의 애정 흐름을<br>자연스럽게 열어주는 리츄얼입니다.<br><br>[ 특정인물을 대상으로 한 주술이 아니기 때문에<br>썸·짝사랑·재회 등 상황에는<br>리츄얼 비방이 효험을 보실 수 있습니다. ]<br><br>신청하신 다음날부터 5일간 주술이 진행됩니다.<br>5일째 진행 완료 후 각 주술 흐름을 상세히 작성하여<br>함께 보내드리며 완료 안내드립니다.<br><br>부적은 내담자님께 맞추어<br>개인별 맞춤 제작을 진행하며,<br>길일을 잡아 정성스럽게 기도한 후<br>발송해 드립니다.<br>배송까지 최대 2주 소요됩니다.<br>(부적은 별도 미판매 제품)<br><br><span class="warn">효력 발생은 상황에 따라 시기와 방식이<br>다르게 나타나며, 시기를 특정하기는 어렵습니다.<br>또한 어떠한 비방·주술·부적에도 100%는 없습니다.</span></div>`;
     buildPrice();
     document.getElementById('btn2').disabled=false;
     return;
@@ -1141,7 +1141,7 @@ function buildPrice(){
   if(m==='reunion'&&S.pkgType)rows+=`<div class="prow"><span>시그니처 전략적 패키지 (${S.pkgType})</span><span>40,000원</span></div>`;
   if(m==='weekly')rows+=`<div class="prow"><span>위클리 패키지</span><span>70,000원</span></div>`;
   if(m==='spell'&&S.spellTopic)rows+=`<div class="prow"><span>스펠자 (${S.spellTopic})</span><span>100,000원</span></div>`;
-  if(m==='butterfly')rows+=`<div class="prow"><span>나비주술 (5일 + 미니 스펠자)</span><span>150,000원</span></div>`;
+  if(m==='butterfly')rows+=`<div class="prow"><span>나비주술 + 부적 (5일 진행)</span><span>150,000원</span></div>`;
   const total=calcPrice();
   const pa=document.getElementById('priceArea');
   if(rows)pa.innerHTML=`<div class="price-box">${rows}<div class="ptotal"><span class="ptotal-label">합계</span><span class="ptotal-amount">${total.toLocaleString()}원</span></div></div>`;
@@ -1333,16 +1333,12 @@ function buildSpellFields(){
   }
 
   const isSpell = (S.menu==='spell');
-  const title = isSpell ? '배송 정보 (스펠자)' : '주술 · 배송 정보 (나비주술)';
+  const title = isSpell ? '배송 정보 (스펠자)' : '배송 정보 (나비주술 + 부적)';
 
   // 스펠자: 재회 = 상대방 이름·생년월일 필수 / 썸·짝사랑 = 이름 필수, 생년월일 선택
   const spellReunion = isSpell && S.spellTopic==='재회';
   const spellCrush   = isSpell && S.spellTopic==='썸/짝사랑';
   const spellPartner = spellReunion || spellCrush;
-  // 나비주술: 내담자 생년월일 항상, 주목적이 재회/썸·짝사랑이면 상대방 추가
-  const bfReunion = !isSpell && S.wishPurpose==='재회';
-  const bfCrush   = !isSpell && S.wishPurpose==='썸/짝사랑';
-  const bfPartner = bfReunion || bfCrush;
 
   const pNameField = (req)=>`<div class="igroup">
       <label class="ilabel">상대방 이름${req?'':' <span class="opt-mark">(선택)</span>'}</label>
@@ -1358,30 +1354,12 @@ function buildSpellFields(){
     birthBlock = birthField('me','내담자 생년월일');
   }
 
-  // 소원 블록
+  // 소원 블록 (스펠자만 사용 / 나비주술+부적은 배송 정보만 받음)
   let wishBlock='';
   if(isSpell){
     wishBlock = `<div class="igroup">
       <label class="ilabel">가장 원하는 소망 한 가지</label>
       <textarea class="ifield" id="spellWish" placeholder="이루고 싶은 소망을 적어주세요" oninput="onSpellInput()">${S.wish||''}</textarea>
-    </div>`;
-  } else {
-    wishBlock = `<div class="wish-box">
-      <div class="ilabel" style="margin-bottom:10px;">소원</div>
-      <div class="olabel" style="font-size:.74rem;">주목적</div>
-      <div class="orow" id="purposeRow" style="margin-bottom:14px;">
-        <button type="button" class="obtn${S.wishPurpose==='재회'?' selected':''}" onclick="selPurpose('재회')">재회</button>
-        <button type="button" class="obtn${S.wishPurpose==='새인연'?' selected':''}" onclick="selPurpose('새인연')">새인연</button>
-        <button type="button" class="obtn${S.wishPurpose==='썸/짝사랑'?' selected':''}" onclick="selPurpose('썸/짝사랑')">썸/짝사랑</button>
-      </div>
-      ${bfPartner ? `<div class="igroup">
-        <label class="ilabel">상대방 이름</label>
-        <input class="ifield" id="spellPName" value="${S.pName||''}" placeholder="상대방 이름을 입력해 주세요" oninput="onSpellInput()">
-      </div>` + birthField('p', bfCrush ? '상대방 생년월일 <span class="opt-mark">(모르면 비워두세요)</span>' : '상대방 생년월일') : ''}
-      <div class="igroup" style="margin-bottom:0;">
-        <label class="ilabel">자유 작성</label>
-        <textarea class="ifield" id="spellWish" placeholder="이루고 싶은 소원을 자유롭게 적어주세요" oninput="onSpellInput()">${S.wish||''}</textarea>
-      </div>
     </div>`;
   }
 
@@ -1545,10 +1523,8 @@ function chk3(){
     if(S.spellTopic==='썸/짝사랑') ok = ok && S.birthLunar && S.pName && (!S.pBirth || !!S.pBirthLunar);
   }
   if(S.menu==='butterfly'){
-    ok = ok && S.birthLunar && S.phone && S.roadAddr && S.addrDetail && S.wishPurpose && S.wish;
-    // 재회: 상대방 이름·생년월일 필수 / 썸·짝사랑: 이름 필수, 생년월일 선택
-    if(S.wishPurpose==='재회') ok = ok && S.pName && S.pBirthLunar;
-    if(S.wishPurpose==='썸/짝사랑') ok = ok && S.pName && (!S.pBirth || !!S.pBirthLunar);
+    // 생년월일 · 전화번호 · 배송지만 필수
+    ok = ok && S.birthLunar && S.phone && S.roadAddr && S.addrDetail;
   }
   if(S.menu==='prayer'){
     // 생년월일 + 소원 필수 / 사랑기도는 상대방 이름·생년월일도 필수
@@ -1696,7 +1672,7 @@ function buildS4(){
 
   // ===== 나비주술: 카톡 양식은 이름·메뉴만 =====
   if(m==='butterfly'){
-    const form=`📋 【나비주술 신청】\n이름: ${S.name}\n메뉴: 나비주술${cashLine()}`;
+    const form=`📋 【나비주술 + 부적 신청】\n이름: ${S.name}\n메뉴: 나비주술 + 부적${cashLine()}`;
     const ft=document.getElementById('formTmpl');
     ft.innerHTML=`${form}`;
     ft.dataset.copy=form;
@@ -1720,17 +1696,15 @@ function buildS4(){
     const bk=`other_${Date.now()}`;
     data.bookings[bk]={
       name:S.name, pw:S.pw, pay:S.pay,
-      menu:'나비주술', menuKey:'butterfly',
+      menu:'나비주술 + 부적', menuKey:'butterfly',
       phone:S.phone||null, addr:S.addr||null, zip:S.zip||null, roadAddr:S.roadAddr||null, addrDetail:S.addrDetail||null,
-      wishPurpose:S.wishPurpose||null, wish:S.wish||null, pName:S.pName||null,
       birthLunar:S.birthLunar||null, birthRaw:S.birth?`${S.birth} (${S.birthCal})`:null,
-      pBirthLunar:S.pBirthLunar||null, pBirthRaw:S.pBirth?`${S.pBirth} (${S.pBirthCal})`:null,
       cashPhone:S.cashPhone||null, price:calcPrice(), ts:Date.now(), source:BOOKING_SOURCE
     };
     saveBooking(bk, data.bookings[bk]).catch(bookingSaveError);
 
     if (typeof fbq === 'function') {
-      fbq('track', 'Lead', { value: calcPrice(), currency: 'KRW', content_name: '나비주술' });
+      fbq('track', 'Lead', { value: calcPrice(), currency: 'KRW', content_name: '나비주술 + 부적' });
     }
     return;
   }
@@ -1945,9 +1919,9 @@ function doCheck(){
 
   // 나비주술 조회
   if(found.menuKey==='butterfly'){
-    const bform=`📋 【나비주술 신청】\n이름: ${found.name}\n메뉴: 나비주술`;
+    const bform=`📋 【나비주술 + 부적 신청】\n이름: ${found.name}\n메뉴: 나비주술 + 부적`;
     let h = `<div class="slabel">조회 결과</div>
-             <div style="font-size:.82rem; color:var(--text2); line-height:1.7; margin-bottom:16px;">· 메뉴: 나비주술<br>· 결제 금액: ${(found.price||0).toLocaleString()}원<br>· 결제 방법: ${found.pay==='account'?'계좌이체':'카드결제'}</div>`;
+             <div style="font-size:.82rem; color:var(--text2); line-height:1.7; margin-bottom:16px;">· 메뉴: 나비주술 + 부적<br>· 결제 금액: ${(found.price||0).toLocaleString()}원<br>· 결제 방법: ${found.pay==='account'?'계좌이체':'카드결제'}</div>`;
     if(found.pay==='account'){
       h += `<div class="account-box show" style="margin-bottom:16px;">
                <div class="arow"><span class="akey">은행</span><span class="aval">카카오뱅크</span></div>

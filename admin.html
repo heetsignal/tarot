@@ -1009,11 +1009,11 @@ function autoTasks(){
           });
         }
       }
-      // 미니 스펠자 발송 기한
+      // 부적 발송 기한
       const ship = new Date(b.ts); ship.setDate(ship.getDate()+10); ship.setHours(12,0,0,0);
       out.push({
         id:'auto_bfs_'+k, when:ship, chKey:'bk_'+k, chName:b.name||'',
-        menuLabel:'미니 스펠자 발송', person:parseChannel(b.name).real||'-', nick:parseChannel(b.name).nick,
+        menuLabel:'부적 발송', person:parseChannel(b.name).real||'-', nick:parseChannel(b.name).nick,
         kind:'ship', shipKey:'bf_'+k, orderTs:b.ts, addr:b.addr||'', phone:b.phone||'', zip:b.zip||'', roadAddr:b.roadAddr||'', addrDetail:b.addrDetail||'',
         purpose:b.wishPurpose||'', wish:b.wish||'', pName:b.pName||'', birthLunar:b.birthLunar||'', pBirthLunar:b.pBirthLunar||'',
         birthRaw:b.birthRaw||'', pBirthRaw:b.pBirthRaw||'',
@@ -1184,7 +1184,7 @@ function toggleDoneTasks(){ showDoneTasks=!showDoneTasks; renderTasks(); }
 let showPastTasks = false;
 function togglePastTasks(){ showPastTasks=!showPastTasks; renderTasks(); }
 
-// 배송(스펠자·미니 스펠자) 전용 섹션
+// 배송(스펠자·부적) 전용 섹션
 function renderShipSection(all, done){
   const data = ad();
   const ship = data.shipInfo || {};
