@@ -277,6 +277,13 @@ input[type="date"].ifield:not(:valid){ color:var(--text3); }
 .kakao-btn-dark:hover{background:#2a1515;transform:translateY(-1px);}
 .card-pay-btn{display:block;width:100%;background:linear-gradient(135deg,#1a6b3c,#03c75a);border:none;border-radius:10px;padding:15px;color:#fff;font-family:'Noto Serif KR',serif;font-size:.95rem;font-weight:600;cursor:pointer;text-decoration:none;text-align:center;transition:all .2s;margin-bottom:10px;}
 .card-pay-btn:hover{opacity:.9;transform:translateY(-1px);}
+.card-pay-box{background:rgba(3,199,90,.07);border:1px solid rgba(3,199,90,.3);border-radius:10px;padding:15px 17px;margin-bottom:12px;}
+.cp-row{display:flex;justify-content:space-between;align-items:center;}
+.cp-key{font-size:.82rem;color:var(--text2);}
+.cp-amt{font-family:'Cormorant Garamond',serif;font-size:1.5rem;color:#6fe09a;user-select:all;}
+.cp-note{font-size:.74rem;color:#e0b87a;margin-top:8px;}
+.cp-guide{font-size:.78rem;color:var(--text2);text-align:center;margin-top:10px;line-height:1.6;}
+.cp-guide b{color:var(--gold2);}
 
 /* BTNS */
 .btn{width:100%;background:linear-gradient(135deg,#7a5810,var(--gold),#7a5810);border:none;border-radius:10px;padding:16px;color:#08070f;font-family:'Noto Serif KR',serif;font-size:.95rem;font-weight:600;cursor:pointer;letter-spacing:.04em;transition:all .3s;box-shadow:0 4px 18px var(--glow);margin-top:6px;}
@@ -432,7 +439,7 @@ input[type="date"].ifield:not(:valid){ color:var(--text3); }
         </div>
         <div class="pay-card" id="pm-card" onclick="selPay('card')">
           <div class="pay-name">카드결제</div>
-          <div class="pay-desc">다음 화면에 보이는 사이트에서 결제 후 양식을 제출해 주세요<br><span style="color:#e0b87a;">※ 카드결제 시 스마트스토어 수수료 5%가 추가됩니다</span></div>
+          <div class="pay-desc">다음 화면에서 안내되는 금액을 입력해 결제 후 양식을 제출해 주세요<br><span style="color:#e0b87a;">※ 카드결제 시 수수료 3.9%가 추가됩니다</span></div>
         </div>
       </div>
     </div>
@@ -1539,6 +1546,47 @@ function chk3(){
   document.getElementById('btn3').disabled=!ok;
 }
 
+// ===== 카드결제 (PayApp) =====
+// 수수료 3.9%를 손님이 부담 → 정산액이 원가격이 되도록 ÷0.961, 100원 단위 올림
+const CARD_FEE_RATE = 0.039;
+const PAYAPP_URL = 'https://www.payapp.kr/L/z4kI5F';
+function cardAmount(){
+  const base = calcPrice();
+  if(!base) return 0;
+  return Math.ceil(base / (1 - CARD_FEE_RATE) / 100) * 100;
+}
+// 카드결제 안내 + 버튼 (모든 메뉴 공통)
+function cardPayBlock(){
+  const amt = cardAmount();
+  return `<div class="card-pay-box">
+      <div class="cp-row"><span class="cp-key">결제 금액</span><span class="cp-amt" id="cardAmtVal">${amt.toLocaleString()}원</span></div>
+      <div class="cp-note">※ 카드결제 시 수수료 3.9%가 추가됩니다</div>
+    </div>
+    <button class="copy-btn" id="cardAmtBtn" onclick="copyCardAmount('cardAmtBtn')">📋 결제 금액 복사하기</button>
+    <a class="card-pay-btn" href="${PAYAPP_URL}" target="_blank">💳 카드결제하기 (PayApp) →</a>
+    <div class="cp-guide">결제 페이지에서 <b>위 금액을 직접 입력</b>해 주세요</div>`;
+}
+function copyCardAmount(btnId){
+  const amt = String(cardAmount());
+  const btn = document.getElementById(btnId);
+  const done = ()=>{
+    const orig = btn.textContent;
+    btn.classList.add('copied');
+    btn.textContent = '✅ 금액 복사 완료!';
+    setTimeout(()=>{ btn.classList.remove('copied'); btn.textContent = orig; }, 2500);
+  };
+  const fallback = ()=>{
+    const ta=document.createElement('textarea');
+    ta.value=amt; ta.style.position='fixed'; ta.style.opacity='0';
+    document.body.appendChild(ta); ta.focus(); ta.select();
+    try{ document.execCommand('copy'); done(); }catch(e){ alert('금액을 길게 눌러 직접 복사해 주세요.'); }
+    document.body.removeChild(ta);
+  };
+  if(navigator.clipboard && window.isSecureContext){
+    navigator.clipboard.writeText(amt).then(done).catch(fallback);
+  } else { fallback(); }
+}
+
 // 카톡 양식에 넣을 현금영수증 줄 (계좌이체 + 번호 입력 시에만)
 function cashLine(){
   return (S.pay==='account' && S.cashPhone) ? `\n현금영수증: ${S.cashPhone}` : '';
@@ -1565,7 +1613,7 @@ function buildS4(){
         </div>
         <button class="copy-btn" id="acctCopyBtn" onclick="copyAccount('acctCopyBtn')">📋 계좌번호 복사하기</button>`;
     } else if(S.pay==='card'){
-      cpa.innerHTML=`<div style="font-size:.78rem;color:#e0b87a;text-align:center;margin-bottom:8px;line-height:1.5;">※ 카드결제 시 스마트스토어 수수료 5%가 추가됩니다</div><a class="card-pay-btn" href="https://mkt.shopping.naver.com/link/6aa2b2a47a192905d5e97e5a" target="_blank">💳 카드결제하기 (네이버 스마트스토어) →</a>`;
+      cpa.innerHTML=cardPayBlock();
     } else { cpa.innerHTML=''; }
 
     const data=aData();
@@ -1607,7 +1655,7 @@ function buildS4(){
         </div>
         <button class="copy-btn" id="acctCopyBtn" onclick="copyAccount('acctCopyBtn')">📋 계좌번호 복사하기</button>`;
     } else if(S.pay==='card'){
-      cpa.innerHTML=`<div style="font-size:.78rem;color:#e0b87a;text-align:center;margin-bottom:8px;line-height:1.5;">※ 카드결제 시 스마트스토어 수수료 5%가 추가됩니다</div><a class="card-pay-btn" href="https://mkt.shopping.naver.com/link/6a82e13f18c8807f9e338c0a" target="_blank">💳 카드결제하기 (네이버 스마트스토어) →</a>`;
+      cpa.innerHTML=cardPayBlock();
     } else { cpa.innerHTML=''; }
 
     const data=aData();
@@ -1647,7 +1695,7 @@ function buildS4(){
         </div>
         <button class="copy-btn" id="acctCopyBtn" onclick="copyAccount('acctCopyBtn')">📋 계좌번호 복사하기</button>`;
     } else if(S.pay==='card'){
-      cpa.innerHTML=`<div style="font-size:.78rem;color:#e0b87a;text-align:center;margin-bottom:8px;line-height:1.5;">※ 카드결제 시 스마트스토어 수수료 5%가 추가됩니다</div><a class="card-pay-btn" href="https://mkt.shopping.naver.com/link/6a4e5c1500cc0d59ae192ef5" target="_blank">💳 카드결제하기 (네이버 스마트스토어) →</a>`;
+      cpa.innerHTML=cardPayBlock();
     } else { cpa.innerHTML=''; }
 
     const data=aData();
@@ -1688,7 +1736,7 @@ function buildS4(){
         </div>
         <button class="copy-btn" id="acctCopyBtn" onclick="copyAccount('acctCopyBtn')">📋 계좌번호 복사하기</button>`;
     } else if(S.pay==='card'){
-      cpa.innerHTML=`<div style="font-size:.78rem;color:#e0b87a;text-align:center;margin-bottom:8px;line-height:1.5;">※ 카드결제 시 스마트스토어 수수료 5%가 추가됩니다</div><a class="card-pay-btn" href="https://mkt.shopping.naver.com/link/6a4ef60499800670a8f18043" target="_blank">💳 카드결제하기 (네이버 스마트스토어) →</a>`;
+      cpa.innerHTML=cardPayBlock();
     } else { cpa.innerHTML=''; }
 
     const data=aData();
@@ -1747,7 +1795,7 @@ function buildS4(){
       </div>
       <button class="copy-btn" id="acctCopyBtn" onclick="copyAccount('acctCopyBtn')">📋 계좌번호 복사하기</button>`;
   } else if(S.pay==='card'){
-    cpa.innerHTML=`<div style="font-size:.78rem;color:#e0b87a;text-align:center;margin-bottom:8px;line-height:1.5;">※ 카드결제 시 스마트스토어 수수료 5%가 추가됩니다</div><a class="card-pay-btn" href="https://mkt.shopping.naver.com/link/69f9aa055358056105d6b7b0" target="_blank">💳 카드결제하기 (네이버 스마트스토어) →</a>`;
+    cpa.innerHTML=cardPayBlock();
   } else {
     cpa.innerHTML='';
   }
