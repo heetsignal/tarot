@@ -471,22 +471,23 @@ input[type="date"].ifield:not(:valid){ color:var(--text3); }
       <p class="c-desc">아래 <strong>1 → 2 → 3</strong> 순서대로 진행해 주세요<br><strong>1시간 이내</strong>에 완료되어야 예약이 확정됩니다</p>
       <div id="saveStatus"></div>
 
-      <div class="dstep" id="dstep1">
-        <div class="dstep-head"><span class="dnum">1</span><span class="dttl">결제하기</span></div>
-        <div id="cardPayArea"></div>
-      </div>
-
       <div class="dstep">
-        <div class="dstep-head"><span class="dnum">2</span><span class="dttl">상담 양식 복사하기</span></div>
-        <div class="dstep-desc">아래 양식을 복사한 뒤, 빈칸을 채워 보내주세요</div>
+        <div class="dstep-head"><span class="dnum">1</span><span class="dttl">상담 양식 복사하기</span></div>
+        <div class="dstep-desc">아래 양식을 복사한 뒤, 빈칸을 채워 보내주세요<br><b>결제 정보도 함께 복사되니 먼저 복사해 주세요</b></div>
         <div class="form-tmpl" id="formTmpl"></div>
         <button class="copy-btn" id="copyBtn" onclick="copyForm('formTmpl','copyBtn')">📋 예약정보 + 상담양식 전체 복사하기</button>
       </div>
 
       <div class="dstep">
-        <div class="dstep-head"><span class="dnum">3</span><span class="dttl">카카오톡으로 보내기</span></div>
-        <div class="dstep-desc">복사한 내용을 붙여넣어 보내주시면 예약이 확정됩니다</div>
+        <div class="dstep-head"><span class="dnum">2</span><span class="dttl">카카오톡으로 보내기</span></div>
+        <div class="dstep-desc">복사한 내용을 붙여넣어 보내주세요</div>
         <a class="kakao-btn" href="https://open.kakao.com/o/sQZiU3Hi" target="_blank">💬 카카오톡 오픈채팅으로 보내기 →</a>
+      </div>
+
+      <div class="dstep" id="dstep3">
+        <div class="dstep-head"><span class="dnum">3</span><span class="dttl">결제하기</span></div>
+        <div class="dstep-desc">양식을 보내신 뒤 결제해 주세요<br>결제 정보는 복사한 양식 안에도 들어 있습니다</div>
+        <div id="cardPayArea"></div>
       </div>
 
       <div class="consent-note">⚠️ 상담 내용은 개인을 특정할 수 없도록 처리한 후 <br>후기로 사용될 수 있습니다. 원치 않으시면 말씀부탁드립니다.</div>
@@ -1607,6 +1608,17 @@ function copyCardAmount(btnId){
   } else { fallback(); }
 }
 
+// 카톡 양식 하단에 붙는 결제 안내 (사이트를 닫아도 카톡에서 결제 가능하도록)
+function payGuideBlock(){
+  if(S.pay==='card'){
+    return `\n\n💳 【카드결제 안내】\n결제 금액: ${cardAmount().toLocaleString()}원 (수수료 3.9% 포함)\n결제 링크: ${PAYAPP_URL}\n※ 결제 페이지에서 위 금액을 직접 입력해 주세요`;
+  }
+  if(S.pay==='account'){
+    return `\n\n🏦 【계좌이체 안내】\n입금액: ${calcPrice().toLocaleString()}원\n카카오뱅크 3333-37-0910218 (한서희)`;
+  }
+  return '';
+}
+
 // 카톡 양식에 넣을 현금영수증 줄 (계좌이체 + 번호 입력 시에만)
 function cashLine(){
   return (S.pay==='account' && S.cashPhone) ? `\n현금영수증: ${S.cashPhone}` : '';
@@ -1617,7 +1629,7 @@ function buildS4(){
 
   // ===== 염화기도 =====
   if(m==='prayer'){
-    const form=`📋 【염화기도 신청】\n이름: ${S.name}\n메뉴: 염화기도\n종류: ${S.prayerType}\n기간: ${S.prayerDays}일${cashLine()}`;
+    const form=`📋 【염화기도 신청】\n이름: ${S.name}\n메뉴: 염화기도\n종류: ${S.prayerType}\n기간: ${S.prayerDays}일${cashLine()}${payGuideBlock()}`;
     const ft=document.getElementById('formTmpl');
     ft.innerHTML=`${form}`;
     ft.dataset.copy=form;
@@ -1659,7 +1671,7 @@ function buildS4(){
 
   // ===== 월별 운세 컨설팅: 카톡 양식은 이름·메뉴·주술분야만 =====
   if(m==='monthly'){
-    const form=`📋 【월별 운세 컨설팅 신청】\n이름: ${S.name}\n메뉴: 월별 운세 컨설팅\n주술 분야: ${S.monthlyTopics.join(', ')}${cashLine()}`;
+    const form=`📋 【월별 운세 컨설팅 신청】\n이름: ${S.name}\n메뉴: 월별 운세 컨설팅\n주술 분야: ${S.monthlyTopics.join(', ')}${cashLine()}${payGuideBlock()}`;
     const ft=document.getElementById('formTmpl');
     ft.innerHTML=`${form}`;
     ft.dataset.copy=form;
@@ -1699,7 +1711,7 @@ function buildS4(){
 
   // ===== 스펠자: 카톡 양식은 이름·메뉴·주제만 =====
   if(m==='spell'){
-    const form=`📋 【스펠자 신청】\n이름: ${S.name}\n메뉴: 스펠자\n주제: ${S.spellTopic}${cashLine()}`;
+    const form=`📋 【스펠자 신청】\n이름: ${S.name}\n메뉴: 스펠자\n주제: ${S.spellTopic}${cashLine()}${payGuideBlock()}`;
     const ft=document.getElementById('formTmpl');
     ft.innerHTML=`${form}`;
     ft.dataset.copy=form;
@@ -1740,7 +1752,7 @@ function buildS4(){
 
   // ===== 나비주술: 카톡 양식은 이름·메뉴만 =====
   if(m==='butterfly'){
-    const form=`📋 【나비주술 + 부적 신청】\n이름: ${S.name}\n메뉴: 나비주술 + 부적${cashLine()}`;
+    const form=`📋 【나비주술 + 부적 신청】\n이름: ${S.name}\n메뉴: 나비주술 + 부적${cashLine()}${payGuideBlock()}`;
     const ft=document.getElementById('formTmpl');
     ft.innerHTML=`${form}`;
     ft.dataset.copy=form;
@@ -1799,7 +1811,7 @@ function buildS4(){
   } else {
     formBody = `내담자 성함 및 나이 :  \n상대방 성함 및 나이 : \n상세 사연 : \n핵심 질문 : `;
   }
-  const form=`📋 【예약 정보】\n이름: ${S.name}\n${info}\n\n📋 【상담 양식】\n${formBody}`;
+  const form=`📋 【예약 정보】\n이름: ${S.name}\n${info}\n\n📋 【상담 양식】\n${formBody}${payGuideBlock()}`;
   const ft=document.getElementById('formTmpl');
   ft.innerHTML=`${form}`;
   ft.dataset.copy=form;
