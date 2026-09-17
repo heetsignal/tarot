@@ -153,6 +153,10 @@ body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellips
 .tm-input{width:100%;background:rgba(255,255,255,.04);border:1px solid var(--border);border-radius:8px;padding:11px 13px;color:var(--text);font-family:'Noto Serif KR',serif;font-size:.87rem;outline:none;}
 .tm-input:focus{border-color:var(--gold);}
 .tm-hint{font-size:.7rem;color:var(--text3);margin-top:6px;line-height:1.5;}
+.tm-btns{display:flex;gap:8px;margin-top:20px;}
+.tm-btns .tm-save{margin-top:0;flex:2;}
+.tm-cancel{flex:1;background:transparent;border:1px solid var(--border);border-radius:9px;padding:14px;color:var(--text2);font-family:'Noto Serif KR',serif;font-size:.9rem;cursor:pointer;}
+.tm-cancel:hover{border-color:var(--border2);color:var(--text);}
 .tm-save{width:100%;background:linear-gradient(135deg,#7a5810,var(--gold),#7a5810);border:none;border-radius:9px;padding:14px;color:#08070f;font-family:'Noto Serif KR',serif;font-size:.9rem;font-weight:600;cursor:pointer;margin-top:20px;}
 .bk-date-group{margin-bottom:18px;}
 .bk-date-label{font-size:.7rem;color:var(--gold);letter-spacing:.15em;margin-bottom:10px;display:flex;align-items:center;gap:8px;}
@@ -194,6 +198,7 @@ body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellips
 .ps-btn{background:rgba(200,164,86,.16);border:1px solid var(--border2);border-radius:7px;padding:7px 14px;color:var(--gold2);font-family:'Noto Serif KR',serif;font-size:.78rem;cursor:pointer;}
 .ps-btn:hover{background:rgba(200,164,86,.28);}
 .ps-hint{font-size:.72rem;color:var(--text3);margin-top:7px;}
+.am-note{font-size:.75rem;color:var(--text3);line-height:1.6;margin-bottom:16px;}
 .bk-spell-key{color:#88c8a0;font-size:.66rem;min-width:54px;flex-shrink:0;font-weight:600;}
 .bk-topic{font-size:.74rem;color:#a8c8ec;background:rgba(100,150,210,.1);border:1px solid rgba(100,150,210,.28);border-radius:7px;padding:6px 10px;margin-bottom:6px;display:inline-block;}
 .bk-topic-key{color:#7aa8e0;font-size:.62rem;margin-right:6px;}
@@ -279,6 +284,7 @@ body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellips
     <div style="display:flex;gap:8px;margin-bottom:18px;">
       <button class="task-add-btn" style="margin-bottom:0;" onclick="openTaskModal()">＋ 일정 추가</button>
       <button class="task-add-btn" style="margin-bottom:0;" onclick="openBulkModal()">📥 일괄 등록</button>
+      <button class="task-add-btn" style="margin-bottom:0;" onclick="openAmuletModal()">🧧 부적 등록</button>
     </div>
     <div id="taskList"></div>
   </div>
@@ -297,6 +303,48 @@ body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellips
     <div class="bk-section">
       <div class="bk-section-title">📋 그 외 메뉴</div>
       <div id="otherBookings"></div>
+    </div>
+  </div>
+</div>
+
+<div class="task-modal" id="amuletModal">
+  <div class="task-modal-box">
+    <div class="task-modal-title">부적 등록</div>
+    <div class="am-note">상담 후 채팅으로 접수한 부적 주문을 등록합니다.<br>등록하면 📦 스펠자 발송 목록에 나타납니다.</div>
+
+    <label class="tm-label">부적 종류 · 장수</label>
+    <input class="tm-input" id="amKind" placeholder="예) 재회부 1장 / 금전부 2장">
+
+    <label class="tm-label">내담자 정보 (이름 · 생년월일)</label>
+    <input class="tm-input" id="amMe" placeholder="예) 방솔지 양력 91년 10월 12일">
+
+    <label class="tm-label">상대방 정보 <span style="color:var(--text3);font-size:.72rem;">(선택)</span></label>
+    <input class="tm-input" id="amPartner" placeholder="예) 박훤함 양력 84년">
+
+    <label class="tm-label">전화번호</label>
+    <input class="tm-input" id="amPhone" placeholder="예) 010 9870 9092">
+
+    <label class="tm-label">주소</label>
+    <textarea class="tm-input" id="amAddr" rows="2" placeholder="예) 서울 광진구 아차산로 33길 51-4 303호"></textarea>
+
+    <label class="tm-label">메모 <span style="color:var(--text3);font-size:.72rem;">(원하는 방향 등 · 선택)</span></label>
+    <textarea class="tm-input" id="amMemo" rows="2" placeholder="원하시는 방향, 특이사항 등"></textarea>
+
+    <div style="display:flex;gap:8px;">
+      <div style="flex:1;">
+        <label class="tm-label">주문일</label>
+        <input class="tm-input" type="date" id="amOrderDate">
+      </div>
+      <div style="flex:1;">
+        <label class="tm-label">발송 기한</label>
+        <input class="tm-input" type="date" id="amDueDate">
+      </div>
+    </div>
+    <div class="am-note" style="margin-top:-4px;">주문일을 넣으면 발송 기한이 +10일로 자동 채워집니다</div>
+
+    <div class="tm-btns">
+      <button class="tm-cancel" onclick="closeAmuletModal()">취소</button>
+      <button class="tm-save" onclick="saveAmulet()">등록</button>
     </div>
   </div>
 </div>
@@ -1022,6 +1070,28 @@ function autoTasks(){
     }
   });
 
+  // ===== 부적: 수기 등록분 → 스펠자 발송 섹션에 표시 =====
+  Object.entries(bookings).forEach(([k,b])=>{
+    if(!b || b.menuKey!=='amulet') return;
+    let due;
+    if(b.dueDate){
+      const p=String(b.dueDate).split('-').map(Number);
+      due=new Date(p[0], p[1]-1, p[2], 12, 0, 0);
+    } else {
+      due=new Date(b.ts||Date.now()); due.setDate(due.getDate()+10); due.setHours(12,0,0,0);
+    }
+    const ch=parseChannel(b.name);
+    out.push({
+      id:'amulet_'+k, when:due, chKey:'bk_'+k, chName:b.name||'',
+      menuLabel:'부적 발송', person:ch.real||'-', nick:ch.nick||'',
+      kind:'ship', shipKey:'am_'+k, orderTs:b.ts,
+      addr:b.addr||'', phone:b.phone||'',
+      purpose:b.amuletKind||'', wish:b.memo||'',
+      amuletMe:b.meInfo||'', amuletPartner:b.partnerInfo||'',
+      meta:`${b.addr||'주소 미입력'}`,
+    });
+  });
+
   // ===== 염화기도: 신청 다음날 시작, 첫날·마지막날 사진 =====
   Object.entries(bookings).forEach(([k,b])=>{
     if(!b) return;
@@ -1219,12 +1289,16 @@ function renderShipSection(all, done){
         </div>
       </div>
       ${t.purpose?`<div class="sp-purpose"><span class="sp-pill">${t.purpose}</span></div>`:''}
+      ${(t.amuletMe||t.amuletPartner)?`<div class="sp-birth">
+        ${t.amuletMe?`<div><span class="sp-bk">내담자</span> ${t.amuletMe}</div>`:''}
+        ${t.amuletPartner?`<div><span class="sp-bk">상대방</span> ${t.amuletPartner}</div>`:''}
+      </div>`:''}
       ${(t.birthLunar||t.pBirthLunar||t.pName)?`<div class="sp-birth">
         ${t.birthLunar?`<div><span class="sp-bk">내담자</span> ${t.birthLunar}${t.birthRaw?` <span class="sp-raw">(입력: ${t.birthRaw})</span>`:''}</div>`:''}
         ${t.pName?`<div><span class="sp-bk">상대방</span> ${t.pName}${t.pBirthLunar?` · ${t.pBirthLunar}${t.pBirthRaw?` <span class="sp-raw">(입력: ${t.pBirthRaw})</span>`:''}`:` <span class="sp-raw">· 생년월일 미입력</span>`}</div>`
           :(t.pBirthLunar?`<div><span class="sp-bk">상대방</span> ${t.pBirthLunar}${t.pBirthRaw?` <span class="sp-raw">(입력: ${t.pBirthRaw})</span>`:''}</div>`:'')}
       </div>`:''}
-      ${t.wish?`<div class="sp-wish"><span class="sp-bk">소원</span> ${t.wish}</div>`:''}
+      ${t.wish?`<div class="sp-wish"><span class="sp-bk">${t.amuletMe?'메모':'소원'}</span> ${t.wish}</div>`:''}
       <div class="sp-addr">${t.addr||'주소 미입력'}${t.phone?` · ${t.phone}`:''}</div>
       <div class="sp-track">
         <input class="sp-input" id="trk_${t.shipKey}" value="${(info.tracking||'').replace(/"/g,'&quot;')}" placeholder="운송장 번호">
@@ -1510,6 +1584,67 @@ function delTask(manualId){
 
 /* ---- 일정 추가 모달 ---- */
 let tmMenu = null, tmNextDay = false;
+
+// ===== 부적 등록 (상담 후 채팅 접수분) =====
+function openAmuletModal(){
+  ['amKind','amMe','amPartner','amPhone','amAddr','amMemo'].forEach(id=>{
+    const el=document.getElementById(id); if(el) el.value='';
+  });
+  const today=new Date();
+  const fmt=d=>d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');
+  const od=document.getElementById('amOrderDate');
+  const dd=document.getElementById('amDueDate');
+  if(od) od.value=fmt(today);
+  if(dd){ const due=new Date(today); due.setDate(due.getDate()+10); dd.value=fmt(due); }
+  // 주문일 바꾸면 기한 자동 갱신
+  if(od && !od.dataset.bound){
+    od.dataset.bound='1';
+    od.addEventListener('change',()=>{
+      if(!od.value) return;
+      const p=od.value.split('-').map(Number);
+      const d=new Date(p[0],p[1]-1,p[2]); d.setDate(d.getDate()+10);
+      const e=document.getElementById('amDueDate');
+      if(e) e.value=d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');
+    });
+  }
+  document.getElementById('amuletModal').classList.add('show');
+}
+function closeAmuletModal(){ document.getElementById('amuletModal').classList.remove('show'); }
+
+function saveAmulet(){
+  const v=id=>{ const el=document.getElementById(id); return el?el.value.trim():''; };
+  const kind=v('amKind'), me=v('amMe'), partner=v('amPartner');
+  const phone=v('amPhone'), addr=v('amAddr'), memo=v('amMemo');
+  const orderDate=v('amOrderDate'), dueDate=v('amDueDate');
+
+  if(!me){ alert('내담자 정보를 입력해 주세요.'); return; }
+  if(!addr){ alert('주소를 입력해 주세요.'); return; }
+  if(!dueDate){ alert('발송 기한을 입력해 주세요.'); return; }
+
+  // 이름은 내담자 정보의 첫 단어로
+  const name = me.split(/\s+/)[0] || '부적';
+  const od = orderDate ? new Date(orderDate.split('-')[0], orderDate.split('-')[1]-1, orderDate.split('-')[2], 12, 0, 0) : new Date();
+
+  const data=ad();
+  if(!data.bookings) data.bookings={};
+  const bk='amulet_'+Date.now();
+  data.bookings[bk]={
+    name: name,
+    menu: '부적', menuKey: 'amulet',
+    amuletKind: kind || null,
+    meInfo: me, partnerInfo: partner || null,
+    phone: phone || null, addr: addr,
+    memo: memo || null,
+    dueDate: dueDate,
+    ts: od.getTime(),
+    source: 'manual'
+  };
+  sad(data);
+  closeAmuletModal();
+  showToast('부적 주문이 등록되었습니다');
+  renderTasks();
+  renderBookings();
+}
 
 function openTaskModal(){
   tmMenu=null; tmNextDay=false; tmChannel=null;
