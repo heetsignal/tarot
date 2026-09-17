@@ -7,6 +7,7 @@
 <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@300;400;600&family=Noto+Serif+KR:wght@300;400;500&display=swap" rel="stylesheet">
 <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
 <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
+<script src="https://t1.daumcdn.net/mapjsapi/bundle/postcode/prod/postcode.v2.js"></script>
 
 <style>
 :root{
@@ -199,6 +200,8 @@ body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellips
 .ps-btn:hover{background:rgba(200,164,86,.28);}
 .ps-hint{font-size:.72rem;color:var(--text3);margin-top:7px;}
 .am-note{font-size:.75rem;color:var(--text3);line-height:1.6;margin-bottom:16px;}
+.am-addr-btn{background:rgba(200,164,86,.14);border:1px solid var(--border2);border-radius:9px;padding:0 16px;color:var(--gold2);font-family:'Noto Serif KR',serif;font-size:.82rem;cursor:pointer;white-space:nowrap;}
+.am-addr-btn:hover{background:rgba(200,164,86,.26);}
 .bk-spell-key{color:#88c8a0;font-size:.66rem;min-width:54px;flex-shrink:0;font-weight:600;}
 .bk-topic{font-size:.74rem;color:#a8c8ec;background:rgba(100,150,210,.1);border:1px solid rgba(100,150,210,.28);border-radius:7px;padding:6px 10px;margin-bottom:6px;display:inline-block;}
 .bk-topic-key{color:#7aa8e0;font-size:.62rem;margin-right:6px;}
@@ -307,6 +310,13 @@ body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellips
   </div>
 </div>
 
+<div id="amPostcodeLayer" style="display:none;position:fixed;inset:0;z-index:1200;background:rgba(8,7,15,.9);padding:16px;">
+  <div style="max-width:500px;margin:32px auto 0;background:#fff;border-radius:12px;overflow:hidden;position:relative;height:80vh;">
+    <button onclick="closeAmPostcode()" style="position:absolute;top:8px;right:10px;z-index:3;background:#08070f;color:#fff;border:none;border-radius:7px;padding:7px 13px;cursor:pointer;font-family:'Noto Serif KR',serif;font-size:.85rem;">닫기 ✕</button>
+    <div id="amPostcodeBox" style="width:100%;height:100%;"></div>
+  </div>
+</div>
+
 <div class="task-modal" id="amuletModal">
   <div class="task-modal-box">
     <div class="task-modal-title">부적 등록</div>
@@ -325,7 +335,13 @@ body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellips
     <input class="tm-input" id="amPhone" placeholder="예) 010 9870 9092">
 
     <label class="tm-label">주소</label>
-    <textarea class="tm-input" id="amAddr" rows="2" placeholder="예) 서울 광진구 아차산로 33길 51-4 303호"></textarea>
+    <div style="display:flex;gap:7px;margin-bottom:7px;">
+      <input class="tm-input" id="amZip" placeholder="우편번호" readonly style="flex:1;margin:0;background:rgba(255,255,255,.02);">
+      <button type="button" class="am-addr-btn" onclick="openAmPostcode()">주소 검색</button>
+    </div>
+    <input class="tm-input" id="amRoad" placeholder="주소 검색 버튼을 눌러주세요" readonly style="margin-bottom:7px;background:rgba(255,255,255,.02);">
+    <input class="tm-input" id="amDetail" placeholder="상세주소 (동·호수 등)" style="margin-bottom:0;">
+    <div class="am-note" style="margin:7px 0 0;">택배 접수 엑셀에 맞춰 우편번호·주소·상세주소로 나눠 저장됩니다</div>
 
     <label class="tm-label">메모 <span style="color:var(--text3);font-size:.72rem;">(원하는 방향 등 · 선택)</span></label>
     <textarea class="tm-input" id="amMemo" rows="2" placeholder="원하시는 방향, 특이사항 등"></textarea>
@@ -1086,6 +1102,7 @@ function autoTasks(){
       menuLabel:'부적 발송', person:ch.real||'-', nick:ch.nick||'',
       kind:'ship', shipKey:'am_'+k, orderTs:b.ts,
       addr:b.addr||'', phone:b.phone||'',
+      zip:b.zip||'', roadAddr:b.roadAddr||'', addrDetail:b.addrDetail||'',
       purpose:b.amuletKind||'', wish:b.memo||'',
       amuletMe:b.meInfo||'', amuletPartner:b.partnerInfo||'',
       meta:`${b.addr||'주소 미입력'}`,
@@ -1585,9 +1602,31 @@ function delTask(manualId){
 /* ---- 일정 추가 모달 ---- */
 let tmMenu = null, tmNextDay = false;
 
+// 부적 등록: 우편번호 검색 (택배 엑셀용 정식 주소)
+function openAmPostcode(){
+  if(typeof daum==='undefined' || !daum.Postcode){
+    alert('주소 검색을 불러오지 못했어요. 잠시 후 다시 시도해 주세요.');
+    return;
+  }
+  const layer=document.getElementById('amPostcodeLayer');
+  const box=document.getElementById('amPostcodeBox');
+  box.innerHTML='';
+  layer.style.display='block';
+  new daum.Postcode({
+    oncomplete:function(data){
+      document.getElementById('amZip').value = data.zonecode;
+      document.getElementById('amRoad').value = data.roadAddress || data.jibunAddress;
+      layer.style.display='none';
+      const d=document.getElementById('amDetail'); if(d) d.focus();
+    },
+    width:'100%', height:'100%'
+  }).embed(box);
+}
+function closeAmPostcode(){ document.getElementById('amPostcodeLayer').style.display='none'; }
+
 // ===== 부적 등록 (상담 후 채팅 접수분) =====
 function openAmuletModal(){
-  ['amKind','amMe','amPartner','amPhone','amAddr','amMemo'].forEach(id=>{
+  ['amKind','amMe','amPartner','amPhone','amZip','amRoad','amDetail','amMemo'].forEach(id=>{
     const el=document.getElementById(id); if(el) el.value='';
   });
   const today=new Date();
@@ -1614,11 +1653,14 @@ function closeAmuletModal(){ document.getElementById('amuletModal').classList.re
 function saveAmulet(){
   const v=id=>{ const el=document.getElementById(id); return el?el.value.trim():''; };
   const kind=v('amKind'), me=v('amMe'), partner=v('amPartner');
-  const phone=v('amPhone'), addr=v('amAddr'), memo=v('amMemo');
+  const phone=v('amPhone'), memo=v('amMemo');
+  const zip=v('amZip'), roadAddr=v('amRoad'), addrDetail=v('amDetail');
   const orderDate=v('amOrderDate'), dueDate=v('amDueDate');
+  const addr = roadAddr ? `(${zip}) ${roadAddr}${addrDetail?' '+addrDetail:''}` : '';
 
   if(!me){ alert('내담자 정보를 입력해 주세요.'); return; }
-  if(!addr){ alert('주소를 입력해 주세요.'); return; }
+  if(!roadAddr){ alert('주소 검색 버튼을 눌러 주소를 입력해 주세요.'); return; }
+  if(!addrDetail){ alert('상세주소를 입력해 주세요.'); return; }
   if(!dueDate){ alert('발송 기한을 입력해 주세요.'); return; }
 
   // 이름은 내담자 정보의 첫 단어로
@@ -1634,6 +1676,7 @@ function saveAmulet(){
     amuletKind: kind || null,
     meInfo: me, partnerInfo: partner || null,
     phone: phone || null, addr: addr,
+    zip: zip || null, roadAddr: roadAddr || null, addrDetail: addrDetail || null,
     memo: memo || null,
     dueDate: dueDate,
     ts: od.getTime(),
