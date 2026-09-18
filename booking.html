@@ -220,6 +220,10 @@ textarea.ifield{resize:vertical;min-height:70px;line-height:1.6;}
 /* 실시간 첫방문 안내 */
 .rt-notice{background:rgba(100,150,210,.08);border-left:3px solid rgba(120,170,220,.7);border-radius:0 8px 8px 0;padding:14px 16px;margin-bottom:22px;font-size:.82rem;color:#cdd8ea;line-height:1.75;}
 .rt-notice b{color:#e8eefc;}
+.notice-event{background:rgba(200,164,86,.1);border:1px solid var(--border2);border-radius:10px;padding:14px 16px;margin-bottom:14px;font-size:.82rem;color:#e8dcc0;line-height:1.8;text-align:center;}
+.notice-event b{color:var(--gold2);}
+.notice-medium{background:rgba(150,110,200,.12);border-left:3px solid rgba(180,140,220,.8);border-radius:0 8px 8px 0;padding:13px 16px;margin-bottom:22px;font-size:.85rem;color:#d8cce8;line-height:1.75;}
+.notice-medium b{color:#e8d8ff;}
 .dur-warn{margin-top:10px;font-size:.8rem;color:#f08a8a;line-height:1.55;}
 .obtn.disabled{opacity:.3;cursor:not-allowed;pointer-events:none;}
 /* 스펠자 안내 (배송 상품) */
@@ -361,23 +365,23 @@ input[type="date"].ifield:not(:valid){ color:var(--text3); }
         <div class="menu-info">4개 분야(일·금전·연애·인간관계) 전체 운세 리딩지 + 결과 맞춤 주술<br><span class="monthly-period">접수기간 : 매월 15일 ~ 25일</span></div>
       </div>
       <div class="menu-card" data-menu="realtime" onclick="selMenu(this)">
-        <div class="menu-top"><span class="menu-name">실시간 채팅 리딩 <span class="mbadge b-rt">LIVE</span></span><span class="menu-price">10,000원~</span></div>
-        <div class="menu-info">10분 / 20분 / 30분 선택 · 채팅으로 진행됩니다</div>
+        <div class="menu-top"><span class="menu-name">실시간 채팅 리딩 <span class="mbadge b-rt">LIVE</span></span><span class="menu-price">30,000원~</span></div>
+        <div class="menu-info">15분 / 20분 / 30분 선택 · 채팅으로 진행됩니다</div>
       </div>
       <div class="menu-card" data-menu="bibang" onclick="selMenu(this)">
-        <div class="menu-top"><span class="menu-name">리츄얼 비방 전 타로상담 (선택) <span class="mbadge b-rt">LIVE</span></span><span class="menu-price">20,000원</span></div>
-        <div class="menu-info">비방 진행 전 상대의 마음과 흐름을 봅니다. <br>타로 리딩 필요치 않으시면 바로 문의 주세요 </div>
+        <div class="menu-top"><span class="menu-name">리츄얼 비방 전 상담 (선택) <span class="mbadge b-rt">LIVE</span></span><span class="menu-price">40,000원</span></div>
+        <div class="menu-info">비방 진행 전 상대의 마음과 흐름을 봅니다.<br>상담이 필요치 않으시면 바로 문의 주세요</div>
       </div>
       <div class="menu-card" data-menu="question" onclick="selMenu(this)">
-        <div class="menu-top"><span class="menu-name">질문제 리딩 <span class="mbadge b-24">24H</span></span><span class="menu-price">5,000원/질문</span></div>
-        <div class="menu-info">질문당 5,000원 · 양식 제출 후 24시간 이내 리딩지 발송</div>
+        <div class="menu-top"><span class="menu-name">질문제 리딩 <span class="mbadge b-24">24H</span></span><span class="menu-price">10,000원/질문</span></div>
+        <div class="menu-info">질문당 10,000원 · 양식 제출 후 24시간 이내 리딩지 발송</div>
       </div>
       <div class="menu-card" data-menu="lite" onclick="selMenu(this)">
-        <div class="menu-top"><span class="menu-name">Lite 패키지 <span class="mbadge b-48">48H</span></span><span class="menu-price">15,000원</span></div>
+        <div class="menu-top"><span class="menu-name">Lite 패키지 <span class="mbadge b-48">48H</span></span><span class="menu-price">30,000원</span></div>
         <div class="menu-info">재회 · 짝사랑 · 썸 · 솔로 중 1종 선택<br>양식 제출 후 48시간 이내 리딩지 발송</div>
       </div>
       <div class="menu-card" data-menu="reunion" onclick="selMenu(this)">
-        <div class="menu-top"><span class="menu-name">시그니처 전략적 패키지 <span class="mbadge b-48">48H</span></span><span class="menu-price">40,000원</span></div>
+        <div class="menu-top"><span class="menu-name">시그니처 전략적 패키지 <span class="mbadge b-48">48H</span></span><span class="menu-price">75,000원</span></div>
         <div class="menu-info">재회 · 썸 중 1종 선택<br>양식 제출 후 48시간 이내 리딩지 발송</div>
       </div>
     </div>
@@ -448,7 +452,7 @@ input[type="date"].ifield:not(:valid){ color:var(--text3); }
         </div>
         <div class="pay-card" id="pm-card" onclick="selPay('card')">
           <div class="pay-name">카드결제</div>
-          <div class="pay-desc">다음 화면에서 안내되는 금액을 입력해 결제 후 양식을 제출해 주세요<br><span style="color:#e0b87a;">※ 카드결제 시 수수료 3.9%가 추가됩니다</span></div>
+          <div class="pay-desc">다음 화면에서 안내되는 금액을 입력해 결제 후 양식을 제출해 주세요<br><span style="color:#e0b87a;">※ 카드결제 시 수수료 4%가 추가됩니다</span></div>
         </div>
       </div>
     </div>
@@ -649,8 +653,15 @@ const PRAYER_PRICE = {
   '사랑기도':     { 1:29000, 3:75000, 5:115000, 7:159000, 15:279000, 30:479000 }
 };
 const PRAYER_DAYS = [1,3,5,7,15,30];
+// 실시간 리딩 시간별 가격
+const RT_PRICE = { 15:30000, 20:40000, 30:50000 };
+const RT_DURS = [15,20,30];
 
-const MENU_NAMES={monthly:'월별 운세 컨설팅',realtime:'실시간 리딩',bibang:'비방',question:'질문제 리딩',mixed:'혼합 리딩',lite:'Lite 패키지',reunion:'시그니처 전략적 패키지',weekly:'위클리 패키지',prayer:'염화기도',spell:'스펠자',butterfly:'나비주술 + 부적'};
+// 상담 안내 문구
+const NOTICE_EVENT = `<div class="notice-event">제 힘이 닿을 수 있는 가능한 많은 분들께 도움이 되고자<br>길고 길었던 이벤트 기간이 종료되어<br><b>원 상담가격</b>을 받습니다.</div>`;
+const NOTICE_MEDIUM = `<div class="notice-medium">✦ <b>영매사 상담</b>입니다.<br>타로는 하나의 보조 도구로 사용합니다.</div>`;
+
+const MENU_NAMES={monthly:'월별 운세 컨설팅',realtime:'실시간 리딩',bibang:'비방',question:'질문제 리딩',mixed:'혼합 리딩',lite:'Lite 패키지',reunion:'시그니처 전략적 패키지',prayer:'염화기도',spell:'스펠자',butterfly:'나비주술 + 부적'};
 
 if(db){
   db.ref('hs_admin').on('value', (snap) => {
@@ -782,17 +793,16 @@ function updSteps(n){
 
 function buildS2(){
   const m=S.menu;
-  const titles={prayer:'기도 선택',monthly:'주술 분야 선택',realtime:'시간 선택',bibang:'예약 일정 선택',question:'질문 수 선택',mixed:'옵션 선택',lite:'Lite 종류 선택',reunion:'종류 선택',weekly:'예약 확인',spell:'주제 선택',butterfly:'신청 확인'};
+  const titles={prayer:'기도 선택',monthly:'주술 분야 선택',realtime:'시간 선택',bibang:'예약 일정 선택',question:'질문 수 선택',mixed:'옵션 선택',lite:'Lite 종류 선택',reunion:'종류 선택',spell:'주제 선택',butterfly:'신청 확인'};
   const descs={
     prayer:'기도 종류와 진행 일수를 선택해 주세요',
     monthly:'주술을 원하는 분야 2개를 선택해 주세요',
     realtime:'상담 시간과 예약 일정을 선택해 주세요',
     bibang:'예약 날짜와 시간을 선택해 주세요',
-    question:'원하시는 질문 개수를 선택해 주세요 (질문당 5,000원)',
+    question:'원하시는 질문 개수를 선택해 주세요 (질문당 10,000원)',
     mixed:'실시간 시간과 질문 수를 자유롭게 조합하세요 · 합계 5,000원 할인',
     lite:'재회 · 짝사랑 · 썸 · 솔로 중 1종을 선택해 주세요',
     reunion:'재회 · 썸 중 1종을 선택해 주세요',
-    weekly:'선택하신 패키지 내역을 확인해 주세요',
     spell:'재회 · 새인연 · 썸/짝사랑 · 금전 · 합격 중 원하는 주제를 선택해 주세요',
     butterfly:'선택하신 내용을 확인해 주세요',
   };
@@ -803,8 +813,15 @@ function buildS2(){
   oa.innerHTML='';ta.style.display='none';
   document.getElementById('btn2').disabled=true;
 
+  // 상단 안내: 이벤트 종료(실시간·비방·패키지) / 영매사 상담(타로 리딩 메뉴 전체)
+  const EVENT_MENUS  = ['realtime','bibang','lite','reunion'];
+  const TAROT_MENUS  = ['realtime','bibang','question','mixed','lite','reunion','monthly'];
+  let topNotice = '';
+  if(EVENT_MENUS.includes(m)) topNotice += NOTICE_EVENT;
+  if(TAROT_MENUS.includes(m)) topNotice += NOTICE_MEDIUM;
+
   if(m==='prayer'){
-    oa.innerHTML=`
+    oa.innerHTML=topNotice+`
     <div class="spell-notice">📌 <b>'염화기도'</b><br>
       간절한 소망 하나를 위해<br>초 위에 정성을 쌓아 올리는 기도.<br><br>
       단순히 초를 밝히는 것에 그치지 않고<br>내담자님의 소망과 기도 내용에 맞추어<br>기도터를 찾아 직접 정성을 올립니다.<br><br>
@@ -829,7 +846,7 @@ function buildS2(){
   }
 
   if(m==='monthly'){
-    oa.innerHTML=`
+    oa.innerHTML=topNotice+`
     <div class="spell-notice">📌 <b>월별 운세 컨설팅</b><br>
       리딩지는 <b>일 · 금전 · 연애 · 인간관계</b><br>4개 분야 모두 리딩해 드립니다.<br><br>
       아래에서 선택하시는 2개 분야는<br><b>주술을 넣을 분야</b>입니다.<br>
@@ -848,8 +865,7 @@ function buildS2(){
   }
 
   if(m==='realtime'){
-    oa.innerHTML=`
-    <div class="rt-notice">📌 <b>연애 관련 첫 방문은 20분 이상부터 가능해요.</b><br>연애는 질문 외에 파악해야 할 부분이 많아, 10분으로는 명확한 상담이 어렵습니다. 재방문부터는 10분 상담도 가능해요.</div>
+    oa.innerHTML=topNotice+`
     <div class="ogroup"><div class="olabel">상담 주제</div><div class="orow" id="topicrow">
       ${['연애','합격','진로','사업','기타'].map(t=>`<button class="obtn" onclick="selTopic(this,'${t}')">${t}</button>`).join('')}
     </div></div>
@@ -860,26 +876,26 @@ function buildS2(){
     <div class="ogroup" id="durGroup" style="display:none"><div class="olabel">상담 시간</div><div id="durArea"></div></div>`;
   } else if(m==='bibang'){
     S.dur=20;
-    oa.innerHTML=`
-    <div class="rt-notice">📌 <b>비방을 위한 사전 타로 상담이에요.</b><br>가능 여부만 보는 게 아니라,<br>20분간 실제 상담을 하며<br>상대방의 성향과 상황을 파악해<br>비방 방향을 함께 잡습니다.<br><br>단순 문의는 비용 없이<br>카카오 채널로 연락 주세요.</div>
+    oa.innerHTML=topNotice+`
+    <div class="rt-notice">📌 <b>비방을 위한 사전 상담이에요.</b><br>가능 여부만 보는 게 아니라,<br>20분간 실제 상담을 하며<br>상대방의 성향과 상황을 파악해<br>비방 방향을 함께 잡습니다.<br><br>단순 문의는 비용 없이<br>카카오 채널로 연락 주세요.</div>
     <div class="ogroup"><div class="olabel">상담 시간</div><div class="orow">
-      <button class="obtn selected" style="cursor:default;pointer-events:none;">20분 · 20,000원</button>
+      <button class="obtn selected" style="cursor:default;pointer-events:none;">20분 · 40,000원</button>
     </div></div>`;
     showTime('realtime');
   } else if(m==='spell'){
-    oa.innerHTML=`
+    oa.innerHTML=topNotice+`
     <div class="spell-notice">📌 <b>재료 하나하나 헤카가 직접 공수해</b><br>정화 및 기도까지 하여 마음을 눌러담아<br>직접 제작하는 1:1 제작입니다.<br>주문 후 배송까지는 최대 2주 소요됩니다.<br><br><span class="warn">주문 후 한 시간 뒤 제작이 시작되므로<br>환불 및 취소는 어렵습니다.</span><br><br>타인에게 선물 용도는 사전에 꼭 말씀해 주세요.<br><br><span class="warn">효력 발생은 상황에 따라 시기와 방식이<br>다르게 나타나며, 시기를 특정하기는 어렵습니다.<br>또한 어떠한 비방·주술·부적에도 100%는 없습니다.</span></div>
     <div class="ogroup"><div class="olabel">주제</div><div class="orow" id="spellrow">
       ${['재회','새인연','썸/짝사랑','금전','합격'].map(t=>`<button class="obtn" onclick="selSpell(this,'${t}')">${t}</button>`).join('')}
     </div></div>`;
   } else if(m==='butterfly'){
-    oa.innerHTML=`
+    oa.innerHTML=topNotice+`
     <div class="spell-notice">📌 <b>'나비주술'</b><br>내담자님의 매력과 오라를 깨워<br>이성의 시선과 호감을 끌어오는 주술.<br><br>연애운, 인기운, 도화운,<br>첫인상, 소개팅, 썸 흐름 특화<br><br>한 사람을 묶는 주술이 아닌,<br>내담자님 주변의 애정 흐름을<br>자연스럽게 열어주는 리츄얼입니다.<br><br>[ 특정인물을 대상으로 한 주술이 아니기 때문에<br>썸·짝사랑·재회 등 상황에는<br>리츄얼 비방이 효험을 보실 수 있습니다. ]<br><br>신청하신 다음날부터 5일간 주술이 진행됩니다.<br>5일째 진행 완료 후 각 주술 흐름을 상세히 작성하여<br>함께 보내드리며 완료 안내드립니다.<br><br>부적은 내담자님께 맞추어<br>개인별 맞춤 제작을 진행하며,<br>길일을 잡아 정성스럽게 기도한 후<br>발송해 드립니다.<br>배송까지 최대 2주 소요됩니다.<br>(부적은 별도 미판매 제품)<br><br><span class="warn">효력 발생은 상황에 따라 시기와 방식이<br>다르게 나타나며, 시기를 특정하기는 어렵습니다.</span></div>`;
     buildPrice();
     document.getElementById('btn2').disabled=false;
     return;
   } else if(m==='question'){
-    oa.innerHTML=`
+    oa.innerHTML=topNotice+`
     <div class="q-guide">
       <span class="qg-head">📌 질문 1개는 한 가지 주제만 답해드려요</span>
       한 문장이어도 서로 다른 걸 물으면 그만큼 질문 수가 늘어나요.
@@ -890,32 +906,32 @@ function buildS2(){
       <span class="qg-cta">이 경우 재회 Lite 또는 시그니처 전략적 패키지를 이용해 주세요.</span>
     </div>
     <div class="ogroup"><div class="olabel">질문 수</div><div class="orow" id="qrow">
-      ${[1,2,3,4,5].map(n=>`<button class="obtn" onclick="selQ(this,${n})">${n}개 · ${(n*5000).toLocaleString()}원</button>`).join('')}
+      ${[1,2,3,4,5].map(n=>`<button class="obtn" onclick="selQ(this,${n})">${n}개 · ${(n*10000).toLocaleString()}원</button>`).join('')}
     </div></div>`;
   } else if(m==='mixed'){
-    oa.innerHTML=`
+    oa.innerHTML=topNotice+`
       <div class="ogroup"><div class="olabel">실시간 시간</div><div class="orow" id="mdrow">
-        <button class="obtn" onclick="selMD(this,10)">10분 · 10,000원</button>
-        <button class="obtn" onclick="selMD(this,20)">20분 · 20,000원</button>
-        <button class="obtn" onclick="selMD(this,30)">30분 · 30,000원</button>
+        <button class="obtn" onclick="selMD(this,15)">15분 · 30,000원</button>
+        <button class="obtn" onclick="selMD(this,20)">20분 · 40,000원</button>
+        <button class="obtn" onclick="selMD(this,30)">30분 · 50,000원</button>
       </div></div>
       <div class="ogroup"><div class="olabel">질문 수</div><div class="orow" id="mqrow">
         ${[1,2,3,4,5].map(n=>`<button class="obtn" onclick="selMQ(this,${n})">${n}개 · ${(n*5000).toLocaleString()}원</button>`).join('')}
       </div></div>`;
   } else if(m==='lite'){
-    oa.innerHTML=`<div class="ogroup"><div class="olabel">Lite 종류</div><div class="orow" id="litrow">
+    oa.innerHTML=topNotice+`<div class="ogroup"><div class="olabel">Lite 종류</div><div class="orow" id="litrow">
       <button class="obtn" onclick="selLite(this,'재회')">재회 Lite</button>
       <button class="obtn" onclick="selLite(this,'짝사랑')">짝사랑 Lite</button>
       <button class="obtn" onclick="selLite(this,'썸')">썸 Lite</button>
       <button class="obtn" onclick="selLite(this,'솔로')">솔로 Lite</button>
     </div></div>`;
   } else if(m==='reunion'){
-    oa.innerHTML=`<div class="ogroup"><div class="olabel">전략적 패키지 종류</div><div class="orow" id="pkgrow">
+    oa.innerHTML=topNotice+`<div class="ogroup"><div class="olabel">전략적 패키지 종류</div><div class="orow" id="pkgrow">
       <button class="obtn" onclick="selPkg(this,'재회')">전략적 재회</button>
       <button class="obtn" onclick="selPkg(this,'썸')">전략적 썸</button>
     </div></div>`;
   } else {
-    oa.innerHTML = `
+    oa.innerHTML = topNotice + `
       <div class="notice" style="background:rgba(200,164,86,.12); border-color:var(--gold2); border-radius:8px;">
         <span style="color:var(--gold2); font-weight:500; font-size:1rem; display:block; margin-bottom:6px;">✔️ 패키지 선택 완료</span>
         <strong>${MENU_NAMES[m]}</strong>가 선택되었습니다.<br>아래 <strong>[다음 단계]</strong> 버튼을 눌러 결제를 진행해 주세요.
@@ -1016,14 +1032,11 @@ function updateMonthlyCount(){
 function renderDurations(){
   const da=document.getElementById('durArea');
   if(!da) return;
-  const lockTen = (S.topic==='연애' && S.visit==='첫 방문');
   let html='<div class="orow" id="durrow">';
-  [10,20,30].forEach(min=>{
-    const disabled=(min===10 && lockTen);
-    html += `<button class="obtn${disabled?' disabled':''}" ${disabled?'':`onclick="selDur(this,${min})"`}>${min}분 · ${(min*1000).toLocaleString()}원</button>`;
+  RT_DURS.forEach(min=>{
+    html += `<button class="obtn" onclick="selDur(this,${min})">${min}분 · ${RT_PRICE[min].toLocaleString()}원</button>`;
   });
   html+='</div>';
-  if(lockTen){ html+='<div class="dur-warn">* 연애 관련 첫 방문은 20분 이상 상담 가능합니다.</div>'; }
   da.innerHTML=html;
 }
 function clearDurAndTime(){
@@ -1157,13 +1170,12 @@ function calcPrice(){
   const m=S.menu;
   if(m==='prayer'){ const t=PRAYER_PRICE[S.prayerType]; return (t && S.prayerDays) ? (t[S.prayerDays]||0) : 0; }
   if(m==='monthly')return 100000;
-  if(m==='realtime')return(S.dur||0)*1000;
-  if(m==='bibang')return 20000;
-  if(m==='question')return S.q*5000;
-  if(m==='mixed'){const b=(S.mixDur||0)*1000+S.q*5000;return b>0?Math.max(0,b-5000):0;}
-  if(m==='lite')return 15000;
-  if(m==='reunion')return 40000;
-  if(m==='weekly')return 70000;
+  if(m==='realtime')return RT_PRICE[S.dur]||0;
+  if(m==='bibang')return 40000;
+  if(m==='question')return S.q*10000;
+  if(m==='mixed'){const b=(RT_PRICE[S.mixDur]||0)+S.q*10000;return b>0?Math.max(0,b-5000):0;}
+  if(m==='lite')return 30000;
+  if(m==='reunion')return 75000;
   if(m==='spell')return 100000;
   if(m==='butterfly')return 150000;
   return 0;
@@ -1173,11 +1185,10 @@ function buildPrice(){
   const m=S.menu;let rows='';
   if(m==='prayer'&&S.prayerType&&S.prayerDays)rows+=`<div class="prow"><span>염화기도 (${S.prayerType} · ${S.prayerDays}일)</span><span>${calcPrice().toLocaleString()}원</span></div>`;
   if(m==='monthly'&&S.monthlyTopics.length===2)rows+=`<div class="prow"><span>월별 운세 컨설팅 (주술: ${S.monthlyTopics.join(' · ')})</span><span>100,000원</span></div>`;
-  if(m==='realtime'&&S.dur)rows+=`<div class="prow"><span>실시간 리딩 (${S.dur}분)</span><span>${(S.dur*1000).toLocaleString()}원</span></div>`;
-  if(m==='question'&&S.q)rows+=`<div class="prow"><span>질문제 리딩 (${S.q}개)</span><span>${(S.q*5000).toLocaleString()}원</span></div>`;
-  if(m==='lite'&&S.liteType)rows+=`<div class="prow"><span>Lite 패키지 (${S.liteType})</span><span>15,000원</span></div>`;
-  if(m==='reunion'&&S.pkgType)rows+=`<div class="prow"><span>시그니처 전략적 패키지 (${S.pkgType})</span><span>40,000원</span></div>`;
-  if(m==='weekly')rows+=`<div class="prow"><span>위클리 패키지</span><span>70,000원</span></div>`;
+  if(m==='realtime'&&S.dur)rows+=`<div class="prow"><span>실시간 리딩 (${S.dur}분)</span><span>${(RT_PRICE[S.dur]||0).toLocaleString()}원</span></div>`;
+  if(m==='question'&&S.q)rows+=`<div class="prow"><span>질문제 리딩 (${S.q}개)</span><span>${(S.q*10000).toLocaleString()}원</span></div>`;
+  if(m==='lite'&&S.liteType)rows+=`<div class="prow"><span>Lite 패키지 (${S.liteType})</span><span>30,000원</span></div>`;
+  if(m==='reunion'&&S.pkgType)rows+=`<div class="prow"><span>시그니처 전략적 패키지 (${S.pkgType})</span><span>75,000원</span></div>`;
   if(m==='spell'&&S.spellTopic)rows+=`<div class="prow"><span>스펠자 (${S.spellTopic})</span><span>100,000원</span></div>`;
   if(m==='butterfly')rows+=`<div class="prow"><span>나비주술 + 부적 (5일 진행)</span><span>150,000원</span></div>`;
   const total=calcPrice();
@@ -1489,7 +1500,7 @@ function buildTone(){
     label='리딩 방향 (선택)';
     sub='어떻게 봐드리면 좋을지 골라주세요. 안 고르셔도 괜찮아요.';
     opts=['제 질문 위주로 봐주세요','제 질문 + 추천 질문도 들을래요','잘 모르겠어요, 주도적으로 봐주세요'];
-  } else if(m==='lite'||m==='reunion'||m==='weekly'){
+  } else if(m==='lite'||m==='reunion'){
     label='리딩 톤 (선택)';
     sub='어떤 톤으로 적어드리면 좋을지 골라주세요. 안 고르셔도 괜찮아요.';
     opts=['작은 가능성도 다 적어주세요','희망고문 싫어요, 확실한 것만 적어주세요'];
@@ -1578,8 +1589,8 @@ function chk3(){
 }
 
 // ===== 카드결제 (PayApp) =====
-// 수수료 3.9%를 손님이 부담 → 정산액이 원가격이 되도록 ÷0.961, 100원 단위 올림
-const CARD_FEE_RATE = 0.039;
+// 수수료 4%를 손님이 부담 → 정산액이 원가격이 되도록 ÷0.96, 100원 단위 올림
+const CARD_FEE_RATE = 0.04;
 const PAYAPP_URL = 'https://www.payapp.kr/L/z4kI5F';
 function cardAmount(){
   const base = calcPrice();
@@ -1591,7 +1602,7 @@ function cardPayBlock(){
   const amt = cardAmount();
   return `<div class="card-pay-box">
       <div class="cp-row"><span class="cp-key">결제 금액</span><span class="cp-amt" id="cardAmtVal">${amt.toLocaleString()}원</span></div>
-      <div class="cp-note">※ 카드결제 시 수수료 3.9%가 추가됩니다</div>
+      <div class="cp-note">※ 카드결제 시 수수료 4%가 추가됩니다</div>
     </div>
     <button class="copy-btn" id="cardAmtBtn" onclick="copyCardAmount('cardAmtBtn')">📋 결제 금액 복사하기</button>
     <a class="card-pay-btn" href="${PAYAPP_URL}" target="_blank">💳 카드결제하기 (PayApp) →</a>
@@ -1621,7 +1632,7 @@ function copyCardAmount(btnId){
 // 카톡 양식 하단에 붙는 결제 안내 (사이트를 닫아도 카톡에서 결제 가능하도록)
 function payGuideBlock(){
   if(S.pay==='card'){
-    return `\n\n💳 【카드결제 안내】\n결제 금액: ${cardAmount().toLocaleString()}원 (수수료 3.9% 포함)\n결제 링크: ${PAYAPP_URL}\n※ 결제 페이지에서 위 금액을 복사해 <직접 입력> 해 주세요\n※ 결제 완료되어야 최종 예약 되십니다.`;
+    return `\n\n💳 【카드결제 안내】\n결제 금액: ${cardAmount().toLocaleString()}원 (수수료 4% 포함)\n결제 링크: ${PAYAPP_URL}\n※ 결제 페이지에서 위 금액을 복사해 <직접 입력> 해 주세요\n※ 결제 완료되어야 최종 예약 되십니다.`;
   }
   if(S.pay==='account'){
     return `\n\n🏦 【계좌이체 안내】\n입금액: ${calcPrice().toLocaleString()}원\n카카오뱅크 3333-37-0910218 (한서희)\n※ 입금 완료되어야 최종 예약 되십니다.`;
@@ -1808,7 +1819,7 @@ function buildS4(){
   info+=`· 결제 방법: ${S.pay==='account'?'계좌이체':'카드결제'}`;
   if(S.pay==='account' && S.cashPhone) info+=`\n· 현금영수증: ${S.cashPhone}`;
 
-  const isPkg = (m==='lite'||m==='reunion'||m==='weekly');
+  const isPkg = (m==='lite'||m==='reunion');
   const isReunionLite = (m==='lite' && S.liteType==='재회');
   const rtNoPartner = (m==='realtime' && S.topic && S.topic!=='연애' && S.topic!=='기타');
   let formBody;
@@ -2050,7 +2061,7 @@ function doCheck(){
              </div>`;
   }
 
-  const chkIsPkg = (found.menuKey==='lite'||found.menuKey==='reunion'||found.menuKey==='weekly');
+  const chkIsPkg = (found.menuKey==='lite'||found.menuKey==='reunion');
   const chkIsReunionLite = (found.menuKey==='lite' && found.liteType==='재회');
   const chkRtNoPartner = (found.menuKey==='realtime' && found.topic && found.topic!=='연애' && found.topic!=='기타');
   let chkBody;
