@@ -827,7 +827,8 @@ function renderOtherItem(b){
     </div>
     ${contactChips(b)}
     ${(b.menuKey==='prayer')?`<div class="bk-spell">
-      ${b.prayerType?`<div class="bk-spell-row"><span class="bk-spell-key">종류</span> ${b.prayerType} · ${b.prayerDays||'?'}일</div>`:''}
+      ${b.prayerType?`<div class="bk-spell-row"><span class="bk-spell-key">종류</span> ${b.prayerType}${b.prayerTarget?' ('+b.prayerTarget+')':''} · ${b.prayerDays||'?'}일</div>`:''}
+      ${b.prayerTargetName?`<div class="bk-spell-row"><span class="bk-spell-key">${b.prayerTarget==='시험지정'?'시험명':'기업명'}</span> ${b.prayerTargetName}</div>`:''}
       ${b.birthLunar?`<div class="bk-spell-row"><span class="bk-spell-key">생년월일</span> ${b.birthLunar}${b.birthRaw?` (입력: ${b.birthRaw})`:''}</div>`:''}
       ${b.pName?`<div class="bk-spell-row"><span class="bk-spell-key">상대방</span> ${b.pName}${b.pBirthLunar?` · ${b.pBirthLunar}`:''}</div>`:''}
       ${b.addr?`<div class="bk-spell-row"><span class="bk-spell-key">거주지</span> ${b.addr}</div>`:''}
@@ -1120,7 +1121,7 @@ function autoTasks(){
     if(!start) return;
     const last  = addDays(start, days-1);      // 마지막 진행일
     const ch = parseChannel(b.name);
-    const label = `${b.prayerType||'염화기도'} ${days}일`;
+    const label = `${b.prayerType||'염화기도'}${b.prayerTarget?'('+b.prayerTarget+')':''} ${days}일`;
 
     const s1 = new Date(start); s1.setHours(22,0,0,0);
     out.push({

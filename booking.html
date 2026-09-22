@@ -617,7 +617,7 @@ try{
 
 let globalData = {};
 
-const S={menu:null,dur:null,q:0,mixDur:null,liteType:null,pkgType:null,topic:null,visit:null,spellTopic:null,phone:'',pName:'',birth:'',birthCal:'양력',birthLunar:'',birthTime:'',pBirth:'',pBirthCal:'양력',pBirthLunar:'',wishPurpose:null,prayerType:null,prayerDays:null,monthlyTopics:[],monthlyWorries:{},zip:'',roadAddr:'',addrDetail:'',addr:'',wish:'',date:null,dateObj:null,time:null,name:'',pw:'',pay:null,tone:null,cashPhone:''};
+const S={menu:null,dur:null,q:0,mixDur:null,liteType:null,pkgType:null,topic:null,visit:null,spellTopic:null,phone:'',pName:'',birth:'',birthCal:'양력',birthLunar:'',birthTime:'',pBirth:'',pBirthCal:'양력',pBirthLunar:'',wishPurpose:null,prayerType:null,prayerDays:null,prayerTarget:null,prayerTargetName:'',monthlyTopics:[],monthlyWorries:{},zip:'',roadAddr:'',addrDetail:'',addr:'',wish:'',date:null,dateObj:null,time:null,name:'',pw:'',pay:null,tone:null,cashPhone:''};
 
 
 // ===== 월별 운세: 접수기간 (매월 15~25일, 한국시간) =====
@@ -650,9 +650,10 @@ const BOOKING_SOURCE = getUtmSource();
 // 염화기도 가격표: [종류][일수]
 const PRAYER_PRICE = {
   '일반 소원기도': { 1:19000, 3:49000, 5:75000, 7:99000, 15:179000, 30:299000 },
-  '사랑기도':     { 1:29000, 3:75000, 5:115000, 7:159000, 15:279000, 30:479000 }
+  '지정기도':     { 1:29000, 3:75000, 5:115000, 7:159000, 15:279000, 30:479000 }
 };
 const PRAYER_DAYS = [1,3,5,7,15,30];
+const PRAYER_TARGETS = ['인물지정','시험지정','기업지정'];
 // 실시간 리딩 시간별 가격
 const RT_PRICE = { 15:30000, 20:40000, 30:50000 };
 const RT_DURS = [15,20,30];
@@ -754,7 +755,7 @@ function selMenu(el){
   try{
     document.querySelectorAll('.menu-card').forEach(c=>c.classList.remove('selected'));
     el.classList.add('selected');
-    S.menu=el.dataset.menu;S.dur=null;S.q=0;S.mixDur=null;S.liteType=null;S.pkgType=null;S.topic=null;S.visit=null;S.spellTopic=null;S.phone='';S.pName='';S.birth='';S.birthCal='양력';S.birthLunar='';S.birthTime='';S.pBirth='';S.pBirthCal='양력';S.pBirthLunar='';S.wishPurpose=null;S.prayerType=null;S.prayerDays=null;S.monthlyTopics=[];S.monthlyWorries={};S.zip='';S.roadAddr='';S.addrDetail='';S.addr='';S.wish='';S.date=null;S.dateObj=null;S.time=null;
+    S.menu=el.dataset.menu;S.dur=null;S.q=0;S.mixDur=null;S.liteType=null;S.pkgType=null;S.topic=null;S.visit=null;S.spellTopic=null;S.phone='';S.pName='';S.birth='';S.birthCal='양력';S.birthLunar='';S.birthTime='';S.pBirth='';S.pBirthCal='양력';S.pBirthLunar='';S.wishPurpose=null;S.prayerType=null;S.prayerDays=null;S.prayerTarget=null;S.prayerTargetName='';S.monthlyTopics=[];S.monthlyWorries={};S.zip='';S.roadAddr='';S.addrDetail='';S.addr='';S.wish='';S.date=null;S.dateObj=null;S.time=null;
     const b1=document.getElementById('btn1'); if(b1) b1.disabled=false;
   }catch(e){ console.error('selMenu 오류:', e); S.menu = el.dataset.menu; const b1=document.getElementById('btn1'); if(b1) b1.disabled=false; }
 }
@@ -832,11 +833,17 @@ function buildS2(){
     <div class="ogroup"><div class="olabel">기도 종류</div>
       <div class="orow" id="prayertyperow">
         <button class="obtn prayer-type${S.prayerType==='일반 소원기도'?' selected':''}" onclick="selPrayerType(this,'일반 소원기도')">일반 소원기도</button>
-        <button class="obtn prayer-type${S.prayerType==='사랑기도'?' selected':''}" onclick="selPrayerType(this,'사랑기도')">사랑기도<span class="ptype-sub">상대가 있는 짝사랑 · 썸 · 재회 등</span></button>
+        <button class="obtn prayer-type${S.prayerType==='지정기도'?' selected':''}" onclick="selPrayerType(this,'지정기도')">지정기도<span class="ptype-sub">특정 상대가 있는 목적의 기도<br>특정 시험 · 기업이 있는 목적의 기도</span></button>
       </div>
     </div>
     <div id="prayerWarn"></div>
-    <div class="ogroup" id="prayerDaysGroup" style="display:${S.prayerType?'block':'none'};">
+    <div class="ogroup" id="prayerTargetGroup" style="display:${S.prayerType==='지정기도'?'block':'none'};">
+      <div class="olabel">지정 대상</div>
+      <div class="orow" id="prayertargetrow">
+        ${PRAYER_TARGETS.map(t=>`<button class="obtn${S.prayerTarget===t?' selected':''}" onclick="selPrayerTarget(this,'${t}')">${t}</button>`).join('')}
+      </div>
+    </div>
+    <div class="ogroup" id="prayerDaysGroup" style="display:${(S.prayerType==='일반 소원기도'||(S.prayerType==='지정기도'&&S.prayerTarget))?'block':'none'};">
       <div class="olabel">진행 일수</div>
       <div class="orow" id="prayerdaysrow"></div>
     </div>`;
@@ -971,9 +978,26 @@ function selPrayerType(el,t){
   el.classList.add('selected');
   S.prayerType=t;
   S.prayerDays=null;
+  S.prayerTarget=null; S.prayerTargetName='';
+  document.querySelectorAll('#prayertargetrow .obtn').forEach(b=>b.classList.remove('selected'));
+  const tg=document.getElementById('prayerTargetGroup');
+  if(tg) tg.style.display = (t==='지정기도') ? 'block' : 'none';
+  // 일반: 바로 일수 / 지정: 대상 고른 뒤 일수
+  const g=document.getElementById('prayerDaysGroup');
+  if(g) g.style.display = (t==='지정기도') ? 'none' : 'block';
+  renderPrayerWarn();
+  renderPrayerDays();
+  buildPrice();
+  chk2();
+}
+// 지정기도: 지정 대상 선택 → 일수 표시
+function selPrayerTarget(el,t){
+  document.querySelectorAll('#prayertargetrow .obtn').forEach(b=>b.classList.remove('selected'));
+  el.classList.add('selected');
+  S.prayerTarget=t;
+  S.prayerTargetName='';
   const g=document.getElementById('prayerDaysGroup');
   if(g) g.style.display='block';
-  renderPrayerWarn();
   renderPrayerDays();
   buildPrice();
   chk2();
@@ -983,7 +1007,7 @@ function renderPrayerWarn(){
   const el=document.getElementById('prayerWarn');
   if(!el) return;
   if(S.prayerType==='일반 소원기도'){
-    el.innerHTML = `<div class="prayer-warn">⚠️ 재회 · 짝사랑 등 <b>상대방이 있는 소원</b>의 경우<br>초가 2개씩 발원됩니다.<br>일반 소원기도로는 진행이 어려우니<br><b>사랑기도</b>로 신청해 주세요.</div>`;
+    el.innerHTML = `<div class="prayer-warn">⚠️ 특정 상대 · 시험 · 기업 등 <b>대상이 정해진 소원</b>은<br>일반 소원기도로는 진행이 어려우니<br><b>지정기도</b>로 신청해 주세요.<br>(지정기도는 초가 2개씩 발원됩니다)</div>`;
   } else {
     el.innerHTML = '';
   }
@@ -1183,7 +1207,7 @@ function calcPrice(){
 
 function buildPrice(){
   const m=S.menu;let rows='';
-  if(m==='prayer'&&S.prayerType&&S.prayerDays)rows+=`<div class="prow"><span>염화기도 (${S.prayerType} · ${S.prayerDays}일)</span><span>${calcPrice().toLocaleString()}원</span></div>`;
+  if(m==='prayer'&&S.prayerType&&S.prayerDays)rows+=`<div class="prow"><span>염화기도 (${S.prayerType}${S.prayerTarget?' · '+S.prayerTarget:''} · ${S.prayerDays}일)</span><span>${calcPrice().toLocaleString()}원</span></div>`;
   if(m==='monthly'&&S.monthlyTopics.length===2)rows+=`<div class="prow"><span>월별 운세 컨설팅 (주술: ${S.monthlyTopics.join(' · ')})</span><span>100,000원</span></div>`;
   if(m==='realtime'&&S.dur)rows+=`<div class="prow"><span>실시간 리딩 (${S.dur}분)</span><span>${(RT_PRICE[S.dur]||0).toLocaleString()}원</span></div>`;
   if(m==='question'&&S.q)rows+=`<div class="prow"><span>질문제 리딩 (${S.q}개)</span><span>${(S.q*10000).toLocaleString()}원</span></div>`;
@@ -1199,7 +1223,7 @@ function buildPrice(){
 
 function chk2(){
   const m=S.menu;let ok=false;
-  if(m==='prayer')ok=!!(S.prayerType&&S.prayerDays);
+  if(m==='prayer')ok=!!(S.prayerType&&S.prayerDays&&(S.prayerType!=='지정기도'||S.prayerTarget));
   else if(m==='monthly')ok=(S.monthlyTopics.length===2);
   else if(m==='realtime')ok=!!(S.topic&&S.visit&&S.dur&&S.date&&S.time);
   else if(m==='bibang')ok=!!(S.dur&&S.date&&S.time);
@@ -1343,7 +1367,10 @@ function buildSpellFields(){
 
   // 염화기도 (배송 없음)
   if(S.menu==='prayer'){
-    const isReunion = (S.prayerType==='사랑기도');
+    const isPerson = (S.prayerType==='지정기도' && S.prayerTarget==='인물지정');
+    const isNamedTarget = (S.prayerType==='지정기도' && (S.prayerTarget==='시험지정' || S.prayerTarget==='기업지정'));
+    const tLabel = S.prayerTarget==='시험지정' ? '시험명' : '기업명';
+    const tPh = S.prayerTarget==='시험지정' ? '예) 2027 공무원 9급 / 변호사시험' : '예) 삼성전자 / 지원하는 회사명';
     sf.innerHTML = `<div class="s3-block">
       <span class="s3-block-title">신청 정보 (염화기도)</span>
       <div class="field-head">내담자 정보</div>
@@ -1358,18 +1385,23 @@ function buildSpellFields(){
         <input class="ifield" id="spellDetail" value="${S.addrDetail||''}" placeholder="상세주소 (동·호수 등)" oninput="onPrayerInput()">
         <div class="cash-note">기도 진행에 사용되며, 배송은 없습니다</div>
       </div>
-      ${isReunion ? `<div class="field-head">상대방 정보</div>
+      ${isPerson ? `<div class="field-head">상대방 정보 (인물지정)</div>
       <div class="igroup">
         <label class="ilabel">상대방 이름</label>
         <input class="ifield" id="spellPName" value="${S.pName||''}" placeholder="상대방 이름을 입력해 주세요" oninput="onPrayerInput()">
       </div>` + birthField('p','상대방 생년월일') + `<div class="cash-note" style="margin-top:-8px;margin-bottom:18px;">상대방 주소는 받지 않습니다</div>` : ''}
+      ${isNamedTarget ? `<div class="field-head">지정 대상 (${S.prayerTarget})</div>
+      <div class="igroup">
+        <label class="ilabel">${tLabel}</label>
+        <input class="ifield" id="prTargetName" value="${S.prayerTargetName||''}" placeholder="${tPh}" oninput="onPrayerInput()">
+      </div>` : ''}
       <div class="igroup" style="margin-bottom:0;">
         <label class="ilabel">소원</label>
         <textarea class="ifield" id="spellWish" placeholder="이루고 싶은 소원을 적어주세요" oninput="onPrayerInput()">${S.wish||''}</textarea>
       </div>
     </div>`;
     if(S.birth) onBirth('me');
-    if(isReunion && S.pBirth) onBirth('p');
+    if(isPerson && S.pBirth) onBirth('p');
     return;
   }
 
@@ -1474,7 +1506,9 @@ function onPrayerInput(){
   const pn=document.getElementById('spellPName');
   const w=document.getElementById('spellWish');
   const dt=document.getElementById('spellDetail');
+  const tn=document.getElementById('prTargetName');
   S.pName = pn ? pn.value.trim() : '';
+  S.prayerTargetName = tn ? tn.value.trim() : '';
   S.wish  = w ? w.value.trim() : '';
   S.addrDetail = dt ? dt.value.trim() : '';
   S.addr = S.roadAddr ? `(${S.zip}) ${S.roadAddr}${S.addrDetail?' '+S.addrDetail:''}` : '';
@@ -1530,7 +1564,7 @@ function refreshS3Price(){
   if(m==='question')sum+=` · 질문 ${S.q}개`;
   if(m==='lite'&&S.liteType)sum+=` · ${S.liteType}`;
   if(m==='reunion'&&S.pkgType)sum+=` · ${S.pkgType}`;
-  if(m==='prayer'&&S.prayerType)sum+=` · ${S.prayerType} ${S.prayerDays}일`;
+  if(m==='prayer'&&S.prayerType)sum+=` · ${S.prayerType}${S.prayerTarget?'('+S.prayerTarget+')':''} ${S.prayerDays}일`;
   if(m==='spell'&&S.spellTopic)sum+=` · ${S.spellTopic}`;
   sum+=` · ${calcPrice().toLocaleString()}원`;
   document.getElementById('s3summary').textContent=sum;
@@ -1576,9 +1610,10 @@ function chk3(){
     ok = ok && S.birthLunar && S.phone && S.roadAddr && S.addrDetail;
   }
   if(S.menu==='prayer'){
-    // 생년월일 + 소원 필수 / 사랑기도는 상대방 이름·생년월일도 필수
+    // 생년월일·주소·소원 필수 / 인물지정: 상대방 이름·생년월일 필수 / 시험·기업지정: 대상명 필수
     ok = ok && S.birthLunar && S.wish && S.roadAddr && S.addrDetail;
-    if(S.prayerType==='사랑기도') ok = ok && S.pName && S.pBirthLunar;
+    if(S.prayerType==='지정기도' && S.prayerTarget==='인물지정') ok = ok && S.pName && S.pBirthLunar;
+    if(S.prayerType==='지정기도' && (S.prayerTarget==='시험지정'||S.prayerTarget==='기업지정')) ok = ok && S.prayerTargetName;
   }
   if(S.menu==='monthly'){
     // 생년월일 필수 + 고민 최소 1개 (태어난 시간은 선택)
@@ -1650,7 +1685,7 @@ function buildS4(){
 
   // ===== 염화기도 =====
   if(m==='prayer'){
-    const form=`📋 【염화기도 신청】\n이름: ${S.name}\n메뉴: 염화기도\n종류: ${S.prayerType}\n기간: ${S.prayerDays}일${cashLine()}${payGuideBlock()}`;
+    const form=`📋 【염화기도 신청】\n이름: ${S.name}\n메뉴: 염화기도\n종류: ${S.prayerType}${S.prayerTarget?' ('+S.prayerTarget+')':''}\n기간: ${S.prayerDays}일${cashLine()}${payGuideBlock()}`;
     const ft=document.getElementById('formTmpl');
     ft.innerHTML=`${form}`;
     ft.dataset.copy=form;
@@ -1676,6 +1711,7 @@ function buildS4(){
       name:S.name, pw:S.pw, pay:S.pay,
       menu:'염화기도', menuKey:'prayer',
       prayerType:S.prayerType||null, prayerDays:S.prayerDays||null,
+      prayerTarget:S.prayerTarget||null, prayerTargetName:S.prayerTargetName||null,
       wish:S.wish||null, pName:S.pName||null,
       addr:S.addr||null, zip:S.zip||null, roadAddr:S.roadAddr||null, addrDetail:S.addrDetail||null,
       birthLunar:S.birthLunar||null, birthRaw:S.birth?`${S.birth} (${S.birthCal})`:null,
@@ -1964,7 +2000,7 @@ function copyForm(tmplId, btnId){
 }
 
 function resetAll(){
-  Object.assign(S,{menu:null,dur:null,q:0,mixDur:null,liteType:null,pkgType:null,topic:null,visit:null,spellTopic:null,phone:'',pName:'',birth:'',birthCal:'양력',birthLunar:'',pBirth:'',pBirthCal:'양력',pBirthLunar:'',wishPurpose:null,prayerType:null,prayerDays:null,monthlyTopics:[],monthlyWorries:{},birthTime:'',zip:'',roadAddr:'',addrDetail:'',addr:'',wish:'',date:null,dateObj:null,time:null,name:'',pw:'',pay:null,tone:null,cashPhone:''});
+  Object.assign(S,{menu:null,dur:null,q:0,mixDur:null,liteType:null,pkgType:null,topic:null,visit:null,spellTopic:null,phone:'',pName:'',birth:'',birthCal:'양력',birthLunar:'',pBirth:'',pBirthCal:'양력',pBirthLunar:'',wishPurpose:null,prayerType:null,prayerDays:null,prayerTarget:null,prayerTargetName:'',monthlyTopics:[],monthlyWorries:{},birthTime:'',zip:'',roadAddr:'',addrDetail:'',addr:'',wish:'',date:null,dateObj:null,time:null,name:'',pw:'',pay:null,tone:null,cashPhone:''});
   document.querySelectorAll('.menu-card').forEach(c=>c.classList.remove('selected'));
   document.getElementById('btn1').disabled=true;
   document.getElementById('cardPayArea').innerHTML='';
