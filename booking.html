@@ -322,10 +322,9 @@ input[type="date"].ifield:not(:valid){ color:var(--text3); }
   <header class="site-header" onclick="resetAll()" style="cursor:pointer;" title="처음으로">
     <span class="site-name">Hecate</span>
     <div class="hdiv"><span>✦</span></div>
-    <span class="site-sub">Tarot Consultation</span>
   </header>
 
-  <div class="review-band" id="reviewBand" style="display:none;">
+  <div class="review-band" id="reviewBand" style="display:none !important;">
     <div class="review-band-label">Real Reviews</div>
     <div class="review-viewport" id="reviewViewport">
       <div class="review-track" id="reviewTrack"></div>
@@ -437,7 +436,7 @@ input[type="date"].ifield:not(:valid){ color:var(--text3); }
       <div class="pay-list">
         <div class="pay-card" id="pm-account" onclick="selPay('account')">
           <div class="pay-name">계좌이체</div>
-          <div class="pay-desc">다음 화면에 보이는 계좌정보로 입금 후 양식을 제출해 주세요</div>
+          <div class="pay-desc">다음 화면의 양식을 보내주신 뒤 안내된 계좌로 입금해 주세요</div>
           <div class="account-box" id="acctBox">
             <div class="arow"><span class="akey">은행</span><span class="aval">카카오뱅크</span></div>
             <div class="arow"><span class="akey">계좌번호</span><span class="aval" style="color:#e8c87a;text-decoration:none;user-select:all;">3333-37-0910218</span></div>
@@ -452,7 +451,7 @@ input[type="date"].ifield:not(:valid){ color:var(--text3); }
         </div>
         <div class="pay-card" id="pm-card" onclick="selPay('card')">
           <div class="pay-name">카드결제</div>
-          <div class="pay-desc">다음 화면에서 안내되는 금액을 입력해 결제 후 양식을 제출해 주세요<br><span style="color:#e0b87a;">※ 카드결제 시 수수료 4.4%가 추가됩니다</span></div>
+          <div class="pay-desc">다음 화면의 양식을 보내주신 뒤 안내된 금액으로 결제해 주세요<br><span style="color:#e0b87a;">※ 카드결제 시 수수료 4.4%가 추가됩니다</span></div>
         </div>
       </div>
     </div>
@@ -463,7 +462,7 @@ input[type="date"].ifield:not(:valid){ color:var(--text3); }
       · 실시간 리딩: 예약 시간 <strong>6시간 전</strong>까지 환불 가능<br>
       · 실시간 리딩: 예약 시간 <strong>2시간 전</strong>까지 1회 일정 변경 가능<br>
       <span class="policy-sub">지각 시 잔여 시간만 상담 진행, 노쇼는 환불 불가</span><br>
-      · 그 외 전체 메뉴: 상담 양식 제출 후 <strong>1시간 이내</strong>에만 환불 가능<br>
+      · 그 외 전체 메뉴: 양식(신청 정보) 제출 후 <strong>1시간 이내</strong>에만 환불 가능<br>
       · 결제 후 <strong>1시간 이내</strong> 양식 미제출 시 예약이 취소될 수 있습니다
     </div>
     <button class="btn-ghost" onclick="go(2)">← 이전</button>
@@ -479,8 +478,8 @@ input[type="date"].ifield:not(:valid){ color:var(--text3); }
       <div id="cardPayArea" style="display:none;"></div>
 
       <div class="dstep">
-        <div class="dstep-head"><span class="dnum">1</span><span class="dttl">상담 양식 복사하기</span></div>
-        <div class="dstep-desc">아래 양식을 복사한 뒤, 빈칸을 채워 보내주세요<br><b>결제 안내도 함께 복사됩니다</b></div>
+        <div class="dstep-head"><span class="dnum">1</span><span class="dttl" id="dttl1">상담 양식 복사하기</span></div>
+        <div class="dstep-desc" id="ddesc1">아래 양식을 복사한 뒤, 빈칸을 채워 보내주세요<br><b>결제 안내도 함께 복사됩니다</b></div>
         <div class="form-tmpl" id="formTmpl"></div>
         <button class="copy-btn" id="copyBtn" onclick="copyForm('formTmpl','copyBtn')">📋 예약정보 + 상담양식 전체 복사하기</button>
       </div>
@@ -505,7 +504,7 @@ input[type="date"].ifield:not(:valid){ color:var(--text3); }
     <div style="text-align:center;font-size:2.2rem;margin-bottom:18px;">⏳</div>
     <div style="font-size:.92rem;color:var(--text);line-height:1.95;text-align:center;margin-bottom:8px;">
       신청 후 <strong style="color:var(--gold2);">1시간 이내</strong>에<br>
-      <strong style="color:var(--gold2);">결제 및 상담 양식 제출</strong>이<br>
+      <strong style="color:var(--gold2);">결제 및 양식(신청 정보) 제출</strong>이<br>
       완료되어야 예약이 확정됩니다.
     </div>
     <div style="font-size:.82rem;color:var(--text3);line-height:1.8;text-align:center;margin-bottom:24px;">
@@ -582,7 +581,8 @@ function renderReviews(imgs){
   ).join('');
   band.style.display = 'block';
 }
-loadReviews();
+// 후기 화면 사용 안 함 (요소는 참조 오류 방지용으로만 유지)
+// loadReviews();
 // ===== 후기 슬라이드 끝 =====
 
 // 결제 단계(Step3) 진입 시 1회만 뜨는 안내 팝업
@@ -1680,8 +1680,27 @@ function cashLine(){
   return (S.pay==='account' && S.cashPhone) ? `\n현금영수증: ${S.cashPhone}` : '';
 }
 
+// 주술·기도류는 상담 양식 없이 신청 정보만 제출
+function applyStepLabels(m){
+  const NO_FORM = ['prayer','spell','butterfly','monthly'];
+  const t1=document.getElementById('dttl1');
+  const d1=document.getElementById('ddesc1');
+  const cb=document.getElementById('copyBtn');
+  if(!t1||!d1||!cb) return;
+  if(NO_FORM.includes(m)){
+    t1.textContent = '신청 정보 복사하기';
+    d1.innerHTML = '별도 상담 양식은 없습니다.<br>아래 신청 정보를 그대로 복사해 보내주세요<br><b>결제 안내도 함께 복사됩니다</b>';
+    cb.textContent = '📋 신청 정보 전체 복사하기';
+  } else {
+    t1.textContent = '상담 양식 복사하기';
+    d1.innerHTML = '아래 양식을 복사한 뒤, 빈칸을 채워 보내주세요<br><b>결제 안내도 함께 복사됩니다</b>';
+    cb.textContent = '📋 예약정보 + 상담양식 전체 복사하기';
+  }
+}
+
 function buildS4(){
   const m=S.menu;
+  applyStepLabels(m);
 
   // ===== 염화기도 =====
   if(m==='prayer'){
