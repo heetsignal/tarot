@@ -26,8 +26,9 @@ body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellips
 .admin-title{font-family:'Cormorant Garamond',serif;font-size:1.6rem;color:var(--gold2);letter-spacing:.15em;display:block;margin-bottom:4px;}
 .admin-sub{font-size:.65rem;color:var(--text3);letter-spacing:.3em;text-transform:uppercase;}
 
-.tabs{display:flex;border-bottom:1px solid var(--border);margin-bottom:26px;}
-.tab{padding:10px 20px;cursor:pointer;font-size:.8rem;color:var(--text3);border-bottom:2px solid transparent;margin-bottom:-1px;transition:all .2s;}
+.tabs{display:flex;border-bottom:1px solid var(--border);margin-bottom:26px;justify-content:space-between;}
+.tab{flex:1;text-align:center;padding:10px 4px;cursor:pointer;font-size:.74rem;color:var(--text3);border-bottom:2px solid transparent;margin-bottom:-1px;transition:all .2s;white-space:nowrap;letter-spacing:-.02em;}
+@media (max-width:400px){ .tab{font-size:.68rem;padding:10px 2px;} }
 .tab.active{color:var(--gold2);border-bottom-color:var(--gold);}
 .tab-panel{display:none;}
 .tab-panel.active{display:block;animation:fu .3s ease;}
@@ -1392,8 +1393,8 @@ function renderPrayerItem(b){
     </div>
     <div class="sp-purpose">${b.prayerType||'염화기도'}${b.prayerTarget?' · '+b.prayerTarget:''} · ${days}일 · ${(b.price||0).toLocaleString()}원</div>
     <div class="sp-birth">
-      ${b.birthLunar?`<div><span class="sp-bk">내담자</span> ${ch.real||''} · ${b.birthLunar}${b.birthTime?' · '+b.birthTime:''}</div>`:''}
-      ${b.pName?`<div><span class="sp-bk">상대방</span> ${b.pName}${b.pBirthLunar?' · '+b.pBirthLunar:''}</div>`:''}
+      ${(b.birthRaw||b.birthLunar)?`<div><span class="sp-bk">내담자</span> ${ch.real||''} · ${b.birthRaw||b.birthLunar}${b.birthTime?' · '+b.birthTime:''}</div>`:''}
+      ${b.pName?`<div><span class="sp-bk">상대방</span> ${b.pName}${(b.pBirthRaw||b.pBirthLunar)?' · '+(b.pBirthRaw||b.pBirthLunar):''}</div>`:''}
       ${b.prayerTargetName?`<div><span class="sp-bk">${b.prayerTarget==='시험지정'?'시험명':'기업명'}</span> ${b.prayerTargetName}</div>`:''}
     </div>
     ${b.wish?`<div class="sp-wish"><span class="sp-bk">소원</span> ${b.wish}</div>`:''}
@@ -1420,24 +1421,22 @@ function togglePrayerComplete(k){
 }
 
 // 염화기도 명단 엑셀 (미완료만 · 지정기도는 2행)
-const PRAYER_HEADERS=['순번','이름','사주','소원'];
+// 라벨지 출력용: 헤더·순번 없이 [이름, 사주(원문), 소원] 3열만
 function collectPrayerRows(){
   const rows=prayerRows().filter(b=>!b.isCompleted);
   const out=[];
-  let i=1;
   rows.forEach(b=>{
     const ch=parseChannel(b.name);
-    const birth=[b.birthLunar||'', b.birthTime||''].filter(Boolean).join(' ');
-    out.push({순번:i, 이름:ch.real||'', 사주:birth, 소원:b.wish||''});
-    // 지정기도: 대상 행 추가
+    const birth=[(b.birthRaw||b.birthLunar||''), b.birthTime||''].filter(Boolean).join(' ');
+    out.push([ch.real||'', birth, b.wish||'']);
+    // 지정기도: 대상은 다음 행에
     if(b.prayerType==='지정기도'){
       if(b.prayerTarget==='인물지정'){
-        out.push({순번:i, 이름:b.pName||'', 사주:b.pBirthLunar||'', 소원:''});
+        out.push([b.pName||'', (b.pBirthRaw||b.pBirthLunar||''), '']);
       } else if(b.prayerTargetName){
-        out.push({순번:i, 이름:b.prayerTargetName, 사주:'', 소원:''});
+        out.push([b.prayerTargetName, '', '']);
       }
     }
-    i++;
   });
   return out;
 }
@@ -1446,12 +1445,12 @@ function exportPrayerXlsx(){
   if(!rows.length){ alert('내보낼 미완료 기도 건이 없습니다.'); return; }
   const doExport=()=>{
     try{
-      const aoa=[PRAYER_HEADERS, ...rows.map(r=>PRAYER_HEADERS.map(h=>r[h]))];
+      const aoa=rows;   // 헤더 없음 (라벨지 출력용)
       const ws=XLSX.utils.aoa_to_sheet(aoa);
       const wb=XLSX.utils.book_new();
       XLSX.utils.book_append_sheet(wb, ws, '염화기도');
       const t=new Date();
-      XLSX.writeFile(wb, `염화기도명단_${t.getMonth()+1}월${t.getDate()}일_${rows.length}행.xlsx`);
+      XLSX.writeFile(wb, `염화기도_라벨_${t.getMonth()+1}월${t.getDate()}일_${rows.length}행.xlsx`);
       showToast(`${rows.length}행 내보내기 완료`);
     }catch(e){ exportPrayerCsv(rows); }
   };
@@ -1464,12 +1463,12 @@ function exportPrayerXlsx(){
 }
 function exportPrayerCsv(rows){
   const esc=v=>`"${String(v==null?'':v).replace(/"/g,'""')}"`;
-  const lines=[PRAYER_HEADERS.join(','), ...rows.map(r=>PRAYER_HEADERS.map(h=>esc(r[h])).join(','))];
+  const lines=rows.map(r=>r.map(esc).join(','));
   const blob=new Blob(['\ufeff'+lines.join('\r\n')],{type:'text/csv;charset=utf-8;'});
   const url=URL.createObjectURL(blob);
   const a=document.createElement('a');
   const t=new Date();
-  a.href=url; a.download=`염화기도명단_${t.getMonth()+1}월${t.getDate()}일.csv`;
+  a.href=url; a.download=`염화기도_라벨_${t.getMonth()+1}월${t.getDate()}일.csv`;
   document.body.appendChild(a); a.click(); document.body.removeChild(a);
   URL.revokeObjectURL(url);
   showToast(`${rows.length}행 내보내기 완료 (CSV)`);
