@@ -283,13 +283,14 @@ body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellips
     <div class="tab active" onclick="switchTab('tasks')">할 일</div>
     <div class="tab" onclick="switchTab('slots')">시간 관리</div>
     <div class="tab" onclick="switchTab('bookings')">예약 내역</div>
+    <div class="tab" onclick="switchTab('ship')">부적·스펠자</div>
+    <div class="tab" onclick="switchTab('prayer')">염화기도</div>
   </div>
 
   <div class="tab-panel active" id="tab-tasks">
     <div style="display:flex;gap:8px;margin-bottom:18px;">
       <button class="task-add-btn" style="margin-bottom:0;" onclick="openTaskModal()">＋ 일정 추가</button>
       <button class="task-add-btn" style="margin-bottom:0;" onclick="openBulkModal()">📥 일괄 등록</button>
-      <button class="task-add-btn" style="margin-bottom:0;" onclick="openAmuletModal()">🧧 부적 등록</button>
     </div>
     <div id="taskList"></div>
   </div>
@@ -299,8 +300,22 @@ body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellips
     <div id="dayPanels"></div>
   </div>
 
+  <div class="tab-panel" id="tab-ship">
+    <div style="display:flex;gap:8px;margin-bottom:18px;">
+      <button class="task-add-btn" style="margin-bottom:0;" onclick="openAmuletModal()">🧧 부적 등록</button>
+      <button class="task-add-btn" style="margin-bottom:0;" onclick="exportShipXlsx()">📥 택배 접수 양식</button>
+    </div>
+    <div id="shipPanel"></div>
+  </div>
+
+  <div class="tab-panel" id="tab-prayer">
+    <div style="display:flex;gap:8px;margin-bottom:18px;">
+      <button class="task-add-btn" style="margin-bottom:0;" onclick="exportPrayerXlsx()">📥 기도 명단 내보내기</button>
+    </div>
+    <div id="prayerPanel"></div>
+  </div>
+
   <div class="tab-panel" id="tab-bookings">
-    <div class="src-summary" id="srcSummary"></div>
     <div class="bk-section">
       <div class="bk-section-title">📡 실시간 상담</div>
       <div id="rtBookings"></div>
@@ -614,11 +629,13 @@ function renderSourceSummary(){
 }
 
 function switchTab(t){
-  document.querySelectorAll('.tab').forEach((el,i)=>el.classList.toggle('active',['tasks','slots','bookings'][i]===t));
+  document.querySelectorAll('.tab').forEach((el,i)=>el.classList.toggle('active',['tasks','slots','bookings','ship','prayer'][i]===t));
   document.querySelectorAll('.tab-panel').forEach(el=>el.classList.remove('active'));
   document.getElementById('tab-'+t).classList.add('active');
   if(t==='bookings') renderBookings();
   if(t==='tasks') renderTasks();
+  if(t==='ship') renderShipTab();
+  if(t==='prayer') renderPrayerTab();
 }
 
 function getKST(addDays = 0) {
@@ -866,10 +883,11 @@ function renderOtherItem(b){
 function renderBookings(){
   const data = ad();
   const bookings = data.bookings || {};
-  renderSourceSummary();
   const rt = [], others = [];
   
   Object.entries(bookings).forEach(([k,b])=>{
+    // 부적·염화기도는 전용 탭에서 관리 (예약 내역 제외)
+    if(b && (b.menuKey==='amulet' || b.menuKey==='prayer' || /염화\s*기도/.test(String(b.menu||'')))) return;
     if(b.menu === '실시간 리딩' || b.menu === '비방' || (b.menu === '혼합 리딩' && b.time)) rt.push({k, ...b});
     if(b.menu !== '실시간 리딩' && b.menu !== '비방') others.push({k, ...b});
   });
@@ -1301,7 +1319,163 @@ let showPastTasks = false;
 function togglePastTasks(){ showPastTasks=!showPastTasks; renderTasks(); }
 
 // 배송(스펠자·부적) 전용 섹션
-function renderShipSection(all, done){
+// ===== 부적·스펠자 탭 =====
+function renderShipTab(){
+  const el=document.getElementById('shipPanel');
+  if(!el) return;
+  const data=ad();
+  const done=data.taskDone||{};
+  const all=[...autoTasks(), ...manualTasks()];
+  const items=all.filter(t=>t.kind==='ship' && (!done[t.id] || showDoneTasks));
+  if(!items.length){ el.innerHTML='<div class="no-data">발송할 건이 없습니다</div>'; return; }
+  const sorted=items.sort((a,b)=>a.when-b.when);
+  const amulets=sorted.filter(t=>String(t.shipKey||'').indexOf('am_')===0);
+  const spells =sorted.filter(t=>String(t.shipKey||'').indexOf('am_')!==0);
+  let html='<div class="sp-note">주문일 +10일 이내 발송 (도착 기한 14일)</div>';
+  if(amulets.length){
+    html+=`<div class="sp-head">🧧 부적 <span class="sp-cnt">${amulets.length}건</span></div>`;
+    html+=renderShipSection(amulets, done, true);
+  }
+  if(spells.length){
+    html+=`<div class="sp-head" style="margin-top:26px;">📦 스펠자 · 나비주술 <span class="sp-cnt">${spells.length}건</span></div>`;
+    html+=renderShipSection(spells, done, true);
+  }
+  html+=`<button class="past-toggle" onclick="toggleDoneTasks();renderShipTab();">${showDoneTasks?'▾ 완료 항목 숨기기':'▸ 완료 항목 보기'}</button>`;
+  el.innerHTML=html;
+}
+
+// ===== 염화기도 탭 =====
+let showPrayerDone=false;
+function togglePrayerDone(){ showPrayerDone=!showPrayerDone; renderPrayerTab(); }
+
+function prayerRows(){
+  const bookings=(ad().bookings)||{};
+  return Object.entries(bookings)
+    .filter(([k,b])=>b && (b.menuKey==='prayer' || /염화\s*기도/.test(String(b.menu||''))))
+    .map(([k,b])=>Object.assign({k}, b))
+    .sort((a,b)=>(a.ts||0)-(b.ts||0));
+}
+
+function renderPrayerTab(){
+  const el=document.getElementById('prayerPanel');
+  if(!el) return;
+  const rows=prayerRows();
+  const active=rows.filter(b=>!b.isCompleted);
+  const cutoff=Date.now()-7*86400000;
+  const doneAll=rows.filter(b=>b.isCompleted);
+  const doneRecent=doneAll.filter(b=>(b.completedAt||b.ts||0)>=cutoff);
+  const hidden=doneAll.length-doneRecent.length;
+
+  let html=`<div class="sp-head">🕯 염화기도 <span class="sp-cnt">${active.length}건 진행중</span></div>
+    <div class="sp-note">완료 처리하면 아래 '완료된 항목'으로 이동합니다</div>`;
+  html+= active.length ? active.map(renderPrayerItem).join('') : '<div class="no-data">진행중인 기도가 없습니다</div>';
+  if(doneAll.length){
+    html+=`<button class="past-toggle" onclick="togglePrayerDone()">${showPrayerDone?'▾':'▸'} 완료된 항목 ${doneRecent.length}건 ${showPrayerDone?'접기':'보기'}${hidden?` (7일 지난 ${hidden}건 숨김)`:''}</button>`;
+    if(showPrayerDone) html+=`<div class="past-wrap">${doneRecent.length?doneRecent.map(renderPrayerItem).join(''):'<div class="no-data">최근 7일 내 완료 건이 없습니다</div>'}</div>`;
+  }
+  el.innerHTML=html;
+}
+
+function renderPrayerItem(b){
+  const st=prayerStartDate(b.k, b);
+  const days=parseInt(b.prayerDays,10)||1;
+  const last=st?addDays(st,days-1):null;
+  const fmt=d=>d?((d.getMonth()+1)+'/'+d.getDate()):'-';
+  const ch=parseChannel(b.name);
+  return `<div class="sp-item${b.isCompleted?' done':''}">
+    <div class="sp-top">
+      <span class="sp-name">${ch.real||'-'}${ch.nick?` <span class="sp-nick">(${ch.nick})</span>`:''}</span>
+      <div>
+        <button class="bk-paid ${b.isPaid?'paid':''}" onclick="togglePaid('${b.k}');renderPrayerTab();">${b.isPaid?'💰 입금완료':'입금 대기'}</button>
+        <button class="bk-comp" onclick="togglePrayerComplete('${b.k}')">${b.isCompleted?'✓ 완료':'완료 처리'}</button>
+      </div>
+    </div>
+    <div class="sp-purpose">${b.prayerType||'염화기도'}${b.prayerTarget?' · '+b.prayerTarget:''} · ${days}일 · ${(b.price||0).toLocaleString()}원</div>
+    <div class="sp-birth">
+      ${b.birthLunar?`<div><span class="sp-bk">내담자</span> ${ch.real||''} · ${b.birthLunar}${b.birthTime?' · '+b.birthTime:''}</div>`:''}
+      ${b.pName?`<div><span class="sp-bk">상대방</span> ${b.pName}${b.pBirthLunar?' · '+b.pBirthLunar:''}</div>`:''}
+      ${b.prayerTargetName?`<div><span class="sp-bk">${b.prayerTarget==='시험지정'?'시험명':'기업명'}</span> ${b.prayerTargetName}</div>`:''}
+    </div>
+    ${b.wish?`<div class="sp-wish"><span class="sp-bk">소원</span> ${b.wish}</div>`:''}
+    <div class="sp-addr">${b.addr||'주소 미입력'}</div>
+    <div class="prayer-start">
+      <span class="ps-label">기도 시작일</span>
+      <input type="date" id="pst_${b.k}" value="${prayerStartValue(b.k,b)}" onchange="savePrayerStart('${b.k}')">
+      <button class="ps-btn" onclick="savePrayerStart('${b.k}')">저장</button>
+    </div>
+    <div class="ps-hint">사진 발송: ${fmt(st)} (첫날)${days>1?` · ${fmt(last)} (마지막날)`:''}</div>
+  </div>`;
+}
+
+function togglePrayerComplete(k){
+  const data=ad();
+  if(data.bookings && data.bookings[k]){
+    const now=!data.bookings[k].isCompleted;
+    data.bookings[k].isCompleted=now;
+    data.bookings[k].completedAt= now?Date.now():null;
+    sad(data);
+    showToast(now?'완료 처리되었습니다':'완료가 해제되었습니다');
+    renderPrayerTab();
+  }
+}
+
+// 염화기도 명단 엑셀 (미완료만 · 지정기도는 2행)
+const PRAYER_HEADERS=['순번','이름','사주','소원'];
+function collectPrayerRows(){
+  const rows=prayerRows().filter(b=>!b.isCompleted);
+  const out=[];
+  let i=1;
+  rows.forEach(b=>{
+    const ch=parseChannel(b.name);
+    const birth=[b.birthLunar||'', b.birthTime||''].filter(Boolean).join(' ');
+    out.push({순번:i, 이름:ch.real||'', 사주:birth, 소원:b.wish||''});
+    // 지정기도: 대상 행 추가
+    if(b.prayerType==='지정기도'){
+      if(b.prayerTarget==='인물지정'){
+        out.push({순번:i, 이름:b.pName||'', 사주:b.pBirthLunar||'', 소원:''});
+      } else if(b.prayerTargetName){
+        out.push({순번:i, 이름:b.prayerTargetName, 사주:'', 소원:''});
+      }
+    }
+    i++;
+  });
+  return out;
+}
+function exportPrayerXlsx(){
+  const rows=collectPrayerRows();
+  if(!rows.length){ alert('내보낼 미완료 기도 건이 없습니다.'); return; }
+  const doExport=()=>{
+    try{
+      const aoa=[PRAYER_HEADERS, ...rows.map(r=>PRAYER_HEADERS.map(h=>r[h]))];
+      const ws=XLSX.utils.aoa_to_sheet(aoa);
+      const wb=XLSX.utils.book_new();
+      XLSX.utils.book_append_sheet(wb, ws, '염화기도');
+      const t=new Date();
+      XLSX.writeFile(wb, `염화기도명단_${t.getMonth()+1}월${t.getDate()}일_${rows.length}행.xlsx`);
+      showToast(`${rows.length}행 내보내기 완료`);
+    }catch(e){ exportPrayerCsv(rows); }
+  };
+  if(typeof XLSX!=='undefined'){ doExport(); return; }
+  showToast('양식 준비 중…');
+  const sc=document.createElement('script');
+  sc.src='https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js';
+  sc.onload=doExport; sc.onerror=()=>exportPrayerCsv(rows);
+  document.head.appendChild(sc);
+}
+function exportPrayerCsv(rows){
+  const esc=v=>`"${String(v==null?'':v).replace(/"/g,'""')}"`;
+  const lines=[PRAYER_HEADERS.join(','), ...rows.map(r=>PRAYER_HEADERS.map(h=>esc(r[h])).join(','))];
+  const blob=new Blob(['\ufeff'+lines.join('\r\n')],{type:'text/csv;charset=utf-8;'});
+  const url=URL.createObjectURL(blob);
+  const a=document.createElement('a');
+  const t=new Date();
+  a.href=url; a.download=`염화기도명단_${t.getMonth()+1}월${t.getDate()}일.csv`;
+  document.body.appendChild(a); a.click(); document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+  showToast(`${rows.length}행 내보내기 완료 (CSV)`);
+}
+
+function renderShipSection(all, done, bare){
   const data = ad();
   const ship = data.shipInfo || {};
   const items = all.filter(t=>t.kind==='ship' && (!done[t.id] || showDoneTasks));
@@ -1358,6 +1532,8 @@ function renderShipSection(all, done){
     </div>`;
   }).join('');
 
+  // 탭에서 호출할 땐 헤더 없이 목록만 (bare=true)
+  if(bare) return rows;
   return `<div class="sp-section">
     <div class="sp-head">📦 스펠자 발송 <span class="sp-cnt">${items.length}건</span></div>
     <div class="sp-note">주문일 +10일 이내 발송 (도착 기한 14일)</div>
@@ -1538,7 +1714,7 @@ function renderTasks(){
   all.sort((a,b)=>a.when - b.when);
 
   // 배송 건은 맨 위 별도 섹션으로 (날짜 목록에서는 제외)
-  const shipHtml = renderShipSection(all, done);
+  const shipHtml = '';   // 배송/부적은 '부적·스펠자' 탭에서 관리
   all = all.filter(t=>t.kind!=='ship');
 
   // 오늘 0시 ~ 이후 14일치 (미래·오늘). 지난 건은 아래 별도 섹션.
