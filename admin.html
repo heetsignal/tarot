@@ -1330,15 +1330,17 @@ function renderShipTab(){
   const items=all.filter(t=>t.kind==='ship' && (!done[t.id] || showDoneTasks));
   if(!items.length){ el.innerHTML='<div class="no-data">발송할 건이 없습니다</div>'; return; }
   const sorted=items.sort((a,b)=>a.when-b.when);
-  const amulets=sorted.filter(t=>String(t.shipKey||'').indexOf('am_')===0);
-  const spells =sorted.filter(t=>String(t.shipKey||'').indexOf('am_')!==0);
+  // 부적: 수기 등록(am_) + 나비주술 부적(bf_)
+  const isAmulet = t=>{ const k=String(t.shipKey||''); return k.indexOf('am_')===0 || k.indexOf('bf_')===0; };
+  const amulets=sorted.filter(isAmulet);
+  const spells =sorted.filter(t=>!isAmulet(t));
   let html='<div class="sp-note">주문일 +10일 이내 발송 (도착 기한 14일)</div>';
   if(amulets.length){
     html+=`<div class="sp-head">🧧 부적 <span class="sp-cnt">${amulets.length}건</span></div>`;
     html+=renderShipSection(amulets, done, true);
   }
   if(spells.length){
-    html+=`<div class="sp-head" style="margin-top:26px;">📦 스펠자 · 나비주술 <span class="sp-cnt">${spells.length}건</span></div>`;
+    html+=`<div class="sp-head" style="margin-top:26px;">📦 스펠자 <span class="sp-cnt">${spells.length}건</span></div>`;
     html+=renderShipSection(spells, done, true);
   }
   html+=`<button class="past-toggle" onclick="toggleDoneTasks();renderShipTab();">${showDoneTasks?'▾ 완료 항목 숨기기':'▸ 완료 항목 보기'}</button>`;
@@ -1428,13 +1430,14 @@ function collectPrayerRows(){
   rows.forEach(b=>{
     const ch=parseChannel(b.name);
     const birth=[(b.birthRaw||b.birthLunar||''), b.birthTime||''].filter(Boolean).join(' ');
-    out.push([ch.real||'', birth, b.wish||'']);
-    // 지정기도: 대상은 다음 행에
+    const wish=b.wish||'';
+    out.push([ch.real||'', birth, wish]);
+    // 지정기도: 대상은 다음 행에 (소원은 동일하게)
     if(b.prayerType==='지정기도'){
       if(b.prayerTarget==='인물지정'){
-        out.push([b.pName||'', (b.pBirthRaw||b.pBirthLunar||''), '']);
+        out.push([b.pName||'', (b.pBirthRaw||b.pBirthLunar||''), wish]);
       } else if(b.prayerTargetName){
-        out.push([b.prayerTargetName, '', '']);
+        out.push([b.prayerTargetName, '', wish]);
       }
     }
   });
@@ -1519,7 +1522,7 @@ function renderShipSection(all, done, bare){
       </div>`:''}
       ${(t.wish && !t.amuletMe)?`<div class="sp-wish"><span class="sp-bk">소원</span> ${t.wish}</div>`:''}
       <div class="sp-addr">${t.addr||'주소 미입력'}${t.phone?` · ${t.phone}`:''}</div>
-      ${String(t.shipKey||'').indexOf('am_')===0?`<div class="sp-track sp-memo-row">
+      ${(String(t.shipKey||'').indexOf('am_')===0||String(t.shipKey||'').indexOf('bf_')===0)?`<div class="sp-track sp-memo-row">
         <textarea class="sp-input sp-memo" id="memo_${t.shipKey}" rows="2" placeholder="비고 (원하는 방향, 특이사항 등)">${(amuletMemo(t.shipKey)||'').replace(/</g,'&lt;')}</textarea>
         <button class="sp-save" onclick="saveAmuletMemo('${t.shipKey}')">저장</button>
       </div>`:''}
@@ -1675,12 +1678,12 @@ function savePrayerStart(k){
 
 // 부적 비고: 언제든 수정·저장
 function amuletMemo(shipKey){
-  const k = String(shipKey||'').replace(/^am_/,'');
+  const k = String(shipKey||'').replace(/^(am_|bf_)/,'');
   const b = (ad().bookings||{})[k];
   return b ? (b.memo||'') : '';
 }
 function saveAmuletMemo(shipKey){
-  const k = String(shipKey||'').replace(/^am_/,'');
+  const k = String(shipKey||'').replace(/^(am_|bf_)/,'');
   const el = document.getElementById('memo_'+shipKey);
   if(!el) return;
   const v = el.value.trim();
@@ -1689,7 +1692,8 @@ function saveAmuletMemo(shipKey){
   data.bookings[k].memo = v || null;
   sad(data);
   showToast(v ? '비고가 저장되었습니다' : '비고가 삭제되었습니다');
-  renderTasks();
+  if(document.getElementById('tab-ship')?.classList.contains('active')) renderShipTab();
+  else renderTasks();
 }
 
 function saveTracking(shipKey){
