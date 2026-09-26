@@ -203,6 +203,9 @@ body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellips
 .ps-btn:hover{background:rgba(200,164,86,.28);}
 .ps-hint{font-size:.72rem;color:var(--text3);margin-top:7px;}
 .am-note{font-size:.75rem;color:var(--text3);line-height:1.6;margin-bottom:16px;}
+.bulk-row{background:rgba(255,255,255,.03);border:1px solid var(--border);border-radius:8px;padding:11px 13px;margin-bottom:8px;font-size:.78rem;line-height:1.7;color:var(--text2);}
+.bulk-row.warn{border-color:rgba(220,120,120,.5);background:rgba(200,80,80,.08);}
+.bulk-row b{color:var(--gold2);}
 .am-addr-btn{background:rgba(200,164,86,.14);border:1px solid var(--border2);border-radius:9px;padding:0 16px;color:var(--gold2);font-family:'Noto Serif KR',serif;font-size:.82rem;cursor:pointer;white-space:nowrap;}
 .am-addr-btn:hover{background:rgba(200,164,86,.26);}
 .bk-spell-key{color:#88c8a0;font-size:.66rem;min-width:54px;flex-shrink:0;font-weight:600;}
@@ -304,6 +307,7 @@ body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellips
   <div class="tab-panel" id="tab-ship">
     <div style="display:flex;gap:8px;margin-bottom:18px;">
       <button class="task-add-btn" style="margin-bottom:0;" onclick="openAmuletModal()">🧧 부적 등록</button>
+      <button class="task-add-btn" style="margin-bottom:0;" onclick="openAmBulk()">📋 일괄 등록</button>
       <button class="task-add-btn" style="margin-bottom:0;" onclick="exportShipXlsx()">📥 택배 접수 양식</button>
     </div>
     <div id="shipPanel"></div>
@@ -311,6 +315,7 @@ body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellips
 
   <div class="tab-panel" id="tab-prayer">
     <div style="display:flex;gap:8px;margin-bottom:18px;">
+      <button class="task-add-btn" style="margin-bottom:0;" onclick="openPrBulk()">📋 일괄 등록</button>
       <button class="task-add-btn" style="margin-bottom:0;" onclick="exportPrayerXlsx()">📥 기도 명단 내보내기</button>
     </div>
     <div id="prayerPanel"></div>
@@ -332,6 +337,114 @@ body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellips
   <div style="max-width:500px;margin:32px auto 0;background:#fff;border-radius:12px;overflow:hidden;position:relative;height:80vh;">
     <button onclick="closeAmPostcode()" style="position:absolute;top:8px;right:10px;z-index:3;background:#08070f;color:#fff;border:none;border-radius:7px;padding:7px 13px;cursor:pointer;font-family:'Noto Serif KR',serif;font-size:.85rem;">닫기 ✕</button>
     <div id="amPostcodeBox" style="width:100%;height:100%;"></div>
+  </div>
+</div>
+
+<div class="task-modal" id="amBulkModal">
+  <div class="task-modal-box">
+    <div class="task-modal-title">부적 일괄 등록</div>
+    <div class="am-note">한 줄에 하나씩, <b>빈 줄</b>로 건을 구분합니다.<br>
+      순서: 종류 / 내담자 / 상대방 / 전화 / 주소 / 비고<br>
+      상대방·비고가 없으면 생략하세요. 주소는 자동으로 우편번호를 찾습니다.</div>
+    <textarea class="tm-input" id="amBulkText" rows="12" placeholder="재회부 2장
+방솔지 양력 91년 10월 12일
+박훤함 양력 84년
+010-9870-9092
+서울 광진구 아차산로33길 51-4 303호
+재회 방향으로
+
+금전부 1장
+김서연 음력 88년 3월 5일
+010-1234-5678
+서울 강남구 테헤란로 152 201호"></textarea>
+    <div id="amBulkPreview"></div>
+    <div class="tm-btns">
+      <button class="tm-cancel" onclick="closeAmBulk()">취소</button>
+      <button class="tm-save" onclick="previewAmBulk()">미리보기</button>
+    </div>
+  </div>
+</div>
+
+<div class="task-modal" id="prBulkModal">
+  <div class="task-modal-box">
+    <div class="task-modal-title">염화기도 일괄 등록</div>
+    <div class="am-note">한 줄에 하나씩, <b>빈 줄</b>로 건을 구분합니다.<br>
+      순서: 종류·대상·일수 / 이름 / 내담자 사주 / 상대방(또는 시험·기업명) / 소원 / 시작일<br>
+      시작일을 비우면 신청 다음날로 잡힙니다.</div>
+    <textarea class="tm-input" id="prBulkText" rows="12" placeholder="지정기도 인물지정 7일
+박지우(지우)
+1995-03-12 양력 09:30
+김상대 1993-08-20 양력
+재회하고 싶어요
+2026-09-21
+
+일반 소원기도 3일
+이일반
+1988-06-18 양력
+건강하고 싶어요"></textarea>
+    <div id="prBulkPreview"></div>
+    <div class="tm-btns">
+      <button class="tm-cancel" onclick="closePrBulk()">취소</button>
+      <button class="tm-save" onclick="previewPrBulk()">미리보기</button>
+    </div>
+  </div>
+</div>
+
+<div class="task-modal" id="prayerEditModal">
+  <div class="task-modal-box">
+    <div class="task-modal-title">염화기도 수정</div>
+
+    <label class="tm-label">이름 (닉네임)</label>
+    <input class="tm-input" id="peName" placeholder="예) 박지우(지우)">
+
+    <div style="display:flex;gap:8px;">
+      <div style="flex:1;">
+        <label class="tm-label">기도 종류</label>
+        <select class="tm-input" id="peType">
+          <option value="일반 소원기도">일반 소원기도</option>
+          <option value="지정기도">지정기도</option>
+        </select>
+      </div>
+      <div style="flex:1;">
+        <label class="tm-label">지정 대상</label>
+        <select class="tm-input" id="peTarget">
+          <option value="">(없음)</option>
+          <option value="인물지정">인물지정</option>
+          <option value="시험지정">시험지정</option>
+          <option value="기업지정">기업지정</option>
+        </select>
+      </div>
+      <div style="width:90px;">
+        <label class="tm-label">일수</label>
+        <input class="tm-input" type="number" id="peDays" min="1" placeholder="7">
+      </div>
+    </div>
+
+    <label class="tm-label">내담자 사주 <span style="color:var(--text3);font-size:.72rem;">(입력 원문)</span></label>
+    <input class="tm-input" id="peBirth" placeholder="예) 1995-03-12 (양력)">
+
+    <label class="tm-label">태어난 시간 <span style="color:var(--text3);font-size:.72rem;">(선택)</span></label>
+    <input class="tm-input" id="peBirthTime" placeholder="예) 09:30">
+
+    <label class="tm-label">상대방 이름 <span style="color:var(--text3);font-size:.72rem;">(인물지정)</span></label>
+    <input class="tm-input" id="pePName" placeholder="예) 김상대">
+
+    <label class="tm-label">상대방 사주 <span style="color:var(--text3);font-size:.72rem;">(인물지정)</span></label>
+    <input class="tm-input" id="pePBirth" placeholder="예) 1993-08-20 (양력)">
+
+    <label class="tm-label">시험명 · 기업명 <span style="color:var(--text3);font-size:.72rem;">(시험/기업지정)</span></label>
+    <input class="tm-input" id="peTargetName" placeholder="예) 공무원 9급 / 삼성전자">
+
+    <label class="tm-label">소원</label>
+    <textarea class="tm-input" id="peWish" rows="2" placeholder="소원 내용"></textarea>
+
+    <label class="tm-label">주소</label>
+    <textarea class="tm-input" id="peAddr" rows="2" placeholder="거주지 주소"></textarea>
+
+    <div class="tm-btns">
+      <button class="tm-cancel" onclick="closePrayerEdit()">취소</button>
+      <button class="tm-save" onclick="savePrayerEdit()">수정 저장</button>
+    </div>
   </div>
 </div>
 
@@ -1390,6 +1503,7 @@ function renderPrayerItem(b){
       <span class="sp-name">${ch.real||'-'}${ch.nick?` <span class="sp-nick">(${ch.nick})</span>`:''}</span>
       <div>
         <button class="bk-paid ${b.isPaid?'paid':''}" onclick="togglePaid('${b.k}');renderPrayerTab();">${b.isPaid?'💰 입금완료':'입금 대기'}</button>
+        <button class="bk-comp" onclick="openPrayerEdit('${b.k}')">✎ 수정</button>
         <button class="bk-comp" onclick="togglePrayerComplete('${b.k}')">${b.isCompleted?'✓ 완료':'완료 처리'}</button>
       </div>
     </div>
@@ -1408,6 +1522,251 @@ function renderPrayerItem(b){
     </div>
     <div class="ps-hint">사진 발송: ${fmt(st)} (첫날)${days>1?` · ${fmt(last)} (마지막날)`:''}</div>
   </div>`;
+}
+
+// ===== 주소 자동 조회 (카카오 주소 API) =====
+function lookupAddress(query){
+  return new Promise(resolve=>{
+    if(typeof daum==='undefined' || !daum.Postcode){ resolve(null); return; }
+    const q=String(query||'').trim();
+    if(!q){ resolve(null); return; }
+    // 상세주소로 보이는 뒷부분 분리 (동/호/층 등)
+    const m=q.match(/^(.*?)\s+((?:[\w가-힣-]*\d+[\w가-힣-]*\s*)*(?:동|호|층|가|실|빌라|아파트)?[\w가-힣\s-]*)$/);
+    const box=document.createElement('div');
+    box.style.cssText='position:fixed;left:-9999px;width:400px;height:400px;';
+    document.body.appendChild(box);
+    let done=false;
+    const finish=(r)=>{ if(done) return; done=true; try{document.body.removeChild(box);}catch(e){} resolve(r); };
+    setTimeout(()=>finish(null), 6000);
+    try{
+      new daum.Postcode({
+        oncomplete:function(data){
+          finish({ zip:data.zonecode, road:data.roadAddress||data.jibunAddress });
+        },
+        onsearch:function(){},
+        onclose:function(){ finish(null); },
+        width:'100%', height:'100%'
+      }).embed(box, { q:q, autoMapping:true, autoClose:false });
+    }catch(e){ finish(null); }
+  });
+}
+// 주소 문자열을 우편번호·도로명·상세로 분리 (자동 조회 + 수동 파싱 대체)
+async function splitAddressAuto(raw){
+  const q=String(raw||'').trim();
+  if(!q) return { zip:'', road:'', detail:'', ok:false };
+  // 이미 (우편번호) 형태면 그대로
+  const pre=q.match(/^\((\d{5})\)\s*(.*)$/);
+  if(pre) return { zip:pre[1], road:pre[2], detail:'', ok:true };
+  const hit=await lookupAddress(q);
+  if(hit && hit.zip){
+    // 조회된 도로명 뒤에 남는 부분을 상세주소로
+    let detail=q;
+    const roadCore=hit.road.replace(/^\S+\s/,'');
+    const idx=q.indexOf(roadCore.split(' ').slice(-1)[0]);
+    if(idx>=0) detail=q.slice(idx+roadCore.split(' ').slice(-1)[0].length).trim();
+    return { zip:hit.zip, road:hit.road, detail:detail||'', ok:true };
+  }
+  return { zip:'', road:q, detail:'', ok:false };
+}
+
+// ===== 부적 일괄 등록 =====
+function openAmBulk(){ document.getElementById('amBulkPreview').innerHTML=''; document.getElementById('amBulkModal').classList.add('show'); }
+function closeAmBulk(){ document.getElementById('amBulkModal').classList.remove('show'); amBulkParsed=[]; }
+let amBulkParsed=[];
+
+function parseAmBlock(lines){
+  const L=lines.filter(x=>x.trim()!=='').map(x=>x.trim());
+  if(!L.length) return null;
+  const isPhone=x=>/^[\d\s\-+()]{9,}$/.test(x);
+  const isAddr=x=>/(시|도|군|구|읍|면|동|로|길)\s|[\d]+-?[\d]*\s*(호|동|층)?$/.test(x) && x.length>8;
+  const o={ kind:L[0]||'', me:'', partner:'', phone:'', addr:'', memo:'' };
+  const rest=L.slice(1);
+  // 전화 찾기
+  const pi=rest.findIndex(isPhone);
+  if(pi>=0){ o.phone=rest[pi]; }
+  // 전화 앞: 내담자 / 상대방
+  const before=pi>=0?rest.slice(0,pi):rest;
+  o.me=before[0]||'';
+  if(before.length>1) o.partner=before[1];
+  // 전화 뒤: 주소 / 비고
+  const after=pi>=0?rest.slice(pi+1):[];
+  if(after.length){ o.addr=after[0]||''; o.memo=after.slice(1).join(' '); }
+  return o;
+}
+
+async function previewAmBulk(){
+  const txt=document.getElementById('amBulkText').value;
+  const blocks=txt.split(/\n\s*\n/).map(b=>b.split('\n')).filter(b=>b.join('').trim());
+  if(!blocks.length){ alert('내용을 입력해 주세요.'); return; }
+  const box=document.getElementById('amBulkPreview');
+  box.innerHTML='<div class="am-note">주소 확인 중…</div>';
+  const out=[];
+  for(const b of blocks){
+    const o=parseAmBlock(b);
+    if(!o) continue;
+    const ad2=await splitAddressAuto(o.addr);
+    out.push(Object.assign(o,{ zip:ad2.zip, road:ad2.road, detail:ad2.detail, addrOk:ad2.ok }));
+  }
+  amBulkParsed=out;
+  box.innerHTML=`<div class="am-note"><b>${out.length}건</b> 확인 — 등록을 누르면 반영됩니다</div>` +
+    out.map((o,i)=>`<div class="bulk-row${o.addrOk?'':' warn'}">
+      <b>${i+1}. ${o.kind||'(종류 없음)'}</b><br>
+      내담자: ${o.me||'-'}${o.partner?` / 상대방: ${o.partner}`:''}<br>
+      전화: ${o.phone||'-'}<br>
+      주소: ${o.addrOk?`(${o.zip}) ${o.road} ${o.detail}`:`⚠️ 우편번호 못 찾음 — ${o.addr||'(주소 없음)'}`}
+      ${o.memo?`<br>비고: ${o.memo}`:''}
+    </div>`).join('') +
+    `<button class="tm-save" onclick="commitAmBulk()">${out.length}건 등록하기</button>`;
+}
+
+function commitAmBulk(){
+  if(!amBulkParsed.length) return;
+  const data=ad();
+  if(!data.bookings) data.bookings={};
+  const now=new Date();
+  const fmt=d=>d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');
+  const due=new Date(now); due.setDate(due.getDate()+10);
+  amBulkParsed.forEach((o,i)=>{
+    const k='amulet_'+(Date.now()+i);
+    const name=(o.me||'부적').split(/\s+/)[0];
+    const addr=o.road?`(${o.zip}) ${o.road}${o.detail?' '+o.detail:''}`:(o.addr||'');
+    data.bookings[k]={
+      name, menu:'부적', menuKey:'amulet',
+      amuletKind:o.kind||null, meInfo:o.me||'', partnerInfo:o.partner||null,
+      phone:o.phone||null, addr, zip:o.zip||null, roadAddr:o.road||null, addrDetail:o.detail||null,
+      memo:o.memo||null, dueDate:fmt(due), ts:now.getTime(), source:'manual'
+    };
+  });
+  sad(data);
+  closeAmBulk();
+  showToast(`${amBulkParsed.length}건 등록되었습니다`);
+  amBulkParsed=[];
+  renderShipTab(); renderTasks();
+}
+
+// ===== 염화기도 일괄 등록 =====
+function openPrBulk(){ document.getElementById('prBulkPreview').innerHTML=''; document.getElementById('prBulkModal').classList.add('show'); }
+function closePrBulk(){ document.getElementById('prBulkModal').classList.remove('show'); prBulkParsed=[]; }
+let prBulkParsed=[];
+const PR_PRICE_TBL={'일반 소원기도':{1:19000,3:49000,5:75000,7:99000,15:179000,30:299000},
+                    '지정기도':{1:29000,3:75000,5:115000,7:159000,15:279000,30:479000}};
+
+function parsePrBlock(lines){
+  const L=lines.filter(x=>x.trim()!=='').map(x=>x.trim());
+  if(!L.length) return null;
+  const head=L[0];
+  const type=/지정기도/.test(head)?'지정기도':'일반 소원기도';
+  const tm=head.match(/(인물지정|시험지정|기업지정)/);
+  const dm=head.match(/(\d+)\s*일/);
+  const o={ type, target:tm?tm[1]:null, days:dm?parseInt(dm[1],10):null,
+            name:L[1]||'', birth:L[2]||'', partner:'', wish:'', start:'' };
+  const rest=L.slice(3);
+  // 마지막 줄이 날짜면 시작일
+  if(rest.length && /^\d{4}-\d{1,2}-\d{1,2}$/.test(rest[rest.length-1])){
+    o.start=rest.pop();
+  }
+  if(type==='지정기도' && rest.length>1){ o.partner=rest.shift(); }
+  o.wish=rest.join(' ');
+  return o;
+}
+
+function previewPrBulk(){
+  const txt=document.getElementById('prBulkText').value;
+  const blocks=txt.split(/\n\s*\n/).map(b=>b.split('\n')).filter(b=>b.join('').trim());
+  if(!blocks.length){ alert('내용을 입력해 주세요.'); return; }
+  const out=blocks.map(parsePrBlock).filter(Boolean);
+  prBulkParsed=out;
+  const box=document.getElementById('prBulkPreview');
+  box.innerHTML=`<div class="am-note"><b>${out.length}건</b> 확인 — 등록을 누르면 반영됩니다</div>` +
+    out.map((o,i)=>{
+      const price=PR_PRICE_TBL[o.type]?.[o.days];
+      const bad=!o.days||!price;
+      return `<div class="bulk-row${bad?' warn':''}">
+        <b>${i+1}. ${o.type}${o.target?' · '+o.target:''} · ${o.days||'?'}일</b> ${price?price.toLocaleString()+'원':'⚠️ 일수 확인'}<br>
+        이름: ${o.name||'-'}<br>사주: ${o.birth||'-'}
+        ${o.partner?`<br>대상: ${o.partner}`:''}
+        ${o.wish?`<br>소원: ${o.wish}`:''}
+        ${o.start?`<br>시작일: ${o.start}`:'<br>시작일: (신청 다음날)'}
+      </div>`;
+    }).join('') +
+    `<button class="tm-save" onclick="commitPrBulk()">${out.length}건 등록하기</button>`;
+}
+
+function commitPrBulk(){
+  if(!prBulkParsed.length) return;
+  const data=ad();
+  if(!data.bookings) data.bookings={};
+  if(!data.prayerStart) data.prayerStart={};
+  const now=Date.now();
+  prBulkParsed.forEach((o,i)=>{
+    const k='pr_'+(now+i);
+    const price=PR_PRICE_TBL[o.type]?.[o.days]||0;
+    let pName=null, pBirth=null, targetName=null;
+    if(o.target==='인물지정' && o.partner){
+      const pm=o.partner.match(/^(\S+)\s+(.*)$/);
+      if(pm){ pName=pm[1]; pBirth=pm[2]; } else pName=o.partner;
+    } else if(o.partner){ targetName=o.partner; }
+    // 사주에서 시간 분리
+    let birthRaw=o.birth, birthTime=null;
+    const tm2=o.birth.match(/\s(\d{1,2}:\d{2})$/);
+    if(tm2){ birthTime=tm2[1]; birthRaw=o.birth.replace(/\s\d{1,2}:\d{2}$/,''); }
+    data.bookings[k]={
+      name:o.name, menu:'염화기도', menuKey:'prayer',
+      prayerType:o.type, prayerTarget:o.target, prayerDays:o.days,
+      birthRaw, birthTime, pName, pBirthRaw:pBirth, prayerTargetName:targetName,
+      wish:o.wish||null, price, ts:now, source:'manual'
+    };
+    if(o.start) data.prayerStart[k]=o.start;
+  });
+  sad(data);
+  closePrBulk();
+  showToast(`${prBulkParsed.length}건 등록되었습니다`);
+  prBulkParsed=[];
+  renderPrayerTab(); renderTasks();
+}
+
+let editingPrayerKey=null;
+function openPrayerEdit(k){
+  const b=(ad().bookings||{})[k];
+  if(!b){ showToast('해당 건을 찾을 수 없습니다'); return; }
+  editingPrayerKey=k;
+  const set=(id,v)=>{ const el=document.getElementById(id); if(el) el.value=(v==null?'':v); };
+  set('peName', b.name); set('peType', b.prayerType||'일반 소원기도');
+  set('peTarget', b.prayerTarget||''); set('peDays', b.prayerDays||'');
+  set('peBirth', b.birthRaw||b.birthLunar||''); set('peBirthTime', b.birthTime||'');
+  set('pePName', b.pName||''); set('pePBirth', b.pBirthRaw||b.pBirthLunar||'');
+  set('peTargetName', b.prayerTargetName||''); set('peWish', b.wish||''); set('peAddr', b.addr||'');
+  document.getElementById('prayerEditModal').classList.add('show');
+}
+function closePrayerEdit(){ editingPrayerKey=null; document.getElementById('prayerEditModal').classList.remove('show'); }
+function savePrayerEdit(){
+  if(!editingPrayerKey) return;
+  const v=id=>{ const el=document.getElementById(id); return el?el.value.trim():''; };
+  const data=ad();
+  const b=data.bookings?.[editingPrayerKey];
+  if(!b){ showToast('해당 건을 찾을 수 없습니다'); return; }
+  const days=parseInt(v('peDays'),10);
+  b.name=v('peName')||b.name;
+  b.prayerType=v('peType');
+  b.prayerTarget=v('peTarget')||null;
+  if(days>0) b.prayerDays=days;
+  b.birthRaw=v('peBirth')||null;
+  b.birthTime=v('peBirthTime')||null;
+  b.pName=v('pePName')||null;
+  b.pBirthRaw=v('pePBirth')||null;
+  b.prayerTargetName=v('peTargetName')||null;
+  b.wish=v('peWish')||null;
+  b.addr=v('peAddr')||null;
+  // 가격 재계산 (종류·일수 변경 시)
+  const TBL={'일반 소원기도':{1:19000,3:49000,5:75000,7:99000,15:179000,30:299000},
+             '지정기도':{1:29000,3:75000,5:115000,7:159000,15:279000,30:479000}};
+  const p=TBL[b.prayerType]?.[b.prayerDays];
+  if(p) b.price=p;
+  sad(data);
+  closePrayerEdit();
+  showToast('수정되었습니다');
+  renderPrayerTab();
+  renderTasks();
 }
 
 function togglePrayerComplete(k){
@@ -1522,6 +1881,7 @@ function renderShipSection(all, done, bare){
       </div>`:''}
       ${(t.wish && !t.amuletMe)?`<div class="sp-wish"><span class="sp-bk">소원</span> ${t.wish}</div>`:''}
       <div class="sp-addr">${t.addr||'주소 미입력'}${t.phone?` · ${t.phone}`:''}</div>
+      ${String(t.shipKey||'').indexOf('am_')===0?`<div style="margin-left:30px;margin-bottom:7px;"><button class="ps-btn" onclick="openAmuletModal('${String(t.shipKey).replace(/^am_/,'')}')">✎ 수정</button></div>`:''}
       ${(String(t.shipKey||'').indexOf('am_')===0||String(t.shipKey||'').indexOf('bf_')===0)?`<div class="sp-track sp-memo-row">
         <textarea class="sp-input sp-memo" id="memo_${t.shipKey}" rows="2" placeholder="비고 (원하는 방향, 특이사항 등)">${(amuletMemo(t.shipKey)||'').replace(/</g,'&lt;')}</textarea>
         <button class="sp-save" onclick="saveAmuletMemo('${t.shipKey}')">저장</button>
@@ -1856,10 +2216,36 @@ function openAmPostcode(){
 function closeAmPostcode(){ document.getElementById('amPostcodeLayer').style.display='none'; }
 
 // ===== 부적 등록 (상담 후 채팅 접수분) =====
-function openAmuletModal(){
+let editingAmuletKey = null;   // 수정 중인 부적 키 (null이면 신규 등록)
+
+function openAmuletModal(editKey){
+  editingAmuletKey = editKey || null;
   ['amKind','amMe','amPartner','amPhone','amZip','amRoad','amDetail','amMemo'].forEach(id=>{
     const el=document.getElementById(id); if(el) el.value='';
   });
+  // 제목·버튼 문구
+  const box=document.getElementById('amuletModal');
+  const ttl=box?box.querySelector('.task-modal-title'):null;
+  const sv=box?box.querySelector('.tm-save'):null;
+  if(ttl) ttl.textContent = editKey ? '부적 수정' : '부적 등록';
+  if(sv) sv.textContent = editKey ? '수정 저장' : '등록';
+
+  // 수정: 기존 값 채우기
+  if(editKey){
+    const b=(ad().bookings||{})[editKey];
+    if(b){
+      const set=(id,v)=>{ const el=document.getElementById(id); if(el) el.value=v||''; };
+      set('amKind', b.amuletKind); set('amMe', b.meInfo); set('amPartner', b.partnerInfo);
+      set('amPhone', b.phone); set('amZip', b.zip); set('amRoad', b.roadAddr);
+      set('amDetail', b.addrDetail); set('amMemo', b.memo);
+      const od=document.getElementById('amOrderDate'), dd=document.getElementById('amDueDate');
+      if(od && b.ts){ const d=new Date(b.ts); od.value=d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0'); }
+      if(dd) dd.value = b.dueDate||'';
+      box.classList.add('show');
+      return;
+    }
+  }
+
   const today=new Date();
   const fmt=d=>d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');
   const od=document.getElementById('amOrderDate');
@@ -1879,7 +2265,7 @@ function openAmuletModal(){
   }
   document.getElementById('amuletModal').classList.add('show');
 }
-function closeAmuletModal(){ document.getElementById('amuletModal').classList.remove('show'); }
+function closeAmuletModal(){ editingAmuletKey=null; document.getElementById('amuletModal').classList.remove('show'); }
 
 function saveAmulet(){
   const v=id=>{ const el=document.getElementById(id); return el?el.value.trim():''; };
@@ -1900,8 +2286,9 @@ function saveAmulet(){
 
   const data=ad();
   if(!data.bookings) data.bookings={};
-  const bk='amulet_'+Date.now();
-  data.bookings[bk]={
+  const bk = editingAmuletKey || ('amulet_'+Date.now());
+  const prev = data.bookings[bk] || {};
+  data.bookings[bk]=Object.assign({}, prev, {
     name: name,
     menu: '부적', menuKey: 'amulet',
     amuletKind: kind || null,
@@ -1912,12 +2299,15 @@ function saveAmulet(){
     dueDate: dueDate,
     ts: od.getTime(),
     source: 'manual'
-  };
+  });
   sad(data);
+  const wasEdit = !!editingAmuletKey;
+  editingAmuletKey = null;
   closeAmuletModal();
-  showToast('부적 주문이 등록되었습니다');
+  showToast(wasEdit ? '부적 정보가 수정되었습니다' : '부적 주문이 등록되었습니다');
   renderTasks();
   renderBookings();
+  if(typeof renderShipTab==='function') renderShipTab();
 }
 
 function openTaskModal(){
