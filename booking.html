@@ -267,6 +267,8 @@ input[type="date"].ifield:not(:valid){ color:var(--text3); }
 /* 소원 블록 */
 .wish-box{background:rgba(200,164,86,.05);border:1px solid var(--border);border-radius:10px;padding:15px;}
 .opt-mark{color:var(--text3);font-size:.68rem;letter-spacing:0;}
+.wish-count{font-size:.72rem;color:var(--text3);text-align:right;margin-top:6px;}
+.wish-count.full{color:#e8b888;}
 .cash-receipt{display:none;margin-top:14px;padding-top:14px;border-top:1px solid var(--border);}
 .cash-receipt .ilabel{margin-bottom:8px;}
 .cash-note{font-size:.72rem;color:var(--text3);margin-top:7px;}
@@ -1396,12 +1398,14 @@ function buildSpellFields(){
         <input class="ifield" id="prTargetName" value="${S.prayerTargetName||''}" placeholder="${tPh}" oninput="onPrayerInput()">
       </div>` : ''}
       <div class="igroup" style="margin-bottom:0;">
-        <label class="ilabel">소원</label>
-        <textarea class="ifield" id="spellWish" placeholder="이루고 싶은 소원을 적어주세요" oninput="onPrayerInput()">${S.wish||''}</textarea>
+        <label class="ilabel">소원 <span class="opt-mark">(30자 이내)</span></label>
+        <textarea class="ifield" id="spellWish" maxlength="30" placeholder="이루고 싶은 소원을 적어주세요 (30자 이내)" oninput="onPrayerInput()">${S.wish||''}</textarea>
+        <div class="wish-count" id="wishCount"></div>
       </div>
     </div>`;
     if(S.birth) onBirth('me');
     if(isPerson && S.pBirth) onBirth('p');
+    updateWishCount();
     return;
   }
 
@@ -1439,8 +1443,9 @@ function buildSpellFields(){
   let wishBlock='';
   if(isSpell){
     wishBlock = `<div class="igroup">
-      <label class="ilabel">가장 원하는 소망 한 가지</label>
-      <textarea class="ifield" id="spellWish" placeholder="이루고 싶은 소망을 적어주세요" oninput="onSpellInput()">${S.wish||''}</textarea>
+      <label class="ilabel">가장 원하는 소망 한 가지 <span class="opt-mark">(30자 이내)</span></label>
+      <textarea class="ifield" id="spellWish" maxlength="30" placeholder="이루고 싶은 소망을 적어주세요 (30자 이내)" oninput="onSpellInput()">${S.wish||''}</textarea>
+      <div class="wish-count" id="wishCount"></div>
     </div>`;
   }
 
@@ -1464,6 +1469,7 @@ function buildSpellFields(){
   </div>`;
 
   // 기존 입력값 있으면 변환 결과 다시 표시
+  updateWishCount();
   if(S.birth) onBirth('me');
   if(S.pBirth) onBirth('p');
 }
@@ -1501,6 +1507,16 @@ function openPostcode(){
   }).embed(box);
 }
 function closePostcode(){ document.getElementById('postcodeLayer').style.display='none'; }
+// 소원 글자 수 표시 (30자 제한)
+function updateWishCount(){
+  const el=document.getElementById('spellWish');
+  const box=document.getElementById('wishCount');
+  if(!el||!box) return;
+  const n=el.value.length;
+  box.textContent = `${n} / 30자`;
+  box.className = 'wish-count' + (n>=30 ? ' full' : '');
+}
+
 // 염화기도 입력 처리 (배송 없음)
 function onPrayerInput(){
   const pn=document.getElementById('spellPName');
@@ -1512,6 +1528,7 @@ function onPrayerInput(){
   S.wish  = w ? w.value.trim() : '';
   S.addrDetail = dt ? dt.value.trim() : '';
   S.addr = S.roadAddr ? `(${S.zip}) ${S.roadAddr}${S.addrDetail?' '+S.addrDetail:''}` : '';
+  updateWishCount();
   chk3();
 }
 
@@ -1520,6 +1537,7 @@ function onSpellInput(){
   S.pName=(document.getElementById('spellPName')?.value||'').trim();
   S.addrDetail=(document.getElementById('spellDetail')?.value||'').trim();
   S.wish=(document.getElementById('spellWish')?.value||'').trim();
+  updateWishCount();
   // 최종 배송지 = (우편번호) 도로명주소 + 상세주소
   S.addr = S.roadAddr ? `(${S.zip}) ${S.roadAddr}${S.addrDetail?' '+S.addrDetail:''}` : '';
   chk3();
