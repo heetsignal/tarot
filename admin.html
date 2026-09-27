@@ -309,6 +309,7 @@ body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellips
       <button class="task-add-btn" style="margin-bottom:0;" onclick="openAmuletModal()">🧧 부적 등록</button>
       <button class="task-add-btn" style="margin-bottom:0;" onclick="openAmBulk()">📋 일괄 등록</button>
       <button class="task-add-btn" style="margin-bottom:0;" onclick="exportShipXlsx()">📥 택배 접수 양식</button>
+      <button class="task-add-btn" style="margin-bottom:0;" onclick="exportLabelXlsx()">🏷 부착용 라벨</button>
     </div>
     <div id="shipPanel"></div>
   </div>
@@ -1802,12 +1803,60 @@ function collectPrayerRows(){
   });
   return out;
 }
+// 부적 상품 부착용 라벨 (이름 · 주소 2열)
+function collectLabelRows(){
+  const data=ad();
+  const done=data.taskDone||{};
+  const all=[...autoTasks(), ...manualTasks()].filter(t=>t.kind==='ship' && !done[t.id]);
+  all.sort((a,b)=>a.when-b.when);
+  return all.map(t=>{
+    const road = t.roadAddr || '';
+    const detail = t.addrDetail || '';
+    let addr = road ? (road + (detail ? ' ' + detail : '')) : String(t.addr||'').replace(/^\(\d{5}\)\s*/,'');
+    return [ (t.person||'').trim(), addr.trim() ];
+  });
+}
+function exportLabelXlsx(){
+  const rows=collectLabelRows();
+  if(!rows.length){ alert('내보낼 미발송 건이 없습니다.'); return; }
+  const doExport=()=>{
+    try{
+      const aoa=[['이름','주소'], ...rows];
+      const ws=XLSX.utils.aoa_to_sheet(aoa);
+      ws['!cols']=[{wch:14},{wch:46}];
+      const wb=XLSX.utils.book_new();
+      XLSX.utils.book_append_sheet(wb, ws, '부착용');
+      const t=new Date();
+      XLSX.writeFile(wb, `부적라벨_${t.getMonth()+1}월${t.getDate()}일_${rows.length}건.xlsx`);
+      showToast(`${rows.length}건 내보내기 완료`);
+    }catch(e){ exportLabelCsv(rows); }
+  };
+  if(typeof XLSX!=='undefined'){ doExport(); return; }
+  showToast('양식 준비 중…');
+  const sc=document.createElement('script');
+  sc.src='https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js';
+  sc.onload=doExport; sc.onerror=()=>exportLabelCsv(rows);
+  document.head.appendChild(sc);
+}
+function exportLabelCsv(rows){
+  const esc=v=>`"${String(v==null?'':v).replace(/"/g,'""')}"`;
+  const lines=[['이름','주소'].join(','), ...rows.map(r=>r.map(esc).join(','))];
+  const blob=new Blob(['\ufeff'+lines.join('\r\n')],{type:'text/csv;charset=utf-8;'});
+  const url=URL.createObjectURL(blob);
+  const a=document.createElement('a');
+  const t=new Date();
+  a.href=url; a.download=`부적라벨_${t.getMonth()+1}월${t.getDate()}일.csv`;
+  document.body.appendChild(a); a.click(); document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+  showToast(`${rows.length}건 내보내기 완료 (CSV)`);
+}
+
 function exportPrayerXlsx(){
   const rows=collectPrayerRows();
   if(!rows.length){ alert('내보낼 미완료 기도 건이 없습니다.'); return; }
   const doExport=()=>{
     try{
-      const aoa=rows;   // 헤더 없음 (라벨지 출력용)
+      const aoa=[['이름','사주','소원'], ...rows];
       const ws=XLSX.utils.aoa_to_sheet(aoa);
       const wb=XLSX.utils.book_new();
       XLSX.utils.book_append_sheet(wb, ws, '염화기도');
@@ -1825,7 +1874,7 @@ function exportPrayerXlsx(){
 }
 function exportPrayerCsv(rows){
   const esc=v=>`"${String(v==null?'':v).replace(/"/g,'""')}"`;
-  const lines=rows.map(r=>r.map(esc).join(','));
+  const lines=[['이름','사주','소원'].join(','), ...rows.map(r=>r.map(esc).join(','))];
   const blob=new Blob(['\ufeff'+lines.join('\r\n')],{type:'text/csv;charset=utf-8;'});
   const url=URL.createObjectURL(blob);
   const a=document.createElement('a');
