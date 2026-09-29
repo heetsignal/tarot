@@ -366,7 +366,7 @@ input[type="date"].ifield:not(:valid){ color:var(--text3); }
         <div class="menu-info">4개 분야(일·금전·연애·인간관계) 전체 운세 리딩지 + 결과 맞춤 주술<br><span class="monthly-period">접수기간 : 매월 15일 ~ 25일</span></div>
       </div>
       <div class="menu-card" data-menu="realtime" onclick="selMenu(this)">
-        <div class="menu-top"><span class="menu-name">실시간 채팅 리딩 <span class="mbadge b-rt">LIVE</span></span><span class="menu-price">30,000원~</span></div>
+        <div class="menu-top"><span class="menu-name">실시간 채팅 상담 <span class="mbadge b-rt">LIVE</span></span><span class="menu-price">30,000원~</span></div>
         <div class="menu-info">15분 / 20분 / 30분 선택 · 채팅으로 진행됩니다</div>
       </div>
       <div class="menu-card" data-menu="bibang" onclick="selMenu(this)">
@@ -374,7 +374,7 @@ input[type="date"].ifield:not(:valid){ color:var(--text3); }
         <div class="menu-info">비방 진행 전 상대의 마음과 흐름을 봅니다.<br>상담이 필요치 않으시면 바로 문의 주세요</div>
       </div>
       <div class="menu-card" data-menu="question" onclick="selMenu(this)">
-        <div class="menu-top"><span class="menu-name">질문제 리딩 <span class="mbadge b-24">24H</span></span><span class="menu-price">10,000원/질문</span></div>
+        <div class="menu-top"><span class="menu-name">질문제 <span class="mbadge b-24">24H</span></span><span class="menu-price">10,000원/질문</span></div>
         <div class="menu-info">질문당 10,000원 · 양식 제출 후 24시간 이내 리딩지 발송</div>
       </div>
     </div>
@@ -453,8 +453,8 @@ input[type="date"].ifield:not(:valid){ color:var(--text3); }
     
     <div class="policy">
       <strong>취소 / 환불 안내</strong><br>
-      · 실시간 리딩: 예약 시간 <strong>6시간 전</strong>까지 환불 가능<br>
-      · 실시간 리딩: 예약 시간 <strong>2시간 전</strong>까지 1회 일정 변경 가능<br>
+      · 실시간 채팅 상담: 예약 시간 <strong>6시간 전</strong>까지 환불 가능<br>
+      · 실시간 채팅 상담: 예약 시간 <strong>2시간 전</strong>까지 1회 일정 변경 가능<br>
       <span class="policy-sub">지각 시 잔여 시간만 상담 진행, 노쇼는 환불 불가</span><br>
       · 그 외 전체 메뉴: 양식(신청 정보) 제출 후 <strong>1시간 이내</strong>에만 환불 가능<br>
       · 결제 후 <strong>1시간 이내</strong> 양식 미제출 시 예약이 취소될 수 있습니다
@@ -653,10 +653,10 @@ const RT_PRICE = { 15:30000, 20:40000, 30:50000 };
 const RT_DURS = [15,20,30];
 
 // 상담 안내 문구
-const NOTICE_EVENT = `<div class="notice-event">제 힘이 닿을 수 있는 가능한 많은 분들께 도움이 되고자<br>길고 길었던 이벤트 기간이 종료되어<br><b>원 상담가격</b>을 받습니다.</div>`;
+const NOTICE_EVENT = '';   // 이벤트 종료 안내 사용 안 함
 const NOTICE_MEDIUM = `<div class="notice-medium">✦ <b>영매사 상담</b>입니다.<br>타로는 하나의 보조 도구로 사용합니다.</div>`;
 
-const MENU_NAMES={monthly:'월별 운세 컨설팅',realtime:'실시간 리딩',bibang:'비방',question:'질문제 리딩',mixed:'혼합 리딩',lite:'Lite 패키지',reunion:'시그니처 전략적 패키지',prayer:'염화기도',spell:'스펠자',butterfly:'나비주술 + 부적'};
+const MENU_NAMES={monthly:'월별 운세 컨설팅',realtime:'실시간 채팅 상담',bibang:'비방',question:'질문제',mixed:'혼합 리딩',lite:'Lite 패키지',reunion:'시그니처 전략적 패키지',prayer:'염화기도',spell:'스펠자',butterfly:'나비주술 + 부적'};
 
 if(db){
   db.ref('hs_admin').on('value', (snap) => {
@@ -1203,8 +1203,8 @@ function buildPrice(){
   const m=S.menu;let rows='';
   if(m==='prayer'&&S.prayerType&&S.prayerDays)rows+=`<div class="prow"><span>염화기도 (${S.prayerType}${S.prayerTarget?' · '+S.prayerTarget:''} · ${S.prayerDays}일)</span><span>${calcPrice().toLocaleString()}원</span></div>`;
   if(m==='monthly'&&S.monthlyTopics.length===2)rows+=`<div class="prow"><span>월별 운세 컨설팅 (주술: ${S.monthlyTopics.join(' · ')})</span><span>100,000원</span></div>`;
-  if(m==='realtime'&&S.dur)rows+=`<div class="prow"><span>실시간 리딩 (${S.dur}분)</span><span>${(RT_PRICE[S.dur]||0).toLocaleString()}원</span></div>`;
-  if(m==='question'&&S.q)rows+=`<div class="prow"><span>질문제 리딩 (${S.q}개)</span><span>${(S.q*10000).toLocaleString()}원</span></div>`;
+  if(m==='realtime'&&S.dur)rows+=`<div class="prow"><span>실시간 채팅 상담 (${S.dur}분)</span><span>${(RT_PRICE[S.dur]||0).toLocaleString()}원</span></div>`;
+  if(m==='question'&&S.q)rows+=`<div class="prow"><span>질문제 (${S.q}개)</span><span>${(S.q*10000).toLocaleString()}원</span></div>`;
   if(m==='lite'&&S.liteType)rows+=`<div class="prow"><span>Lite 패키지 (${S.liteType})</span><span>30,000원</span></div>`;
   if(m==='reunion'&&S.pkgType)rows+=`<div class="prow"><span>시그니처 전략적 패키지 (${S.pkgType})</span><span>75,000원</span></div>`;
   if(m==='spell'&&S.spellTopic)rows+=`<div class="prow"><span>스펠자 (${S.spellTopic})</span><span>100,000원</span></div>`;
