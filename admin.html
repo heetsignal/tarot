@@ -1530,49 +1530,60 @@ function renderPrayerItem(b){
   </div>`;
 }
 
-// ===== 주소 자동 조회 (카카오 주소 API) =====
+// ===== 주소 분리 & 자동 조회 =====
+// 도로명/지번 본체와 상세주소를 먼저 나눈 뒤, 본체만으로 우편번호를 조회한다.
+// (상세주소까지 넣고 검색하면 대부분 조회 실패)
+function splitRoadDetail(raw){
+  const q = String(raw||'').replace(/\s+/g,' ').trim();
+  if(!q) return { road:'', detail:'' };
+  // 1) 도로명: ...로/길 + 건물번호(-번호). 도로명에 숫자가 붙은 경우(지산로11길)도 올바르게 인식
+  let m = q.match(/^(.*?(?:로|길)\s*\d+(?:-\d+)?)(?=\s|$)\s*(.*)$/);
+  if(m) return { road:m[1].trim(), detail:m[2].trim() };
+  // 2) 지번: ...동/읍/면/리 + 번지(-번지)
+  m = q.match(/^(.*?(?:동|읍|면|리)\s*\d+(?:-\d+)?)(?=\s|$)\s*(.*)$/);
+  if(m) return { road:m[1].trim(), detail:m[2].trim() };
+  // 3) 못 나누면 전체를 본체로
+  return { road:q, detail:'' };
+}
+
 function lookupAddress(query){
   return new Promise(resolve=>{
     if(typeof daum==='undefined' || !daum.Postcode){ resolve(null); return; }
     const q=String(query||'').trim();
     if(!q){ resolve(null); return; }
-    // 상세주소로 보이는 뒷부분 분리 (동/호/층 등)
-    const m=q.match(/^(.*?)\s+((?:[\w가-힣-]*\d+[\w가-힣-]*\s*)*(?:동|호|층|가|실|빌라|아파트)?[\w가-힣\s-]*)$/);
     const box=document.createElement('div');
-    box.style.cssText='position:fixed;left:-9999px;width:400px;height:400px;';
+    box.style.cssText='position:fixed;left:-9999px;top:0;width:400px;height:450px;';
     document.body.appendChild(box);
     let done=false;
     const finish=(r)=>{ if(done) return; done=true; try{document.body.removeChild(box);}catch(e){} resolve(r); };
-    setTimeout(()=>finish(null), 6000);
+    setTimeout(()=>finish(null), 7000);
     try{
       new daum.Postcode({
-        oncomplete:function(data){
-          finish({ zip:data.zonecode, road:data.roadAddress||data.jibunAddress });
-        },
-        onsearch:function(){},
+        oncomplete:function(data){ finish({ zip:data.zonecode, road:data.roadAddress||data.jibunAddress }); },
         onclose:function(){ finish(null); },
         width:'100%', height:'100%'
       }).embed(box, { q:q, autoMapping:true, autoClose:false });
     }catch(e){ finish(null); }
   });
 }
-// 주소 문자열을 우편번호·도로명·상세로 분리 (자동 조회 + 수동 파싱 대체)
+
+// 주소 문자열 → { zip, road, detail, ok }
 async function splitAddressAuto(raw){
   const q=String(raw||'').trim();
   if(!q) return { zip:'', road:'', detail:'', ok:false };
-  // 이미 (우편번호) 형태면 그대로
+  // 이미 (우편번호) 형태면 그대로 사용
   const pre=q.match(/^\((\d{5})\)\s*(.*)$/);
-  if(pre) return { zip:pre[1], road:pre[2], detail:'', ok:true };
-  const hit=await lookupAddress(q);
-  if(hit && hit.zip){
-    // 조회된 도로명 뒤에 남는 부분을 상세주소로
-    let detail=q;
-    const roadCore=hit.road.replace(/^\S+\s/,'');
-    const idx=q.indexOf(roadCore.split(' ').slice(-1)[0]);
-    if(idx>=0) detail=q.slice(idx+roadCore.split(' ').slice(-1)[0].length).trim();
-    return { zip:hit.zip, road:hit.road, detail:detail||'', ok:true };
+  if(pre){
+    const sp=splitRoadDetail(pre[2]);
+    return { zip:pre[1], road:sp.road, detail:sp.detail, ok:true };
   }
-  return { zip:'', road:q, detail:'', ok:false };
+  const sp=splitRoadDetail(q);
+  const hit=await lookupAddress(sp.road);
+  if(hit && hit.zip){
+    return { zip:hit.zip, road:hit.road, detail:sp.detail, ok:true };
+  }
+  // 조회 실패해도 도로명/상세는 나눠서 넘김 (우편번호만 비움)
+  return { zip:'', road:sp.road, detail:sp.detail, ok:false };
 }
 
 // ===== 부적 일괄 등록 =====
