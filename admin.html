@@ -1826,10 +1826,11 @@ function collectLabelRows(){
   const all=[...autoTasks(), ...manualTasks()].filter(t=>t.kind==='ship' && !done[t.id]);
   all.sort((a,b)=>a.when-b.when);
   return all.map(t=>{
-    const road = t.roadAddr || '';
-    const detail = t.addrDetail || '';
-    let addr = road ? (road + (detail ? ' ' + detail : '')) : String(t.addr||'').replace(/^\(\d{5}\)\s*/,'');
-    return [ (t.person||'').trim(), addr.trim() ];
+    // 부착용은 도로명까지만 (건물번호·상세주소 제외)
+    let base = t.roadAddr || String(t.addr||'').replace(/^\(\d{5}\)\s*/,'');
+    const sp = splitRoadDetail(base);
+    let addr = (sp.road || base).replace(/\s*\d+(?:-\d+)?\s*$/,'').trim();
+    return [ (t.person||'').trim(), addr ];
   });
 }
 function exportLabelXlsx(){
