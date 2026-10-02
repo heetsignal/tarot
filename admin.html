@@ -1870,87 +1870,68 @@ function exportLabelCsv(rows){
   showToast(`${rows.length}건 내보내기 완료 (CSV)`);
 }
 
-// 염화기도 라벨 PDF (60 x 50mm, 1건 1페이지)
+// 염화기도 라벨 PDF (60 x 50mm, 1건 1페이지) — 파일로 바로 저장
 function exportPrayerPdf(){
   const rows=collectPrayerRows();
   if(!rows.length){ alert('내보낼 미완료 기도 건이 없습니다.'); return; }
 
-  const esc=v=>String(v==null?'':v)
-    .replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+  const run=async ()=>{
+    showToast('라벨 만드는 중…');
+    const W=60, H=50;                 // mm
+    const PX=w=>Math.round(w*96/25.4); // mm → px (96dpi)
+    const box=document.createElement('div');
+    box.style.cssText=`position:fixed;left:-99999px;top:0;width:${PX(W)}px;height:${PX(H)}px;background:#fff;`;
+    document.body.appendChild(box);
 
-  const pages=rows.map(r=>`
-    <section class="label">
-      <div class="inner">
-        <div class="name">${esc(r[0])}</div>
-        <div class="rule"></div>
-        <div class="saju">${esc(r[1])}</div>
-        ${r[2]?`<div class="wish">${esc(r[2])}</div>`:''}
-      </div>
-    </section>`).join('');
+    const { jsPDF } = window.jspdf;
+    const pdf=new jsPDF({ unit:'mm', format:[W,H], orientation:'landscape' });
 
-  const html=`<!DOCTYPE html>
-<html lang="ko"><head><meta charset="UTF-8">
-<title>염화기도 라벨</title>
-<link href="https://fonts.googleapis.com/css2?family=Noto+Serif+KR:wght@300;400;600&family=Cormorant+Garamond:wght@400;600&display=swap" rel="stylesheet">
-<style>
-  @page { size: 60mm 50mm; margin: 0; }
-  *{ box-sizing:border-box; margin:0; padding:0; }
-  body{ font-family:'Noto Serif KR', serif; background:#fff; color:#1a1712; }
-  .label{
-    width:60mm; height:50mm; page-break-after:always; break-after:page;
-    display:flex; align-items:center; justify-content:center; padding:4mm;
-  }
-  .label:last-child{ page-break-after:auto; break-after:auto; }
-  .inner{
-    width:100%; height:100%; border:0.35mm solid #b99a55; border-radius:1.5mm;
-    display:flex; flex-direction:column; align-items:center; justify-content:center;
-    padding:3mm 3mm; text-align:center; position:relative;
-  }
-  .inner::before, .inner::after{
-    content:''; position:absolute; left:2mm; right:2mm; height:0.15mm; background:#e3d6b8;
-  }
-  .inner::before{ top:1.6mm; } .inner::after{ bottom:1.6mm; }
-  .name{
-    font-size:5.4mm; font-weight:600; letter-spacing:0.4mm; line-height:1.25;
-    margin-bottom:1.6mm; word-break:keep-all;
-  }
-  .rule{ width:9mm; height:0.3mm; background:#b99a55; margin-bottom:1.8mm; }
-  .saju{
-    font-size:3.3mm; font-weight:400; letter-spacing:0.15mm; color:#4a4238;
-    line-height:1.45; margin-bottom:1.4mm; word-break:keep-all;
-  }
-  .wish{
-    font-size:3.1mm; font-weight:300; color:#6b6050; line-height:1.5;
-    word-break:keep-all; max-height:12mm; overflow:hidden;
-  }
-  @media screen{
-    body{ background:#2a2a2e; padding:12px; }
-    .label{ background:#fff; margin:0 auto 12px; box-shadow:0 2px 10px rgba(0,0,0,.4); }
-    .print-bar{
-      position:fixed; top:0; left:0; right:0; background:#111; color:#e8c87a;
-      padding:10px; text-align:center; font-size:14px; z-index:10;
-      font-family:'Noto Serif KR',serif;
+    for(let i=0;i<rows.length;i++){
+      const r=rows[i];
+      box.innerHTML=`
+        <div style="width:${PX(W)}px;height:${PX(H)}px;background:#fff;color:#1a1712;
+                    font-family:'Noto Serif KR',serif;display:flex;align-items:center;
+                    justify-content:center;padding:${PX(4)}px;box-sizing:border-box;">
+          <div style="width:100%;height:100%;border:1.5px solid #b99a55;border-radius:6px;
+                      display:flex;flex-direction:column;align-items:center;justify-content:center;
+                      padding:${PX(3)}px;text-align:center;box-sizing:border-box;position:relative;">
+            <div style="position:absolute;left:${PX(2)}px;right:${PX(2)}px;top:${PX(1.6)}px;height:1px;background:#e3d6b8;"></div>
+            <div style="position:absolute;left:${PX(2)}px;right:${PX(2)}px;bottom:${PX(1.6)}px;height:1px;background:#e3d6b8;"></div>
+            <div style="font-size:${PX(5.4)}px;font-weight:600;letter-spacing:${PX(0.4)}px;
+                        line-height:1.25;margin-bottom:${PX(1.6)}px;word-break:keep-all;">${r[0]||''}</div>
+            <div style="width:${PX(9)}px;height:1.2px;background:#b99a55;margin-bottom:${PX(1.8)}px;"></div>
+            <div style="font-size:${PX(3.3)}px;color:#4a4238;line-height:1.45;
+                        margin-bottom:${PX(1.4)}px;word-break:keep-all;">${r[1]||''}</div>
+            ${r[2]?`<div style="font-size:${PX(3.1)}px;font-weight:300;color:#6b6050;
+                        line-height:1.5;word-break:keep-all;">${r[2]}</div>`:''}
+          </div>
+        </div>`;
+      // 글꼴 적용 대기
+      if(i===0){ try{ await document.fonts.ready; }catch(e){} await new Promise(r2=>setTimeout(r2,120)); }
+      const canvas=await html2canvas(box.firstElementChild, { scale:4, backgroundColor:'#ffffff', logging:false });
+      if(i>0) pdf.addPage([W,H],'landscape');
+      pdf.addImage(canvas.toDataURL('image/jpeg',0.95), 'JPEG', 0, 0, W, H);
     }
-    .print-bar button{
-      background:#c8a456; border:none; border-radius:6px; padding:8px 18px;
-      margin-left:10px; cursor:pointer; font-family:inherit; font-size:14px; font-weight:600;
-    }
-    body{ padding-top:56px; }
-  }
-  @media print{ .print-bar{ display:none; } }
-</style></head>
-<body>
-<div class="print-bar">60 × 50mm · ${rows.length}장
-  <button onclick="window.print()">PDF로 저장 / 인쇄</button>
-</div>
-${pages}
-<scr'+'ipt>window.onload=function(){ setTimeout(function(){ window.print(); }, 600); };<\/scr'+'ipt>
-</body></html>`;
+    document.body.removeChild(box);
+    const t=new Date();
+    pdf.save(`염화기도라벨_${t.getMonth()+1}월${t.getDate()}일_${rows.length}장.pdf`);
+    showToast(`${rows.length}장 저장 완료`);
+  };
 
-  const w=window.open('', '_blank');
-  if(!w){ alert('팝업이 차단되었습니다. 팝업 허용 후 다시 눌러주세요.'); return; }
-  w.document.open(); w.document.write(html); w.document.close();
-  showToast(`${rows.length}장 라벨 준비 완료`);
+  // 라이브러리 로드 후 실행
+  const need=[];
+  if(typeof html2canvas==='undefined') need.push('https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js');
+  if(!(window.jspdf && window.jspdf.jsPDF)) need.push('https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js');
+  if(!need.length){ run().catch(e=>{ console.error(e); alert('PDF 생성 중 오류가 발생했어요.'); }); return; }
+  showToast('준비 중…');
+  let left=need.length;
+  need.forEach(src=>{
+    const sc=document.createElement('script');
+    sc.src=src;
+    sc.onload=()=>{ if(--left===0) run().catch(e=>{ console.error(e); alert('PDF 생성 중 오류가 발생했어요.'); }); };
+    sc.onerror=()=>alert('PDF 기능을 불러오지 못했어요. 네트워크를 확인해 주세요.');
+    document.head.appendChild(sc);
+  });
 }
 
 function exportPrayerXlsx(){
