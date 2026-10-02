@@ -78,8 +78,9 @@ body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellips
 /* 버튼이 여러 개인 줄에서는 글씨를 줄여 줄바꿈 방지 */
 .btn-row{display:flex;gap:7px;margin-bottom:18px;}
 .btn-row .task-add-btn{flex:1;margin-bottom:0;font-size:.82rem;padding:13px 4px;}
+.btn-row.three .task-add-btn{font-size:.78rem;padding:12px 3px;}
 .btn-row.four .task-add-btn{font-size:.74rem;padding:12px 2px;}
-@media (max-width:400px){ .btn-row .task-add-btn{font-size:.76rem;} .btn-row.four .task-add-btn{font-size:.68rem;} }
+@media (max-width:400px){ .btn-row .task-add-btn{font-size:.76rem;} .btn-row.three .task-add-btn{font-size:.72rem;} .btn-row.four .task-add-btn{font-size:.68rem;} }
 .task-add-btn:hover{background:rgba(200,164,86,.24);}
 .task-day{margin-bottom:24px;}
 .task-day-head{font-size:.9rem;color:var(--gold2);margin-bottom:10px;padding-bottom:7px;border-bottom:1px solid var(--border);display:flex;justify-content:space-between;align-items:center;}
@@ -320,9 +321,10 @@ body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellips
   </div>
 
   <div class="tab-panel" id="tab-prayer">
-    <div class="btn-row">
+    <div class="btn-row three">
       <button class="task-add-btn" onclick="openPrBulk()">일괄 등록</button>
       <button class="task-add-btn" onclick="exportPrayerXlsx()">기도 명단</button>
+      <button class="task-add-btn" onclick="exportPrayerPdf()">라벨 PDF</button>
     </div>
     <div id="prayerPanel"></div>
   </div>
@@ -1866,6 +1868,89 @@ function exportLabelCsv(rows){
   document.body.appendChild(a); a.click(); document.body.removeChild(a);
   URL.revokeObjectURL(url);
   showToast(`${rows.length}건 내보내기 완료 (CSV)`);
+}
+
+// 염화기도 라벨 PDF (60 x 50mm, 1건 1페이지)
+function exportPrayerPdf(){
+  const rows=collectPrayerRows();
+  if(!rows.length){ alert('내보낼 미완료 기도 건이 없습니다.'); return; }
+
+  const esc=v=>String(v==null?'':v)
+    .replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+
+  const pages=rows.map(r=>`
+    <section class="label">
+      <div class="inner">
+        <div class="name">${esc(r[0])}</div>
+        <div class="rule"></div>
+        <div class="saju">${esc(r[1])}</div>
+        ${r[2]?`<div class="wish">${esc(r[2])}</div>`:''}
+      </div>
+    </section>`).join('');
+
+  const html=`<!DOCTYPE html>
+<html lang="ko"><head><meta charset="UTF-8">
+<title>염화기도 라벨</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Serif+KR:wght@300;400;600&family=Cormorant+Garamond:wght@400;600&display=swap" rel="stylesheet">
+<style>
+  @page { size: 60mm 50mm; margin: 0; }
+  *{ box-sizing:border-box; margin:0; padding:0; }
+  body{ font-family:'Noto Serif KR', serif; background:#fff; color:#1a1712; }
+  .label{
+    width:60mm; height:50mm; page-break-after:always; break-after:page;
+    display:flex; align-items:center; justify-content:center; padding:4mm;
+  }
+  .label:last-child{ page-break-after:auto; break-after:auto; }
+  .inner{
+    width:100%; height:100%; border:0.35mm solid #b99a55; border-radius:1.5mm;
+    display:flex; flex-direction:column; align-items:center; justify-content:center;
+    padding:3mm 3mm; text-align:center; position:relative;
+  }
+  .inner::before, .inner::after{
+    content:''; position:absolute; left:2mm; right:2mm; height:0.15mm; background:#e3d6b8;
+  }
+  .inner::before{ top:1.6mm; } .inner::after{ bottom:1.6mm; }
+  .name{
+    font-size:5.4mm; font-weight:600; letter-spacing:0.4mm; line-height:1.25;
+    margin-bottom:1.6mm; word-break:keep-all;
+  }
+  .rule{ width:9mm; height:0.3mm; background:#b99a55; margin-bottom:1.8mm; }
+  .saju{
+    font-size:3.3mm; font-weight:400; letter-spacing:0.15mm; color:#4a4238;
+    line-height:1.45; margin-bottom:1.4mm; word-break:keep-all;
+  }
+  .wish{
+    font-size:3.1mm; font-weight:300; color:#6b6050; line-height:1.5;
+    word-break:keep-all; max-height:12mm; overflow:hidden;
+  }
+  @media screen{
+    body{ background:#2a2a2e; padding:12px; }
+    .label{ background:#fff; margin:0 auto 12px; box-shadow:0 2px 10px rgba(0,0,0,.4); }
+    .print-bar{
+      position:fixed; top:0; left:0; right:0; background:#111; color:#e8c87a;
+      padding:10px; text-align:center; font-size:14px; z-index:10;
+      font-family:'Noto Serif KR',serif;
+    }
+    .print-bar button{
+      background:#c8a456; border:none; border-radius:6px; padding:8px 18px;
+      margin-left:10px; cursor:pointer; font-family:inherit; font-size:14px; font-weight:600;
+    }
+    body{ padding-top:56px; }
+  }
+  @media print{ .print-bar{ display:none; } }
+</style></head>
+<body>
+<div class="print-bar">60 × 50mm · ${rows.length}장
+  <button onclick="window.print()">PDF로 저장 / 인쇄</button>
+</div>
+${pages}
+<scr'+'ipt>window.onload=function(){ setTimeout(function(){ window.print(); }, 600); };<\/scr'+'ipt>
+</body></html>`;
+
+  const w=window.open('', '_blank');
+  if(!w){ alert('팝업이 차단되었습니다. 팝업 허용 후 다시 눌러주세요.'); return; }
+  w.document.open(); w.document.write(html); w.document.close();
+  showToast(`${rows.length}장 라벨 준비 완료`);
 }
 
 function exportPrayerXlsx(){
