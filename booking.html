@@ -371,17 +371,9 @@ input[type="date"].ifield:not(:valid){ color:var(--text3); }
         <div class="menu-top"><span class="menu-name">나비주술 + 부적 <span class="mbadge b-dl">5일+배송</span></span><span class="menu-price">150,000원</span></div>
         <div class="menu-info">매력과 오라를 깨워 이성의 시선과 호감을 끌어오는 주술<br>5일간 진행 · 개인별 맞춤 부적 제공 (배송 최대 2주)</div>
       </div>
-      <div class="menu-card menu-monthly" data-menu="monthly" onclick="selMenu(this)">
-        <div class="menu-top"><span class="menu-name">월별 운세 컨설팅 <span class="mbadge b-monthly">MONTHLY</span></span><span class="menu-price">100,000원</span></div>
-        <div class="menu-info">4개 분야(일·금전·연애·인간관계) 전체 운세 리딩지 + 결과 맞춤 주술<br><span class="monthly-period">접수기간 : 매월 15일 ~ 25일</span></div>
-      </div>
       <div class="menu-card" data-menu="realtime" onclick="selMenu(this)">
         <div class="menu-top"><span class="menu-name">실시간 채팅 상담 <span class="mbadge b-rt">LIVE</span></span><span class="menu-price">30,000원~</span></div>
         <div class="menu-info">15분 / 20분 / 30분 선택 · 채팅으로 진행됩니다</div>
-      </div>
-      <div class="menu-card" data-menu="bibang" onclick="selMenu(this)">
-        <div class="menu-top"><span class="menu-name">리츄얼 비방 전 상담 (선택) <span class="mbadge b-rt">LIVE</span></span><span class="menu-price">40,000원</span></div>
-        <div class="menu-info">비방 진행 전 상대의 마음과 흐름을 봅니다.<br>상담이 필요치 않으시면 바로 문의 주세요</div>
       </div>
       <div class="menu-card" data-menu="question" onclick="selMenu(this)">
         <div class="menu-top"><span class="menu-name">질문제 <span class="mbadge b-24">24H</span></span><span class="menu-price">10,000원/질문</span></div>
@@ -664,7 +656,7 @@ const RT_DURS = [15,20,30];
 
 // 상담 안내 문구
 const NOTICE_EVENT = '';   // 이벤트 종료 안내 사용 안 함
-const NOTICE_MEDIUM = `<div class="notice-medium">✦ <b>영매사(스피릿워커) 상담</b>입니다.<br>타로는 하나의 보조 도구로 사용합니다.</div>`;
+const NOTICE_MEDIUM = '';   // 영매사 상담 안내 사용 안 함
 
 const MENU_NAMES={monthly:'월별 운세 컨설팅',realtime:'실시간 채팅 상담',bibang:'비방',question:'질문제',mixed:'혼합 리딩',lite:'Lite 패키지',reunion:'시그니처 전략적 패키지',prayer:'염화기도',spell:'스펠자',butterfly:'나비주술 + 부적'};
 
